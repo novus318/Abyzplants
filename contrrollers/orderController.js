@@ -35,7 +35,7 @@ export const createOrderController=async(req,res)=>{
             orderStatus: 'Processing', 
           }).save();
       
-          res.json({ success: true, message: 'Your order has been placed successfully',newOrder});
+          res.json({ success: true, message: 'Your order has been placed successfully check your email',newOrder});
     } catch (error) {
         res.status(500).json({ success: false, message: 'Order placement failed',error});
     }
@@ -172,49 +172,19 @@ export const getOrdersByUserIdController = async (req, res) => {
 
 
 
-// export const updateOrderStatusAndSendNotification = async (req, res) => {
-//   try {
-//     const orderId = req.params.orderId;
-//     const newStatus = req.body.newStatus; 
+ export const updateOrderStatusAndSendNotification = async (req, res) => {
+   try {
+     const orderId = req.params.orderId;
+     const newStatus = req.body.newStatus; 
 
-//     // Update the order status in your database (orderModel)
-//     // Replace this with your code to update the status
-//     const updatedOrder = await orderModel.findByIdAndUpdate(orderId, { orderStatus: newStatus });
+     const updatedOrder = await orderModel.findByIdAndUpdate(orderId, {status: newStatus });
 
-//     if (!updatedOrder) {
-//       return res.status(404).json({ success: false, message: 'Order not found' });
-//     }
+     if (!updatedOrder) {
+       return res.status(404).json({ success: false, message: 'Order not found' });
+     }
 
-//     const user = await userModel.findById(updatedOrder.user);
-//     switch (newStatus) {
-//       case 'Order Delivered':
-//         await sendSMSNotification(user.phone, 'Your order is being Delevered.');
-//         break;
-//       case 'Order Cancelled':
-//         await sendSMSNotification(user.phone, 'Your order is Cancelled');
-//         break;
-
-//       default:
-//         break;
-//     }
-
-//     res.json({ success: true, message: 'Order status updated and SMS notification sent' });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: 'Error updating order status', error });
-//   }
-// };
-
-// async function sendSMSNotification(phoneNumber, message) {
-//   try {
-//     const params = {
-//       originator: '', // Set your company name or number
-//       recipients: [phoneNumber],
-//       body: message,
-//     };
-
-//     const response = await messageBirdClient.messages.create(params);
-//   } catch (error) {
-   
-//     console.error('Error sending SMS:', error);
-//   }
-// }
+     res.status(200).json({ success: true, message: 'Order status updated and SMS notification sent' });
+   } catch (error) {
+     res.status(500).json({ success: false, message: 'Error updating order status', error });
+   }
+ };

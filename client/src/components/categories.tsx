@@ -6,6 +6,7 @@ import Spinner from './Spinner';
 
 type Category = {
   _id?: number;
+  photo?:string;
   name?: string | undefined;
 };
 const Categories = () => {
@@ -37,7 +38,7 @@ const Categories = () => {
               className="bg-gray-100 rounded-lg overflow-hidden shadow-md transition-transform transform hover:scale-105 hover:shadow-lg"
             >
               <img
-                src={`http://localhost:8080/category/category-photo/${category._id}`}
+                src={category.photo}
                 alt={category.name}
                 className="w-full h-40 object-cover"
               />

@@ -14,6 +14,7 @@ interface CreateCategoryResponse {
   category: {
     name: string;
     _id:number;
+    photo:string;
   };
 }
 
@@ -22,11 +23,13 @@ type Category = {
 };
 type selectedCategoryForDeletion = {
   _id?: number;
+  photo?:string;
   name?: string | undefined;
   image?: File | null;
 };
 type SelectedCategory = {
   _id?: number;
+  photo?:string;
   name?: string | undefined;
   image?: File | null;
 };
@@ -297,7 +300,7 @@ const CreateCategory = () => {
     />
   ) : (
     <img
-      src={`http://localhost:8080/category/category-photo/${selectedCategory?._id}`}
+      src={selectedCategory?.photo}
       alt="Updated Category Image"
       className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
     />

@@ -10,7 +10,7 @@ import { format, subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fn
 interface Product {
   _id: string;
   name: string;
-  image:string;
+  image: string;
   price: number;
   quantity: number;
   size: string;
@@ -110,6 +110,23 @@ const Order = () => {
 
     return new Date(dateString).toLocaleString(undefined, options);
   };
+  const handleCancelOrder = async (orderId:any) => {
+   if(window.confirm('Are you sure you want to Cancel Order')){
+    setLoading(true);
+    try {
+      const newStatus = 'Order Cancelled';
+      const response = await axios.put(`http://localhost:8080/order/orders/${orderId}/status`, { newStatus });
+  
+      if (response.status === 200) {
+    
+        window.location.reload();
+      }
+    } catch (error) {
+      setLoading(false);
+    } 
+   }
+  }
+  
 
   return (
     <>
@@ -164,16 +181,14 @@ const Order = () => {
                           <p className="text-[#5f9231] font-semibold text-xl md:text-2xl">
                             Total: {order.total.toFixed(2)} AED
                           </p>
-                          <p className={`text-lg font-semibold ${order.status === 'Processing' ? 'text-[#5f9231]' :
-                              order.status === 'Ready to Ship' ? 'text-[#0077b6]' :
-                                order.status === 'Order Shipped' ? 'text-[#560bad]' :
-                                  order.status === 'Order Delivered' ? 'text-[#198754]' :
+                          <p className='text-lg font-semibold text-[#5f9231]'>
+                            Status: <span className={`text-lg font-semibold ${order.status === 'Processing' ? 'text-[#5f9231]' :
+                              order.status === 'Ready to Ship' ? 'text-[#5f9231]' :
+                                order.status === 'Order Shipped' ? 'text-[#5f9231]' :
+                                  order.status === 'Order Delivered' ? 'text-[#5f9231]' :
                                     order.status === 'Order Cancelled' ? 'text-[#dc3545]' :
                                       order.status === 'Unable to Process' ? 'text-[#ff8c00]' :
-                                        order.status === 'Refunded' ? 'text-[#17a2b8]' :
-                                          ''
-                            }`}>
-                            Status: {order.status}
+                                        order.status === 'Refunded' && 'text-[#5f9231]'}`}>{order.status}</span>
                           </p>
 
                         </div>
@@ -200,10 +215,18 @@ const Order = () => {
                         </div>
                       ))}
                       <div className="text-center mt-4">
-                        <button className="text-red-500 rounded-md hover:text-red-700 cursor-pointer">
-                          Cancel Order
-                        </button>
+                        {!(order.status === 'Refunded' || order.status === 'Order Cancelled' || order.status === 'Order Delivered' || order.status === 'Order Shipped') ? (
+                          <button
+                          onClick={() => handleCancelOrder(order._id)} className="text-red-500 rounded-md hover:text-red-700 cursor-pointer">
+                            Cancel Order
+                          </button>
+                        ) : null}
 
+                        {order.status === 'Order Delivered' ? (
+                          <button className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer">
+                            Return
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   ))}

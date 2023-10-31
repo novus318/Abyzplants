@@ -224,6 +224,11 @@ const AuthPage = () => {
               {isSignup ? 'Log in here' : 'Sign up here'}
             </button>
           </p>
+          {!isSignup && ( <p className="text-sm mt-3 text-gray-600">
+            <Link href='mailto:info@abyzplants.com'  target="_blank" className="font-medium text-red-500 hover:text-[#a14e3a] cursor-pointer" >
+            Forgot Password? contact support
+            </Link>
+          </p>)}
         </div>
       </div>
     </div>

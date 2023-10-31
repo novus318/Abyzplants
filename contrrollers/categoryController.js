@@ -64,10 +64,18 @@ export const updateCategoryController=async(req,res)=>{
 export const categoryController=async(req,res)=>{
     try {
         const category=await categoryModel.find({}).select('-photo')
+
+        const productsWithImageUrls = await Promise.all(category.map(async product => {
+            const photoUrl = `http://localhost:8080/category/category-photo/${product._id}`;
+            return {
+                ...product._doc,
+                photo: photoUrl,
+            };
+        }));
         res.status(200).send({
             success:true,
             message:"All categories list",
-            category
+            category:productsWithImageUrls
         })
     } catch (error) {
         console.log(error)

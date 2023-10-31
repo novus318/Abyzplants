@@ -8,7 +8,7 @@ import { useAuth } from '@/store/authContext';
 
 const PaymentCompletePage = () => {
   const router = useRouter();
-  const { cart } = useCart();
+  const { cart,setCart } = useCart();
   const { auth } = useAuth();
   const { sessionId } = router.query
   useEffect(() => {
@@ -35,6 +35,7 @@ const PaymentCompletePage = () => {
 
 
   const createOrder = async () => {
+  
     const orderDetails = {
       products: cart.map((item) => ({
         _id: item._id,
@@ -60,8 +61,9 @@ const PaymentCompletePage = () => {
 
       if (response.data.success) {
         localStorage.removeItem('cart');
+        setCart([])
         router.push('/order');
-        toast.success(response.data.message);
+        toast.success(response.data.message,{ duration: 6000 });
       } else {
         router.push('/cart');
         toast.error(response.data.message);

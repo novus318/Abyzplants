@@ -3,7 +3,7 @@ import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import axios from 'axios';
 import Link from 'next/link';
-import { FaArrowRight, FaMinus, FaPlus, FaShare } from 'react-icons/fa';
+import { FaArrowRight, FaExclamationCircle, FaMinus, FaPlus, FaShare } from 'react-icons/fa';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import { useRouter } from 'next/router';
@@ -21,6 +21,7 @@ interface Product {
   image: string;
   description: string;
   price: number;
+  quantity:number;
   offerPercentage: number;
   category: {
     _id: string;
@@ -342,20 +343,29 @@ const Details: React.FC = () => {
                       </div>
 
                       <div className="mt-4 flex space-x-4">
-                        <button
-                          type="button"
-                          className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#8d4533] transition-colors duration-300"
-                          onClick={handleAddToCart}
-                        >
-                          Add to Cart
-                        </button>
-                        <button
-                          type="button"
-                          className="bg-[#a14e3a] text-white py-2 px-4 rounded-md hover-bg-[#8d4533] transition-colors duration-300"
-                          onClick={handleBuyNow}
-                        >
-                          Buy now
-                        </button>
+                      {product.quantity > 0 ? (
+              <>
+                <button
+                  type="button"
+                  className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#8d4533] transition-colors duration-300"
+                  onClick={handleAddToCart}
+                >
+                  Add to Cart
+                </button>
+                <button
+                  type="button"
+                  className="bg-[#a14e3a] text-white py-2 px-4 rounded-md hover-bg-[#8d4533] transition-colors duration-300"
+                  onClick={handleBuyNow}
+                >
+                  Buy now
+                </button>
+              </>
+            ) : (
+              <div className="restocking-soon flex items-center text-red-500 text-lg font-medium">
+                Restocking Soon
+                <FaExclamationCircle className="icon text-red-500 ml-2" />
+              </div>
+            )}
                         <button
                           type="button"
                           className="bg-[#333] text-white py-2 px-4 rounded-md hover:bg-[#444] transition-colors duration-300"

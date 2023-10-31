@@ -11,6 +11,7 @@ interface Product {
   price: number;
   offerPercentage: number;
   code: string;
+  image:string;
 }
 const allProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -80,7 +81,7 @@ const allProducts = () => {
                     </div>
                   )}
                   <img
-                    src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                    src={item.image}
                     alt={item.name}
                     className="w-full h-72 object-cover"
                   />

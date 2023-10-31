@@ -13,11 +13,10 @@ import { FaPlus, FaMinus, FaTimes } from 'react-icons/fa';
 import ReactInputMask from 'react-input-mask';
 
 
-
 const Cart: React.FC = () => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { cart, removeItem, changeQuantity } = useCart();
+  const { cart, removeItem, changeQuantity,setCart } = useCart();
   const { auth, setAuth } = useAuth();
   const [city, setCity] = useState('');
   const [zip, setZip] = useState('');
@@ -152,9 +151,10 @@ const Cart: React.FC = () => {
 
       if (response.data.success) {
         localStorage.removeItem('cart');
+        setCart([])
         router.push('/order');
+        toast.success(response.data.message,{ duration: 6000 });
         setLoading(false);
-        toast.success(response.data.message);
       } else {
         setLoading(false);
         toast.error(response.data.message);
@@ -180,16 +180,18 @@ const Cart: React.FC = () => {
               quantity: item.quantity,
               size: item.size,
             })),
-            total: calculateTotal(),
+            total: calculateTotal().toFixed(2),
           },
         });
 
         stripe.redirectToCheckout({ sessionId: response.data.sessionId });
       } catch (error) {
         toast.error('Something went wrong, try again');
+        setLoading(false)
       }
     } else {
-      toast.error('Stripe is not available. Please check your configuration.');
+      toast.error('Online is not available.');
+      setLoading(false)
     }
   };
 

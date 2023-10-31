@@ -186,6 +186,23 @@ const Dashboard: React.FC = () => {
 
     return new Date(dateTime).toLocaleString(undefined, options);
   };
+  const handleStatusChange = (orderId: string, newStatus: string) => {
+    Axios.put(`http://localhost:8080/order/orders/${orderId}/status`, { newStatus })
+      .then((response) => {
+        if (response.data.success) {
+          const updatedOrders = orders.map((order) =>
+            order._id === orderId ? { ...order, status: newStatus } : order
+          );
+          setOrders(updatedOrders);
+          setFilteredOrders(updatedOrders);
+        } else {
+          // Handle the error.
+        }
+      })
+      .catch((error) => {
+        console.error('Error updating order status:', error);
+      });
+  };
   
   
   return (
@@ -246,7 +263,12 @@ const Dashboard: React.FC = () => {
             </thead>
             <tbody className="bg-white">
               {filteredOrders.map((order) => (
-                <tr key={order._id} className='ring-gray-500 ring-1'>
+                <tr
+                key={order._id}
+                className={`ring-gray-500 ring-1 ${
+                  order.status === 'Order Cancelled' ? 'bg-red-50' : ''
+                }`}
+              >
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 font-medium text-gray-900">
                     {order._id.substring(16)}
                   </td>
@@ -266,27 +288,41 @@ const Dashboard: React.FC = () => {
                     {order.total.toFixed(2)} AED
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
-                        }`}
-                    >
-                      {order.status}
-                    </span>
+                    {order.status === 'Order Cancelled' ? (
+                      'Cancelled'
+                    ) : (
+                      <Select
+                        defaultValue={order.status}
+                        style={{ width: 150 }}
+                        onChange={(newStatus) =>
+                          handleStatusChange(order._id, newStatus)
+                        }
+                      >
+                        <Option value="Processing">Processing</Option>
+                        <Option value="Ready to Ship">Ready to Ship</Option>
+                        <Option value="Order Shipped">Order Shipped</Option>
+                        <Option value="Order Delivered">Order Delivered</Option>
+                        <Option value="Order Cancelled">Order Cancelled</Option>
+                        <Option value="Unable to Process">Unable to Process</Option>
+                        <Option value="Refunded">Refunded</Option>
+                      </Select>
+                    )}
                   </td>
-
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500 grid gap-4">
-                    <button
-                      onClick={() => handleViewClick(order)}
-                      className="text-indigo-600 hover:text-indigo-900"
-                    >
-                      View
-                    </button>
-                    <Link href={`/admin/bill/${order._id}`} target="_blank">
-                    <button
-                     className="text-green-600 hover:text-green-900">
-                      Print
-                    </button>
-                    </Link>
+                    {order.status === 'Order Cancelled' ? (
+                      <span>Actions Disabled</span>
+                    ) : (
+                      <>
+                        <button onClick={() => handleViewClick(order)} className="text-indigo-600 hover:text-indigo-900">
+                          View
+                        </button>
+                        <Link href={`/admin/bill/${order._id}`} target="_blank">
+                          <button className="text-green-600 hover:text-green-900">
+                            Print
+                          </button>
+                        </Link>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}

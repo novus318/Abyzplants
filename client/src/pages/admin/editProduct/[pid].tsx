@@ -14,6 +14,7 @@ interface Product {
     description: string;
     plantCare: string[];
     price: number;
+    quantity:number;
     offerPercentage: number;
     category: {
         _id: string;
@@ -21,7 +22,11 @@ interface Product {
     };
     sizes: string[];
 }
-
+interface photoUrls{
+    image1: string;
+    image2: string;
+    image3: string;
+  }
 const EditProduct = () => {
     const router = useRouter();
     const { pid } = router.query;
@@ -39,6 +44,7 @@ const EditProduct = () => {
         description: '',
         plantCare: [],
         price: 0,
+        quantity: 0,
         offerPercentage: 0,
         category: {
             _id: '',
@@ -46,15 +52,16 @@ const EditProduct = () => {
         },
         sizes: [],
     });
-
+    const [photos, setPhotos] = useState<photoUrls | null>(null);
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
     const getSingleProduct = async () => {
         try {
-            const { data } = await axios.get<Product>(`http://localhost:8080/product/get-product/${pid}`);
-            setProduct(data);
-            setSelectedSizes(data.sizes);
-            setPlantCare(data.plantCare)
+            const { data } = await axios.get(`http://localhost:8080/product/get-product/${pid}`);
+            setProduct(data.product);
+            setPhotos(data.photoUrls)
+            setSelectedSizes(data.product.sizes);
+            setPlantCare(data.product.plantCare)
 
             setLoading(false);
         } catch (error) {
@@ -80,6 +87,7 @@ const EditProduct = () => {
             formData.append('description', product.description);
             formData.append('plantCare', JSON.stringify(plantCare));
             formData.append('price', product.price.toString());
+            formData.append('quantity', product.quantity.toString());
             formData.append('offerPercentage', product.offerPercentage.toString());
             if (image1File) {
                 formData.append('image1', image1File);
@@ -212,7 +220,7 @@ const EditProduct = () => {
                                 type="text"
                                 id="name"
                                 name="name"
-                                value={product.category.name}
+                                value={product.category?.name}
                                 className="border border-gray-300 rounded-md p-2 w-full"
                                 disabled
                             />
@@ -236,7 +244,7 @@ const EditProduct = () => {
                                 Plant Care (Up to 5 points)
                             </label>
                             <div>
-                                {plantCare.map((point, index) => (
+                                {plantCare?.map((point, index) => (
                                     <div key={index} className="flex items-center mb-2">
                                         <textarea
                                             name={`plantCare[${index}]`}
@@ -254,7 +262,7 @@ const EditProduct = () => {
                                     </div>
                                 ))}
                             </div>
-                            {plantCare.length < 5 && (
+                            {plantCare?.length < 5 && (
                                 <button
                                     type="button"
                                     className="bg-[#5f9231] hover:bg-[#4b7427] text-white font-semibold p-2 rounded-md mt-2"
@@ -274,6 +282,20 @@ const EditProduct = () => {
                                 id="price"
                                 name="price"
                                 value={product.price}
+                                onChange={handleInputChange}
+                                className="border border-gray-300 rounded-md p-2 w-full"
+                                required
+                            />
+                        </div>
+                        <div className="mb-4">
+                            <label htmlFor="quantity" className="block text-gray-700 text-sm font-semibold mb-2">
+                            Quantity
+                            </label>
+                            <input
+                               type="number"
+                               id="quantity"
+                               name="quantity"
+                               value={product.quantity}
                                 onChange={handleInputChange}
                                 className="border border-gray-300 rounded-md p-2 w-full"
                                 required
@@ -322,7 +344,7 @@ const EditProduct = () => {
                                             type="checkbox"
                                             name="sizes"
                                             value={`${size}`}
-                                            checked={selectedSizes.includes(size)}
+                                            checked={selectedSizes?.includes(size)}
                                             onChange={() => handleSizeCheckboxChange(size)}
                                             className="mr-2"
                                         />
@@ -367,7 +389,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={`http://localhost:8080/product/product-photo1/${product._id}`}
+                                            src={photos?.image1}
                                             alt="Image1"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -391,7 +413,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={`http://localhost:8080/product/product-photo2/${product._id}`}
+                                            src={photos?.image2}
                                             alt="Image2"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -415,7 +437,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={`http://localhost:8080/product/product-photo3/${product._id}`}
+                                            src={photos?.image3}
                                             alt="Image3"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
