@@ -53,21 +53,19 @@ interface CategoriesScrollProps {
     <>
       {loading ? (
         <Spinner />
-      ) : (
+      ) : (<>
+        {products?.length > 0 && (
         <section className="bg-white py-8">
           <div className="container m-auto px-4">
-            <h2 className="text-3xl font-semibold text-[#5f9231] mb-6 uppercase">{categoryName}</h2>
-            <Carousel
+              <h2 className="text-3xl font-semibold text-[#5f9231] mb-6 uppercase">{categoryName}</h2>
+              <Carousel
               responsive={responsive}
               containerClass="carousel-container"
               additionalTransfrom={0}
               sliderClass=""
               itemClass="p-2 sm:p-3 md:p-4 lg:p-5 xl:p-6"
             >
-              {products?.length === 0 ? (
-                <p>No products available</p>
-              ) : (
-                products?.map((item: any) => (
+              {products?.map((item: any) => (
                   <Link href={`/details/${item._id}`} key={item._id}>
                     <div
                       key={item._id}
@@ -79,7 +77,7 @@ interface CategoriesScrollProps {
                         </div>
                       )}
                       <img
-                        src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                       />
@@ -112,11 +110,11 @@ interface CategoriesScrollProps {
                       </div>
                     </div>
                   </Link>
-                )))}
+                ))}
             </Carousel>
           </div>
         </section>
-     )}
+    )}</> )}
     </>
   )
 }

@@ -10,6 +10,7 @@ import { format, subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fn
 interface Product {
   _id: string;
   name: string;
+  image:string;
   price: number;
   quantity: number;
   size: string;
@@ -48,6 +49,7 @@ const Order = () => {
                   return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 })
                 setOrderData(filteredOrders);
+                console.log(filteredOrders)
                 setLoading(false);
                 setLoading(false);
               }
@@ -184,7 +186,7 @@ const Order = () => {
                         >
                           <Link href={`/details/${product._id}`}>
                             <img
-                              src={`http://localhost:8080/product/product-photo1/${product._id}`}
+                              src={product.image}
                               alt={product.name}
                               className="w-16 h-20 object-cover rounded-lg mb-4 md:mr-4"
                             />

@@ -12,8 +12,23 @@ const YOUR_DOMAIN = 'http://localhost:3000';
 export const createOrderController=async(req,res)=>{
     const { orderDetails, userDetails } = req.body;
     try {
+     
+        const products = orderDetails.products
+        const productsWithImageUrls = await Promise.all(products.map(async product => {
+          const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+          return {
+            _id:product._id ,
+            code: product.code,
+            name: product.name ,
+            price: product.price ,
+            quantity: product.quantity,
+            size: product.size,
+              image: photoUrl,
+          };
+      }));
+  
         const newOrder = await new orderModel({
-            products: orderDetails.products,
+            products: productsWithImageUrls,
             total: orderDetails.total,
             paymentMethod: orderDetails.paymentMethod,
             user: userDetails._id,
@@ -154,7 +169,7 @@ export const getOrdersByUserIdController = async (req, res) => {
   
 
 
-// const messageBirdClient = messagebird('<YOUR_API_KEY>');
+
 
 
 // export const updateOrderStatusAndSendNotification = async (req, res) => {

@@ -5,12 +5,12 @@ import Link from 'next/link';
 import axios from 'axios';
 import Spinner from '@/components/Spinner';
 import { useRouter } from 'next/router';
-import { string } from 'yup';
 import ContactIcon from '@/components/ContactIcon';
 
 interface Product {
   _id: string;
   name: string;
+  image: string;
   description: string;
   category: {
     name:string;
@@ -119,7 +119,7 @@ const category = () => {
                         </div>
                       )}
                       <img
-                        src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-72 object-cover"
                       />

@@ -18,6 +18,7 @@ interface Product {
   _id: string;
   code: string;
   name: string;
+  image: string;
   description: string;
   price: number;
   offerPercentage: number;
@@ -28,7 +29,11 @@ interface Product {
   sizes: string[];
   plantCare: String[];
 }
-
+interface photoUrls{
+  image1: string;
+  image2: string;
+  image3: string;
+}
 interface Image {
   url: string;
 }
@@ -36,6 +41,7 @@ interface CartItem {
   _id: string;
   code: string;
   name: string;
+  image: string;
   price: any;
   size: string;
   quantity: number;
@@ -57,6 +63,7 @@ const Details: React.FC = () => {
   const { addToCart } = useCart();
   const [selectedSizeError, setSelectedSizeError] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
+  const [photos, setPhotos] = useState<photoUrls | null>(null);
   const [SimilarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -118,6 +125,7 @@ const Details: React.FC = () => {
             size: selectedSizes[0],
             price: price,
             quantity: quantity,
+            image: selectedImage,
           };
           addToCart(item);
           router.push('/cart')
@@ -153,6 +161,7 @@ const Details: React.FC = () => {
             size: selectedSizes[0],
             price: price,
             quantity: quantity,
+            image: selectedImage,
           };
           addToCart(item);
           toast.success('Item added to cart')
@@ -203,11 +212,12 @@ const Details: React.FC = () => {
 
   const getSingleProduct = async () => {
     try {
-      const { data } = await axios.get<Product>(`http://localhost:8080/product/get-product/${pid}`);
-      setProduct(data);
-      getSimilarProduct(data?._id, data?.category._id);
-      if (data._id) {
-        setSelectedImage(`http://localhost:8080/product/product-photo1/${data._id}`);
+      const { data } = await axios.get(`http://localhost:8080/product/get-product/${pid}`);
+      setProduct(data.product);
+      getSimilarProduct(data?.product._id, data?.product.category._id);
+      if (data.photoUrls) {
+        setPhotos(data.photoUrls)
+        setSelectedImage(data.photoUrls.image1);
       }
       setLoading(false);
     } catch (error) {
@@ -249,22 +259,34 @@ const Details: React.FC = () => {
                     {selectedImage && <img src={selectedImage} alt="Product Image" className="w-full h-full object-cover" />}
                   </div>
                   <div className="mt-6 flex justify-center gap-4">
-                    {product && [...Array(3)].map((_, index) => (
+                    {photos &&  (
+                    <>
                       <img
-                        key={index}
-                        src={`http://localhost:8080/product/product-photo${index + 1}/${product._id}`}
-                        alt={`Thumbnail Image ${index}`}
+                        src={photos.image1}
+                        alt='ThumbnailImage'
                         className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                        onClick={() => handleThumbnailClick(`http://localhost:8080/product/product-photo${index + 1}/${product._id}`)}
+                        onClick={() => handleThumbnailClick(photos.image1)}
                       />
-                    ))}
+                      <img
+                      src={photos.image2}
+                      alt='ThumbnailImage'
+                      className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                      onClick={() => handleThumbnailClick(photos.image2)}
+                    />
+                    <img
+                    src={photos.image3}
+                    alt='ThumbnailImage'
+                    className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                    onClick={() => handleThumbnailClick(photos.image3)}
+                  /></>
+                    )}
                   </div>
                 </div>
                 <div className="md:order-1 md:pt-4">
                   {product && (
                     <>
                       <h4 className="text-4xl font-semibold mb-2 text-[#5f9231]">{product.name}</h4>
-                      <p className="text-gray-600 text-lg">{product.category.name}</p>
+                      <p className="text-gray-600 text-lg">{product?.category?.name}</p>
                       <p className="text-xl mt-4">
                         {product.offerPercentage ? (
                           <>
@@ -291,7 +313,7 @@ const Details: React.FC = () => {
                           <p className="text-red-500">{selectedSizeError}</p>
                         )}
                         <div className="flex flex-wrap">
-                          {product.sizes.map((size, index) => (
+                          {product?.sizes?.map((size, index) => (
                             <button
                               key={index}
                               className={`${selectedSizes.includes(size)
@@ -361,10 +383,10 @@ const Details: React.FC = () => {
                       <p className="text-lg">
                         <strong>{selectedLocation.name}:</strong> {selectedLocation.days}
                       </p>
-                      {product.plantCare.length > 0 && (<div className="bg-[#f5f5f5] p-6 rounded-lg shadow-md my-6">
+                      {product.plantCare?.length > 0 && (<div className="bg-[#f5f5f5] p-6 rounded-lg shadow-md my-6">
                         <h2 className="text-2xl font-semibold mb-4">Plant Care</h2>
                         <ul className="grid grid-cols-1 gap-4">
-                          {product.plantCare.map((point, index) => (
+                          {product?.plantCare?.map((point, index) => (
                             <li key={index} className="flex items-center">
                               <span className="text-[#5f9231] mr-2"><FaArrowRight /></span>
                               <p className="text-gray-700">{point}</p>
@@ -407,7 +429,7 @@ const Details: React.FC = () => {
                           </div>
                         )}
                         <img
-                          src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                          src={item.image}
                           alt={item.name}
                           className="w-full hover:scale-105 h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72"
                         />

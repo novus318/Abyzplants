@@ -77,7 +77,7 @@ const BestSellers = () => {
                         </div>
                       )}
                       <img
-                        src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                        src={item.image}
                         alt={item.name}
                         className="w-full h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72"
                       />

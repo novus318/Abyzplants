@@ -225,7 +225,7 @@ const Cart: React.FC = () => {
                           <div className="flex items-center p-3">
                             <Link href={`/details/${item._id}`}>
                               <img
-                                src={`http://localhost:8080/product/product-photo1/${item._id}`}
+                                src={item.image}
                                 alt={item.name}
                                 className="w-16 h-20 object-cover rounded-lg"
                               />

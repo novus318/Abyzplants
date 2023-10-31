@@ -54,33 +54,50 @@ export const createProductController=async(req,res)=>{
         })
     }
 } 
-export const getProductController= async(req,res)=>{
+export const getProductController = async (req, res) => {
     try {
-        const products=await productModel.find({}).select('-photo').limit(15).sort({createdAt:-1})
+        const products = await productModel.find({}).select('-photo').limit(15).sort({ createdAt: -1 });
+
+        const productsWithImageUrls = await Promise.all(products.map(async product => {
+            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            return {
+                ...product._doc,
+                image: photoUrl,
+            };
+        }));
+
         res.status(200).send({
-            success:true,
-            totalCount:products.length,
-            message:'All products',
-            products
-        })
+            success: true,
+            totalCount: productsWithImageUrls.length,
+            message: 'All products',
+            products: productsWithImageUrls,
+        });
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).send({
-            
-            success:false,
-            message:"Error in getting products",
-            error:error.message
-        })
+            success: false,
+            message: 'Error in getting products',
+            error: error.message,
+        });
     }
 }
+
 export const getRecommendedProductController= async(req,res)=>{
     try {
         const products=await productModel.find({}).populate('category').select('-photo').limit(15).sort({createdAt:1})
+        const productsWithImageUrls = await Promise.all(products.map(async product => {
+            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            return {
+                ...product._doc,
+                image: photoUrl,
+            };
+        }));
+
         res.status(200).send({
             success:true,
             totalCount:products.length,
             message:'All products',
-            products
+            products: productsWithImageUrls
         })
     } catch (error) {
         console.log(error)
@@ -96,8 +113,7 @@ export const getSingleProductController = async (req, res) => {
     try {
       const product = await productModel
         .findById(req.params.pid)
-        .select('-photo')
-        .populate('category');
+        .populate('category').select('-photo');
   
       if (!product) {
         return res.status(404).send({
@@ -105,8 +121,17 @@ export const getSingleProductController = async (req, res) => {
           message: 'Product not found',
         });
       }
+      
+      // Construct the image URLs
+      const photoBaseUrl = 'http://localhost:8080/product/';
+      const photoUrls = {
+        image1: `${photoBaseUrl}product-photo1/${product._id}`,
+        image2: `${photoBaseUrl}product-photo2/${product._id}`,
+        image3: `${photoBaseUrl}product-photo3/${product._id}`,
+      };
+    
   
-      res.status(200).send(product);
+      res.status(200).send({product,photoUrls});
     } catch (error) {
       console.error(error);
       res.status(500).send({
@@ -115,7 +140,9 @@ export const getSingleProductController = async (req, res) => {
         error,
       });
     }
-  };
+};
+
+
   
 export const productPhoto1Controller=async(req,res)=>{
     try {
@@ -232,8 +259,14 @@ export const getCategoryController = async (req, res) => {
         return res.status(404).json({ message: 'Category not found' });
       }
       const products = await productModel.find({ category: categoryId });
-  
-      res.status(200).json({ category, products });
+      const productsWithImageUrls = await Promise.all(products.map(async product => {
+        const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+        return {
+            ...product._doc,
+            image: photoUrl,
+        };
+    }));
+      res.status(200).json({ category, products: productsWithImageUrls });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching category and products' });
     }
@@ -245,9 +278,16 @@ export const relatedProductontroller =async(req,res)=>{
             category:cid,
             _id:{$ne:pid}
         }).select('-photo').limit(15).populate("category")
+        const productsWithImageUrls = await Promise.all(products.map(async product => {
+            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            return {
+                ...product._doc,
+                image: photoUrl,
+            };
+        }));
         res.status(200).send({
             success:true,
-            products
+            products:productsWithImageUrls
         })
     } catch (error) {
         console.log(error)
@@ -266,9 +306,15 @@ export const getProductByCategoryController = async (req, res) => {
       if (!category) {
         return res.status(404).json({ message: 'Category not found' });
       }
-      const products = await productModel.find({ category: categoryId }).limit(30);;
-  
-      res.status(200).json({products});
+      const products = await productModel.find({ category: categoryId }).select('-photo').limit(30);;
+      const productsWithImageUrls = await Promise.all(products.map(async product => {
+        const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+        return {
+            ...product._doc,
+            image: photoUrl,
+        };
+    }));
+      res.status(200).json({products: productsWithImageUrls});
     } catch (error) {
       res.status(500).json({ message: 'Error fetching category and products' });
     }
