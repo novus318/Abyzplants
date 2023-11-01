@@ -201,11 +201,20 @@ const Cart: React.FC = () => {
     if (selectedPaymentMethod === '') {
       toast.error('Please select a payment method...');
     } else if (selectedPaymentMethod === 'cod') {
-      handleCODOrder();
+      if (!address || !city || !zip) {
+        toast.error('Please fill in all shipping details.');
+      } else {
+        handleCODOrder();
+      }
     } else if (selectedPaymentMethod === 'online') {
-      handleOnlineOrder();
+      if (!address || !city || !zip) {
+        toast.error('Please fill in all shipping details.');
+      } else {
+        handleOnlineOrder();
+      }
     }
   };
+  
 
   return (
     <>
