@@ -43,7 +43,7 @@ const Bill: React.FC = () => {
   useEffect(() => {
     if (pid) {
       axios
-        .get(`http://localhost:8080/api/order/get-orderById/${pid}`)
+        .get(`http://localhost:8080/order/get-orderById/${pid}`)
         .then((response) => {
           setOrder(response.data.order);
           setLoading(false);

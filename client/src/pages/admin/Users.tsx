@@ -32,7 +32,7 @@ const Users = () => {
   const deleteUser = (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete user ${userName}?`)) {
       // Make an API call to delete the user by userId
-      axios.delete(`http://localhost:8080/api/auth/users/${userId}`)
+      axios.delete(`http://localhost:8080/auth/users/${userId}`)
         .then(() => {
           setUsers(users.filter((user) => user._id !== userId));
           window.location.reload();

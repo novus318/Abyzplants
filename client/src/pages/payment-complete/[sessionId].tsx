@@ -54,7 +54,7 @@ const PaymentCompletePage = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/api/order/create-order', {
+      const response = await axios.post('http://localhost:8080/order/create-order', {
         orderDetails,
         userDetails,
       });

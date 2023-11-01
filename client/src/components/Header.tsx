@@ -67,7 +67,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/category/get-category');
+        const response = await axios.get('http://localhost:8080/category/get-category');
         setCategories(response.data.category);
   
       } catch (error) {

@@ -102,7 +102,7 @@ const EditProduct = () => {
             formData.append('sizes', JSON.stringify(sortedSizes));
 
             const response = await axios.put(
-                `http://localhost:8080/api/product/update-product/${pid}`,
+                `http://localhost:8080/product/update-product/${pid}`,
                 formData
             );
 

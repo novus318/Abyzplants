@@ -203,7 +203,7 @@ const Details: React.FC = () => {
   const getSimilarProduct = async (pid: string, cid: string) => {
     try {
       const { data } = await axios.get(
-        `http://localhost:8080/api/product/related-product/${pid}/${cid}`
+        `http://localhost:8080/product/related-product/${pid}/${cid}`
       );
       setSimilarProducts(data.products);
     } catch (error) {
@@ -213,7 +213,7 @@ const Details: React.FC = () => {
 
   const getSingleProduct = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:8080/api/product/get-product/${pid}`);
+      const { data } = await axios.get(`http://localhost:8080/product/get-product/${pid}`);
       setProduct(data.product);
       getSimilarProduct(data?.product._id, data?.product.category._id);
       if (data.photoUrls) {
