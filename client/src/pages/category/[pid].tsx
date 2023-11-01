@@ -43,7 +43,7 @@ const Category = () => {
       setLoading(false);
     })
     .catch((error) => {
-     window.location.reload();
+     setLoading(false)
     });
    }
   }, [pid]);
@@ -110,42 +110,49 @@ const Category = () => {
               ) : (
                 filteredProducts.map((item) => (
                   <Link href={`/details/${item._id}`} key={item._id}>
-                    <div
-                      key={item._id}
-                      className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform hover:scale-105 duration-300 hover:shadow-2xl"
-                    >
-                      {item.offerPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                          {item.offerPercentage}% OFF
-                        </div>
-                      )}
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-72 object-cover"
-                      />
-                      <div className="p-4">
-                        <h3 className="text-xl font-semibold mb-2 uppercase">{item.name}</h3>
-                        <p className="text-gray-700 mb-2">{item.description.substring(0, 45)}...</p>
-                        <div className="flex items-center mb-2">
-                          {item.offerPercentage > 0 ? (
-                            <>
-                              <span className="text-[#a14e3a] font-semibold text-lg mr-2">
-                                <s>{Number(item.price).toFixed(2)} AED</s>
-                              </span>
-                              <span className="text-[#5f9231] font-semibold text-lg">
-                                {(((100 - item.offerPercentage) / 100) * item.price).toFixed(2)} AED
-                              </span>
-                            </>
-                          ) : (
-                            <span className="text-[#a14e3a] font-semibold text-lg">
-                              {Number(item.price).toFixed(2)} AED
+                  <div
+                    key={item._id}
+                    className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
+                  >
+                    {item.offerPercentage > 0 && (
+                      <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
+                        {item.offerPercentage}% OFF
+                      </div>
+                    )}
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
+                    />
+                    <div className="p-4">
+                      <h3 className="font-semibold mb-2 uppercase sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                        {item.name.substring(0, 10)}..
+                      </h3>
+                      <p className="text-gray-700 mb-2 sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                        {item.description.substring(0, 25)}...
+                      </p>
+                      <div className="flex items-center mb-2">
+                        {item.offerPercentage > 0 ? (
+                          <>
+                            <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg mr-2">
+                              <s>{Number(item.price).toFixed(1)}</s>
                             </span>
-                          )}
-                        </div>
+                            <span className="text-[#5f9231] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                              {(
+                                ((100 - item.offerPercentage) / 100) * item.price
+                              ).toFixed(1)}{' '}
+                              AED
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                            {Number(item.price).toFixed(2)} AED
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </Link>
+                  </div>
+                </Link>
                 ))
               )}
             </div>
