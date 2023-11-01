@@ -429,7 +429,7 @@ const Details: React.FC = () => {
                   itemClass='p-1 sm:p-1 md:p-3 lg:p-4 xl:p-5'
                 >
                   {SimilarProducts?.map((item) => (
-                    <Link href={`/similar/${item._id}`} key={item._id}>
+                    <Link href={`/details/${item._id}`} key={item._id}>
                       <div
                         key={item._id}
                         className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
