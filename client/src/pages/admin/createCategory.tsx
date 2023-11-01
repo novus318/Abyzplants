@@ -72,7 +72,7 @@ const CreateCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/category/get-category');
+      const response = await axios.get('http://localhost:8080/category/get-category');
       setCategories(response.data.category);
       setLoading(false);
     } catch (error) {
@@ -264,7 +264,7 @@ const CreateCategory = () => {
       <Modal
     onCancel={closeEditModal}
     footer={null}
-    visible={visible}
+    open={visible}
     title="Edit Category"
   >
     <form onSubmit={handleUpdate} className="space-y-4">
@@ -338,7 +338,7 @@ const CreateCategory = () => {
     </form>
   </Modal>;
   <Modal
-      visible={deleteModalVisible}
+      open={deleteModalVisible}
       title="Confirm Delete"
       onCancel={closeDeleteModal}
       footer={[

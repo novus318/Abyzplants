@@ -276,13 +276,13 @@ const Dashboard: React.FC = () => {
                     {formatDateTime(order.createdAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user.name}
+                    {order.user?.name}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user.email}
+                    {order.user?.email}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user.phone}
+                    {order.user?.phone}
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
                     {order.total.toFixed(2)} AED
@@ -352,9 +352,9 @@ const Dashboard: React.FC = () => {
               />
               <h3 className="text-xl font-semibold mt-6">Payment : {selectedOrder.paymentMethod}</h3>
               <h2 className="text-2xl font-semibold mt-6">User Address</h2>
-              <p className="mb-2">Address: {selectedOrder.user.address}</p>
-              <p className="mb-2">City: {selectedOrder.user.city}</p>
-              <p>Zip Code: {selectedOrder.user.zip}</p>
+              <p className="mb-2">Address: {selectedOrder.user?.address}</p>
+              <p className="mb-2">City: {selectedOrder.user?.city}</p>
+              <p>Zip Code: {selectedOrder.user?.zip}</p>
             </div>
           )}
         </Modal>

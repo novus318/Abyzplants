@@ -18,7 +18,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/auth/users/role')
+    axios.get('http://localhost:8080/auth/users/role')
       .then((response) => {
         setUsers(response.data.users);
         setSearchUsers(response.data.users);

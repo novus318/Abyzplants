@@ -108,7 +108,7 @@ const CreateProduct = () => {
       }
 
       try {
-        const response = await axios.post('http://localhost:8080/api/product/create-product', formData);
+        const response = await axios.post('http://localhost:8080/product/create-product', formData);
         if (response.data.success) {
           toast.success('Product created successfully!');
           formik.resetForm();
@@ -163,7 +163,7 @@ const CreateProduct = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/api/category/get-category');
+        const response = await axios.get('http://localhost:8080/category/get-category');
         setCategories(response.data.category);
         setLoading(false);
       } catch (error) {
