@@ -52,7 +52,7 @@ const Cart: React.FC = () => {
     };
 
     checkUserExistence();
-  }, []);
+  }, [router]);
 
   const handleUpdateClick = () => {
     setIsEditable(false);

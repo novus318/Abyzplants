@@ -3,6 +3,7 @@ import Header from '@/components/Header'
 import React from 'react'
 import contactImage from '@/images/contact.webp';
 import ContactIcon from '@/components/ContactIcon';
+import Image from 'next/image';
 
 const Page = () => {
   return (
@@ -19,8 +20,8 @@ const Page = () => {
             <form className="space-y-6">
               <div className="relative">
                 <div className="mb-6">
-                  <img
-                    src={contactImage.src}
+                  <Image
+                    src={contactImage}
                     alt="Contact"
                     className="w-full h-auto"
                   />

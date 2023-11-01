@@ -10,6 +10,7 @@ import axios from 'axios'
 import Spinner from '@/components/Spinner'
 import CategoriesScroll from '@/components/CategoriesScroll'
 import BannerSlider from '@/components/Banner1'
+import Image from 'next/image'
 
 type Category = {
   _id?: number;
@@ -53,7 +54,7 @@ export default function Home() {
         <h3 className="text-2xl font-semibold mb-4 text-[#5f9231]">Services Include :</h3>
         <ul className="text-lg list-disc pl-4 mb-6 font-normal">
           <li>Expert selection of the perfect pot for your plant</li>
-          <li>Careful repotting with utmost attention to your plant's roots</li>
+          <li>Careful repotting with utmost attention to your plants roots</li>
           <li>High-quality soil and nutrients to promote growth</li>
         </ul>
       </div>

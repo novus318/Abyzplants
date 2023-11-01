@@ -113,8 +113,8 @@ const Profile = () => {
               </h2>
               <div className="flex flex-col items-center space-y-4">
                 <div className="w-32 h-32 rounded-full overflow-hidden">
-                  <img
-                    src={profile.src}
+                  <Image
+                    src={profile}
                     alt="User Profile"
                     className="w-full h-full object-cover"
                   />

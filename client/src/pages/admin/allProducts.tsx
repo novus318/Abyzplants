@@ -3,6 +3,7 @@ import Link from 'next/link';
 import axios from 'axios';
 import Spinner from '@/components/Spinner';
 import AdminSidebar from '@/components/AdminSidebar';
+import { withAuth } from '@/components/withAuth';
 
 interface Product {
   _id: string;
@@ -13,7 +14,7 @@ interface Product {
   code: string;
   image:string;
 }
-const allProducts = () => {
+const AllProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
@@ -117,4 +118,4 @@ const allProducts = () => {
   )
 }
 
-export default allProducts
+export default withAuth(AllProducts);

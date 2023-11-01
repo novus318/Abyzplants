@@ -48,7 +48,7 @@ interface CategoriesScrollProps {
           .catch((error) => {
             window.location.reload();
           });
-      }, []);
+      }, [categoryId]);
   return (
     <>
       {loading ? (

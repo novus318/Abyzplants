@@ -4,7 +4,7 @@ let stripePromise: Promise<Stripe | null>;
 
 const getStripe = (): Promise<Stripe | null> => {
   if (!stripePromise) {
-    stripePromise = loadStripe('pk_test_51O2I2YKXx5O0k1ERrK2dLG1BB2F19YshUkb4RElRaLyn75lpYoWYP3ndKtTRrNUn6OP6azjij2JimmsjLdndXZZe00z6Fnnibo');
+    stripePromise = loadStripe('pk_live_51O2I2YKXx5O0k1EREaaDOUQ29kTPCbReJyaYwMW1joWOFiqMbIijZdOtTtu1eSU4s1lJ4YHpTlwrSl7d7gYka4Q600McB7zaLj');
   }
   return stripePromise;
 };

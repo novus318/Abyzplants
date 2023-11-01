@@ -6,6 +6,7 @@ import Spinner from '@/components/Spinner';
 import { FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { Button, Modal } from 'antd';
+import { withAuth } from '@/components/withAuth';
 
 interface Product {
     _id: string;
@@ -23,9 +24,9 @@ interface Product {
     sizes: string[];
 }
 interface photoUrls{
-    image1: string;
-    image2: string;
-    image3: string;
+    image1: any;
+    image2: any;
+    image3: any;
   }
 const EditProduct = () => {
     const router = useRouter();
@@ -495,4 +496,4 @@ const EditProduct = () => {
     );
 };
 
-export default EditProduct;
+export default withAuth(EditProduct);

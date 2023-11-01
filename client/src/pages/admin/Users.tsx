@@ -2,6 +2,7 @@ import AdminSidebar from '@/components/AdminSidebar';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Spinner from '@/components/Spinner';
+import { withAuth } from '@/components/withAuth';
 
 interface User {
   _id: string;
@@ -34,6 +35,7 @@ const Users = () => {
       axios.delete(`http://localhost:8080/auth/users/${userId}`)
         .then(() => {
           setUsers(users.filter((user) => user._id !== userId));
+          window.location.reload();
         })
         .catch((error) => {
           window.location.reload();
@@ -112,4 +114,4 @@ const Users = () => {
   );
 };
 
-export default Users;
+export default withAuth(Users);

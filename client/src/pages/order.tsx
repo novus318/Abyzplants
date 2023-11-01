@@ -5,7 +5,8 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { format, subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import {subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+
 
 interface Product {
   _id: string;

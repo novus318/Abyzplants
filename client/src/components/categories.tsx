@@ -6,7 +6,7 @@ import Spinner from './Spinner';
 
 type Category = {
   _id?: number;
-  photo?:string;
+  photo?:any;
   name?: string | undefined;
 };
 const Categories = () => {
@@ -39,7 +39,7 @@ const Categories = () => {
             >
               <img
                 src={category.photo}
-                alt={category.name}
+                alt='photo'
                 className="w-full h-40 object-cover"
               />
               <div className="p-4">

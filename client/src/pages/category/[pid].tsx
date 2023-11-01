@@ -19,14 +19,14 @@ interface Product {
   price: number;
   offerPercentage: number;
 }
-type Category = {
+type category = {
   name?: string;
   _id?: number;
 };
-const category = () => {
+const Category = () => {
   const router = useRouter();
   const { pid } = router.query;
-  const [category, setCategory] = useState<Category | null>(null);
+  const [category, setCategory] = useState<category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -35,7 +35,7 @@ const category = () => {
   useEffect(() => {
    if(pid){
     axios
-    .get<{ products: Product[],category:Category}>(`http://localhost:8080/product/get-byCategory/${pid}`)
+    .get<{ products: Product[],category:category}>(`http://localhost:8080/product/get-byCategory/${pid}`)
     .then((response) => {
       setCategory(response.data.category)
       setProducts(response.data.products);
@@ -156,4 +156,4 @@ const category = () => {
   );
 };
 
-export default category
+export default Category;

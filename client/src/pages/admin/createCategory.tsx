@@ -7,6 +7,8 @@ import * as Yup from 'yup';
 import toast from 'react-hot-toast';
 import Spinner from '@/components/Spinner';
 import {Button, Modal} from 'antd'
+import { withAuth } from '@/components/withAuth';
+
 
 interface CreateCategoryResponse {
   success: boolean;
@@ -29,7 +31,7 @@ type selectedCategoryForDeletion = {
 };
 type SelectedCategory = {
   _id?: number;
-  photo?:string;
+  photo?:any;
   name?: string | undefined;
   image?: File | null;
 };
@@ -56,6 +58,7 @@ const CreateCategory = () => {
       _id: category._id ?? undefined,
       name: category.name ?? '',
       image: null,
+      photo:category.photo
     });
     setVisible(true);
   };
@@ -355,4 +358,4 @@ const CreateCategory = () => {
   );
 };
 
-export default CreateCategory;
+export default withAuth(CreateCategory);

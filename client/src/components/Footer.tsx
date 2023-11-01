@@ -63,7 +63,7 @@ const Footer = () => {
           rel="noopener noreferrer"
           className="text-[#e8ba79] hover:text-[#f2fafd] transition-colors duration-300"
         >
-          <img src={loopcod.src} alt="loopcod" className="inline h-4 ml-1" />
+          <Image src={loopcod.src} alt="loopcod" className="inline h-4 ml-1" />
         </a>
       </div>
     </footer>

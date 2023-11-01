@@ -7,6 +7,7 @@ import Spinner from '@/components/Spinner';
 import { Menu, Transition } from '@headlessui/react';
 import ContactIcon from '@/components/ContactIcon';
 
+
 interface Product {
   _id: string;
   name: string;

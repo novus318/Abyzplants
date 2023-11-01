@@ -242,7 +242,7 @@ const Details: React.FC = () => {
 
   useEffect(() => {
     if (pid) getSingleProduct();
-  }, [pid]);
+  }, [pid,getSingleProduct]);
 
   return (
     <>
