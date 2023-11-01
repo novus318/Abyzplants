@@ -40,7 +40,7 @@ interface CategoriesScrollProps {
       };
       useEffect(() => {
         axios
-          .get<{ products: Product[] }>(`http://localhost:8080/product/get-ProductbyCategory/${categoryId}`)
+          .get<{ products: Product[] }>(`http://localhost:8080/api/product/get-ProductbyCategory/${categoryId}`)
           .then((response) => {
             setProducts(response.data.products);
             setLoading(false)

@@ -21,7 +21,7 @@ export default function Home() {
   const [categories,setCategories] = useState<Category[]>([]);
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/category/get-category');
+      const response = await axios.get('http://localhost:8080/api/category/get-category');
       setCategories(response.data.category);
       setLoading(false);
     } catch (error) {

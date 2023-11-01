@@ -20,7 +20,7 @@ const AllProducts = () => {
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   useEffect(() => {
-    axios.get<{ products: Product[] }>('http://localhost:8080/product/get-product')
+    axios.get<{ products: Product[] }>('http://localhost:8080/api/product/get-product')
       .then((response) => {
         setProducts(response.data.products);
         setSearchResults(response.data.products);

@@ -35,7 +35,7 @@ const Category = () => {
   useEffect(() => {
    if(pid){
     axios
-    .get<{ products: Product[],category:category}>(`http://localhost:8080/product/get-byCategory/${pid}`)
+    .get<{ products: Product[],category:category}>(`http://localhost:8080/api/product/get-byCategory/${pid}`)
     .then((response) => {
       setCategory(response.data.category)
       setProducts(response.data.products);
