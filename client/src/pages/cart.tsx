@@ -15,6 +15,7 @@ import ReactInputMask from 'react-input-mask';
 
 const Cart: React.FC = () => {
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [loading, setLoading] = useState(false);
   const { cart, removeItem, changeQuantity,setCart } = useCart();
   const { auth, setAuth } = useAuth();
@@ -65,7 +66,7 @@ const Cart: React.FC = () => {
       phone,
     };
     axios
-      .put(`http://localhost:8080/auth/profile/${auth.user._id}`, updatedProfile)
+      .put(`${apiUrl}/api/auth/profile/${auth.user._id}`, updatedProfile)
       .then((response) => {
         if (response.data.success) {
           setAuth({
@@ -144,7 +145,7 @@ const Cart: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:8080/order/create-order', {
+      const response = await axios.post(`${apiUrl}/api/order/create-order`, {
         orderDetails,
         userDetails,
       });
@@ -170,7 +171,7 @@ const Cart: React.FC = () => {
 
     if (stripe) {
       try {
-        const response = await axios.post('http://localhost:8080/order/checkout-stripe', {
+        const response = await axios.post(`${apiUrl}/api/order/checkout-stripe`, {
           orderDetails: {
             products: cart.map((item) => ({
               _id: item._id,

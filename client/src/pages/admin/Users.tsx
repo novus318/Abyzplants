@@ -12,13 +12,14 @@ interface User {
 }
 
 const Users = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [users, setUsers] = useState<User[]>([]);
   const [searchUsers, setSearchUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/auth/users/role')
+    axios.get(`${apiUrl}/api/auth/users/role`)
       .then((response) => {
         setUsers(response.data.users);
         setSearchUsers(response.data.users);
@@ -32,7 +33,7 @@ const Users = () => {
   const deleteUser = (userId: string, userName: string) => {
     if (window.confirm(`Are you sure you want to delete user ${userName}?`)) {
       // Make an API call to delete the user by userId
-      axios.delete(`http://localhost:8080/auth/users/${userId}`)
+      axios.delete(`${apiUrl}/api/auth/users/${userId}`)
         .then(() => {
           setUsers(users.filter((user) => user._id !== userId));
           window.location.reload();

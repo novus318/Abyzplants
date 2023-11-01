@@ -36,6 +36,7 @@ type SelectedCategory = {
   image?: File | null;
 };
 const CreateCategory = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [categories,setCategories] = useState<Category[]>([]);
   const [loading,setLoading] = useState(true)
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
@@ -72,7 +73,7 @@ const CreateCategory = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/category/get-category');
+      const response = await axios.get(`${apiUrl}/api/category/get-category`);
       setCategories(response.data.category);
       setLoading(false);
     } catch (error) {
@@ -108,7 +109,7 @@ const CreateCategory = () => {
           formData.append('photo', values.categoryImage);
         }
       
-        const response = await axios.post<CreateCategoryResponse>('http://localhost:8080/category/create-category', formData);
+        const response = await axios.post<CreateCategoryResponse>(`${apiUrl}/api/category/create-category`, formData);
       
         if (response.data.success) {
           toast.success(`${response.data.category.name} is created`);
@@ -136,7 +137,7 @@ const CreateCategory = () => {
       }
   
       const response = await axios.put<CreateCategoryResponse>(
-        `http://localhost:8080/category/update-category/${selectedCategory?._id}`,
+        `${apiUrl}/api/category/update-category/${selectedCategory?._id}`,
         formData
       );
   
@@ -160,7 +161,7 @@ const CreateCategory = () => {
       setLoading(true);
 
       if (selectedCategoryForDeletion._id) {
-        const response = await axios.delete(`http://localhost:8080/category/delete-category/${selectedCategoryForDeletion._id}`);
+        const response = await axios.delete(`${apiUrl}/api/category/delete-category/${selectedCategoryForDeletion._id}`);
 
         if (response.data.success) {
           toast.success(`${selectedCategoryForDeletion.name} category has been deleted.`);

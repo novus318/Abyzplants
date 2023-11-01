@@ -8,13 +8,14 @@ import { useAuth } from '@/store/authContext';
 
 const PaymentCompletePage = () => {
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const { cart,setCart } = useCart();
   const { auth } = useAuth();
   const { sessionId } = router.query
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/order/check-payment-status/${sessionId}`);
+        const response = await axios.get(`${apiUrl}/api/order/check-payment-status/${sessionId}`);
         if (response.data.success) {
           createOrder();
         } else {
@@ -54,7 +55,7 @@ const PaymentCompletePage = () => {
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/order/create-order', {
+      const response = await axios.post(`${apiUrl}/api/order/create-order`, {
         orderDetails,
         userDetails,
       });

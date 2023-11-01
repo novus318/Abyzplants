@@ -21,6 +21,8 @@ interface CategoriesScrollProps {
   const CategoriesScroll: React.FC<CategoriesScrollProps> = ({categoryName,categoryId }) => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
     const responsive = {
         desktop: {
           breakpoint: { max: 3000, min: 1024 },
@@ -40,7 +42,7 @@ interface CategoriesScrollProps {
       };
       useEffect(() => {
         axios
-          .get<{ products: Product[] }>(`http://localhost:8080/product/get-ProductbyCategory/${categoryId}`)
+          .get<{ products: Product[] }>(`${apiUrl}/api/product/get-ProductbyCategory/${categoryId}`)
           .then((response) => {
             setProducts(response.data.products);
             setLoading(false)

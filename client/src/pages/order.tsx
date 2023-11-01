@@ -28,6 +28,7 @@ interface Order {
 
 const Order = () => {
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [loading, setLoading] = useState(true);
   const [orderData, setOrderData] = useState<Order[] | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('thisWeek');
@@ -43,7 +44,7 @@ const Order = () => {
             const userId = userData.user._id;
 
             try {
-              const response = await axios.get(`http://localhost:8080/order/get-order/${userId}`);
+              const response = await axios.get(`${apiUrl}/api/order/get-order/${userId}`);
               if (response.data.success) {
                 const filteredOrders = filterOrdersByDate(response.data.orders, selectedFilter);
                 filteredOrders.sort((a, b) => {
@@ -116,7 +117,7 @@ const Order = () => {
     setLoading(true);
     try {
       const newStatus = 'Order Cancelled';
-      const response = await axios.put(`http://localhost:8080/order/orders/${orderId}/status`, { newStatus });
+      const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus });
   
       if (response.status === 200) {
     

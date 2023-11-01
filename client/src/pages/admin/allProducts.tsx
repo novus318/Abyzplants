@@ -15,12 +15,13 @@ interface Product {
   image:string;
 }
 const AllProducts = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
   useEffect(() => {
-    axios.get<{ products: Product[] }>('http://localhost:8080/product/get-product')
+    axios.get<{ products: Product[] }>(`${apiUrl}/api/product/get-product`)
       .then((response) => {
         setProducts(response.data.products);
         setSearchResults(response.data.products);

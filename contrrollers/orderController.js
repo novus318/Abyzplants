@@ -2,12 +2,13 @@ import orderModel from '../models/orderModel.js'
 import userModel from "../models/userModel.js";
 import stripe from 'stripe';
 import dotenv from 'dotenv'
-// import messagebird from 'messagebird';
-dotenv.config({ path: './.env' })
+dotenv.config("../.env")
+
+const apiUrl = process.env.REACT_APP_API_URL;
+const appUrl = process.env.API_URL;
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeInstance = stripe(stripeSecretKey);
 
-const YOUR_DOMAIN = 'http://localhost:3000';
 
 export const createOrderController=async(req,res)=>{
     const { orderDetails, userDetails } = req.body;
@@ -15,7 +16,7 @@ export const createOrderController=async(req,res)=>{
      
         const products = orderDetails.products
         const productsWithImageUrls = await Promise.all(products.map(async product => {
-          const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+          const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
           return {
             _id:product._id ,
             code: product.code,
@@ -138,8 +139,8 @@ export const getOrdersByUserIdController = async (req, res) => {
           },
         ],
         mode: 'payment',
-        success_url: `${YOUR_DOMAIN}/payment-complete/{CHECKOUT_SESSION_ID}`,
-        cancel_url: `${YOUR_DOMAIN}/payment-complete/{CHECKOUT_SESSION_ID}`,
+        success_url: `${appUrl}/payment-complete/{CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/payment-complete/{CHECKOUT_SESSION_ID}`,
       });
   
       res.json({ sessionId: session.id });

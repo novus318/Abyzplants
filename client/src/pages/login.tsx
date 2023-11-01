@@ -15,6 +15,7 @@ import Layout from '@/components/Layout';
 const AuthPage = () => {
   const { auth, setAuth } = useAuth();
   const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [error, setError] = useState<string | null>(null);
   const [isSignup, setIsSignup] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
@@ -47,14 +48,14 @@ const AuthPage = () => {
       try {
         let res;
         if (isSignup) {
-          res = await axios.post('http://localhost:8080/auth/signup', {
+          res = await axios.post(`${apiUrl}/api/auth/signup`, {
             name: values.name,
             email: values.email,
             phone: values.phone,
             password: values.password,
           });
         } else {
-          res = await axios.post('http://localhost:8080/auth/login', {
+          res = await axios.post(`${apiUrl}/api/auth/login`, {
             email: values.email,
             password: values.password,
           });

@@ -31,6 +31,7 @@ interface photoUrls{
 const EditProduct = () => {
     const router = useRouter();
     const { pid } = router.query;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const [loading, setLoading] = useState(true);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [plantCare, setPlantCare] = useState<string[]>([]);
@@ -58,7 +59,7 @@ const EditProduct = () => {
 
     const getSingleProduct = async () => {
         try {
-            const { data } = await axios.get(`http://localhost:8080/product/get-product/${pid}`);
+            const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
             setProduct(data.product);
             setPhotos(data.photoUrls)
             setSelectedSizes(data.product.sizes);
@@ -102,7 +103,7 @@ const EditProduct = () => {
             formData.append('sizes', JSON.stringify(sortedSizes));
 
             const response = await axios.put(
-                `http://localhost:8080/product/update-product/${pid}`,
+                `${apiUrl}/api/product/update-product/${pid}`,
                 formData
             );
 
@@ -159,7 +160,7 @@ const EditProduct = () => {
     const handleDelete = async () => {
         try {
             setLoading(true)
-            const response = await axios.delete(`http://localhost:8080/product/delete-product/${pid}`);
+            const response = await axios.delete(`${apiUrl}/api/product/delete-product/${pid}`);
             if (response.status === 200) {
                 setLoading(false)
                 toast.success(`Product deleted successfully`);

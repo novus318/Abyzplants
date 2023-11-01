@@ -34,7 +34,7 @@ const CreateProduct = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [unit, setUnit] = useState('cm');
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const validationSchema = Yup.object().shape({
     name: Yup.string().required('Product name is required'),
     code: Yup.string()
@@ -108,7 +108,7 @@ const CreateProduct = () => {
       }
 
       try {
-        const response = await axios.post('http://localhost:8080/product/create-product', formData);
+        const response = await axios.post(`${apiUrl}/api/product/create-product`, formData);
         if (response.data.success) {
           toast.success('Product created successfully!');
           formik.resetForm();
@@ -163,7 +163,7 @@ const CreateProduct = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/category/get-category');
+        const response = await axios.get(`${apiUrl}/api/category/get-category`);
         setCategories(response.data.category);
         setLoading(false);
       } catch (error) {

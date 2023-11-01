@@ -38,11 +38,7 @@ export default function Header() {
   const router = useRouter();
   const { auth, setAuth } = useAuth()
   const [categories, setCategories] = useState<Category[]>([]);
-
-
-
-  
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const getCategoryMenu = () => (
     <AntdMenu>
       {categories.map((category) => (
@@ -67,7 +63,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/category/get-category');
+        const response = await axios.get(`${apiUrl}/api/category/get-category`);
         setCategories(response.data.category);
   
       } catch (error) {

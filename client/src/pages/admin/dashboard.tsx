@@ -35,6 +35,7 @@ interface Product {
 }
 
 const Dashboard: React.FC = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ const Dashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    Axios.get('http://localhost:8080/order/get-allOrders')
+    Axios.get(`${apiUrl}/api/order/get-allOrders`)
       .then((response) => {
         if (response.data.success) {
           const sortedOrders = response.data.orders.sort((a: Order, b: Order) => {
@@ -187,7 +188,7 @@ const Dashboard: React.FC = () => {
     return new Date(dateTime).toLocaleString(undefined, options);
   };
   const handleStatusChange = (orderId: string, newStatus: string) => {
-    Axios.put(`http://localhost:8080/order/orders/${orderId}/status`, { newStatus })
+    Axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus })
       .then((response) => {
         if (response.data.success) {
           const updatedOrders = orders.map((order) =>

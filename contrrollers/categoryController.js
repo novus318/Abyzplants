@@ -2,6 +2,10 @@ import categoryModel from "../models/categoryModel.js";
 import productModel from '../models/productModel.js' 
 import slugify from "slugify";
 import fs from 'fs'
+import dotenv from 'dotenv'
+dotenv.config({ path: './.env' })
+const apiUrl = process.env.REACT_APP_API_URL;
+
 export const createCategoryController=async(req,res)=>{
     try {
         const {name}=req.fields
@@ -66,7 +70,7 @@ export const categoryController=async(req,res)=>{
         const category=await categoryModel.find({}).select('-photo')
 
         const productsWithImageUrls = await Promise.all(category.map(async product => {
-            const photoUrl = `http://localhost:8080/category/category-photo/${product._id}`;
+            const photoUrl = `${apiUrl}/api/category/category-photo/${product._id}`;
             return {
                 ...product._doc,
                 photo: photoUrl,

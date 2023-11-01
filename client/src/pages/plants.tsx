@@ -30,12 +30,13 @@ const Plants: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [sortOrder, setSortOrder] = useState('');
 
   useEffect(() => {
     axios
-      .get<{ products: Product[] }>('http://localhost:8080/product/get-product')
+      .get<{ products: Product[] }>(`${apiUrl}/api/product/get-product`)
       .then((response) => {
         setProducts(response.data.products);
         setLoading(false);
@@ -47,7 +48,7 @@ const Plants: React.FC = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:8080/category/get-category');
+        const response = await axios.get(`${apiUrl}/api/category/get-category`);
         setCategories(response.data.category);
         setLoading(false);
       } catch (error) {

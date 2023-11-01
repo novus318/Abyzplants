@@ -26,6 +26,7 @@ type category = {
 const Category = () => {
   const router = useRouter();
   const { pid } = router.query;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [category, setCategory] = useState<category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,7 @@ const Category = () => {
   useEffect(() => {
    if(pid){
     axios
-    .get<{ products: Product[],category:category}>(`http://localhost:8080/product/get-byCategory/${pid}`)
+    .get<{ products: Product[],category:category}>(`${apiUrl}/api/product/get-byCategory/${pid}`)
     .then((response) => {
       setCategory(response.data.category)
       setProducts(response.data.products);

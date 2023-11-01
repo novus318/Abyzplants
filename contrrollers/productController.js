@@ -3,9 +3,9 @@ import productModel from '../models/productModel.js'
 import categoryModel from "../models/categoryModel.js";
 import fs from 'fs'
 import dotenv from 'dotenv'
-dotenv.config()
+dotenv.config("../.env")
 
-
+const apiUrl = process.env.REACT_APP_API_URL;
 export const createProductController=async(req,res)=>{
     try {
         const {name,code,slug,description,plantCare,price,sizes,category,quantity,offerPercentage}=req.fields
@@ -59,7 +59,7 @@ export const getProductController = async (req, res) => {
         const products = await productModel.find({}).select('-photo').limit(15).sort({ createdAt: -1 });
 
         const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
             return {
                 ...product._doc,
                 image: photoUrl,
@@ -86,7 +86,7 @@ export const getRecommendedProductController= async(req,res)=>{
     try {
         const products=await productModel.find({}).populate('category').select('-photo').limit(15).sort({createdAt:1})
         const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
             return {
                 ...product._doc,
                 image: photoUrl,
@@ -123,11 +123,10 @@ export const getSingleProductController = async (req, res) => {
       }
       
       // Construct the image URLs
-      const photoBaseUrl = 'http://localhost:8080/product/';
       const photoUrls = {
-        image1: `${photoBaseUrl}product-photo1/${product._id}`,
-        image2: `${photoBaseUrl}product-photo2/${product._id}`,
-        image3: `${photoBaseUrl}product-photo3/${product._id}`,
+        image1: `${apiUrl}/api/product/product-photo1/${product._id}`,
+        image2: `${apiUrl}/api/product/product-photo2/${product._id}`,
+        image3: `${apiUrl}/api/product/product-photo3/${product._id}`,
       };
     
   
@@ -260,7 +259,7 @@ export const getCategoryController = async (req, res) => {
       }
       const products = await productModel.find({ category: categoryId });
       const productsWithImageUrls = await Promise.all(products.map(async product => {
-        const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+        const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
         return {
             ...product._doc,
             image: photoUrl,
@@ -279,7 +278,7 @@ export const relatedProductontroller =async(req,res)=>{
             _id:{$ne:pid}
         }).select('-photo').limit(15).populate("category")
         const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
             return {
                 ...product._doc,
                 image: photoUrl,
@@ -308,7 +307,7 @@ export const getProductByCategoryController = async (req, res) => {
       }
       const products = await productModel.find({ category: categoryId }).select('-photo').limit(30);;
       const productsWithImageUrls = await Promise.all(products.map(async product => {
-        const photoUrl = `http://localhost:8080/product/product-photo1/${product._id}`;
+        const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
         return {
             ...product._doc,
             image: photoUrl,

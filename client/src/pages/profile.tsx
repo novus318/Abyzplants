@@ -15,7 +15,7 @@ const Profile = () => {
   const [isEditable, setIsEditable] = useState(false);
   const [loading, setLoading] = useState(true);
   const { auth, setAuth } = useAuth();
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [zip, setZip] = useState('');
@@ -72,7 +72,7 @@ const Profile = () => {
     };
 
     axios
-      .put(`http://localhost:8080/auth/profile/${auth.user._id}`, updatedProfile)
+      .put(`${apiUrl}/api/auth/profile/${auth.user._id}`, updatedProfile)
       .then((response) => {
         if (response.data.success) {
           setAuth({

@@ -35,6 +35,8 @@ const Bill: React.FC = () => {
   const router = useRouter();
   const { pid } = router.query;
   const componentRef = useRef(null);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
 
   const handlePrint = useReactToPrint({
     content: () => componentRef.current,
@@ -43,7 +45,7 @@ const Bill: React.FC = () => {
   useEffect(() => {
     if (pid) {
       axios
-        .get(`http://localhost:8080/order/get-orderById/${pid}`)
+        .get(`${apiUrl}/api/order/get-orderById/${pid}`)
         .then((response) => {
           setOrder(response.data.order);
           setLoading(false);

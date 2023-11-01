@@ -17,11 +17,12 @@ type Category = {
   name?: string | undefined;
 };
 export default function Home() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const [loading,setLoading] = useState(true)
   const [categories,setCategories] = useState<Category[]>([]);
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/category/get-category');
+      const response = await axios.get(`${apiUrl}/api/category/get-category`);
       setCategories(response.data.category);
       setLoading(false);
     } catch (error) {

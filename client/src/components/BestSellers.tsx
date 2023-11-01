@@ -16,10 +16,10 @@ interface Product {
 const BestSellers = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     axios
-      .get<{ products: Product[] }>('http://localhost:8080/product/get-product')
+      .get<{ products: Product[] }>(`${apiUrl}/api/product/get-product`)
       .then((response) => {
         setProducts(response.data.products);
         setLoading(false);

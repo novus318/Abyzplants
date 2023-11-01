@@ -23,12 +23,12 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 //routes
-app.use('/auth',authRoutes)
-app.use('/category',categoryRoutes)
-app.use('/product',productRoutes)
-app.use('/order',orderRoutes)
+app.use('/api/auth',authRoutes)
+app.use('/api/category',categoryRoutes)
+app.use('/api/product',productRoutes)
+app.use('/api/order',orderRoutes)
 //rest api
-app.get('/',(req,res)=>{
+app.get('/api',(req,res)=>{
     res.send({
         message:'welcome to app'
     })
