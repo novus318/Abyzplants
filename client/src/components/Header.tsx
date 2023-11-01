@@ -9,7 +9,6 @@ import { useAuth } from '@/store/authContext';
 import { useRouter } from 'next/router';
 import { Dropdown, Menu as AntdMenu } from 'antd';
 import axios from 'axios';
-import Image from 'next/image';
 
 const { SubMenu } = AntdMenu;
 const navigation = [
@@ -85,16 +84,16 @@ export default function Header() {
         <>
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative flex items-center justify-between h-20">
-              <Image
+              <img
                 className="h-8 w-auto rounded-md"
-                src={UAEFlag}
+                src={UAEFlag.src}
                 alt="UAE Flag"
               />
               <Link href='/'>
                 <div className="flex-shrink-0">
-                  <Image
+                  <img
                     className="h-10 w-auto"
-                    src={Logo}
+                    src={Logo.src}
                     alt="Your Company"
                   />
                 </div>
@@ -128,10 +127,10 @@ export default function Header() {
                       <Menu.Button className="relative flex rounded-full">
                         <span className="absolute -inset-1.5" />
                         <span className="sr-only">Open user menu</span>
-                        <Image
+                        <img
                           className="h-10 w-10 rounded-full"
-                          src={UserProfile}
-                          alt=""
+                          src={UserProfile.src}
+                          alt="pro"
                         />
                       </Menu.Button>
                     </div>

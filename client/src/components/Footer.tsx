@@ -1,7 +1,6 @@
 import React from 'react';
 import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
 import loopcod from '@/images/loopcod.webp';
-import Image from 'next/image';
 
 const Footer = () => {
   return (
@@ -63,7 +62,7 @@ const Footer = () => {
           rel="noopener noreferrer"
           className="text-[#e8ba79] hover:text-[#f2fafd] transition-colors duration-300"
         >
-          <Image src={loopcod.src} alt="loopcod" className="inline h-4 ml-1" />
+          <img src={loopcod.src} alt="loopcod" className="inline h-4 ml-1" />
         </a>
       </div>
     </footer>

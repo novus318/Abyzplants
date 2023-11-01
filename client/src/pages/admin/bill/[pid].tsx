@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import logo from '@/images/logo.webp'
 import React, { useEffect, useState, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import Image from 'next/image';
 import { withAuth } from '@/components/withAuth';
 
 interface Order {
@@ -68,7 +67,7 @@ const Bill: React.FC = () => {
         </div>
         <div ref={componentRef} className="bg-white p-4 px-8 h-full w-full text-black print:block">
           <div className="text-center py-2">
-            <Image src={logo} alt="Your Logo" className="w-auto h-10 mx-auto mb-4" />
+            <img src={logo.src} alt="Your Logo" className="w-auto h-10 mx-auto mb-4" />
           </div>
           <div className="my-5">
             <div className="flex justify-between mb-2">
