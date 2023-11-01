@@ -102,7 +102,7 @@ const Category = () => {
             </div>
             <p className="mb-4 text-gray-600">Total Plants: {filteredProducts.length}</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-14">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredProducts.length === 0 ? (
                 <div className="h-[550px] flex items-center justify-center">
                   <p>No plants available</p>
