@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-[#292929] text-white py-6">
       <div className="container mx-auto flex flex-col-reverse md:flex-row justify-between items-center px-4">
         <div className="md:w-1/3 mb-6 md:mb-0 text-center">
-          <h3 className="text-2xl font-semibold mb-2">Abyzplants</h3>
+          <h3 className="text-2xl font-semibold mb-2">Abyzplants.com</h3>
           <p className="text-gray-300 text-sm">
             Abyz Plants the definitive online destination for exceptional indoor and outdoor plants
             and a delightful selection of home accessories. Whether it is for offices,malls,hotels or any setting

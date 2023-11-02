@@ -7,8 +7,10 @@ import UserProfile from '@/images/user.webp';
 import Link from 'next/link';
 import { useAuth } from '@/store/authContext';
 import { useRouter } from 'next/router';
-import { Dropdown, Menu as AntdMenu } from 'antd';
+import { Dropdown, Menu as AntdMenu, Badge } from 'antd';
 import axios from 'axios';
+import { useCart } from '@/store/cartContext';
+import { FaShoppingBag } from 'react-icons/fa';
 
 const { SubMenu } = AntdMenu;
 const navigation = [
@@ -24,8 +26,8 @@ interface Product {
   name: string;
   description: string;
   category: {
-    name:string;
-    _id:number;
+    name: string;
+    _id: number;
   }
   price: number;
   offerPercentage: number;
@@ -37,6 +39,7 @@ type Category = {
 export default function Header() {
   const router = useRouter();
   const { auth, setAuth } = useAuth()
+  const { cart } = useCart()
   const [categories, setCategories] = useState<Category[]>([]);
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const getCategoryMenu = () => (
@@ -65,7 +68,7 @@ export default function Header() {
       try {
         const response = await axios.get(`${apiUrl}/api/category/get-category`);
         setCategories(response.data.category);
-  
+
       } catch (error) {
         window.location.reload()
       }
@@ -81,19 +84,30 @@ export default function Header() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative flex items-center justify-between h-20">
               <img
-                className="h-8 w-auto rounded-md"
+                className="h-5 md:h-8 w-auto rounded-md"
                 src={UAEFlag.src}
                 alt="UAE Flag"
               />
               <Link href='/'>
                 <div className="flex-shrink-0">
                   <img
-                    className="h-10 w-auto"
+                    className="h-8 md:h-10 w-auto"
                     src={Logo.src}
                     alt="Your Company"
                   />
                 </div>
               </Link>
+              {auth?.user && (
+              <Link
+                    href="/cart"
+                    className='py-2 md:hidden'>
+                       <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
+                      <div className='text-[#a14e3a] text-xl'>
+                        <FaShoppingBag />
+                      </div>
+                    </Badge>
+                  </Link>
+              )}
               <div className="hidden md:flex md:space-x-4">
                 {navigation.map((item) => (
                   <a
@@ -153,16 +167,6 @@ export default function Header() {
                         <Menu.Item>
                           {({ active }) => (
                             <Link
-                              href="/cart"
-                              className={classNames(active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700')}
-                            >
-                              Cart
-                            </Link>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <Link
                               href="/order"
                               className={classNames(active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700')}
                             >
@@ -183,6 +187,15 @@ export default function Header() {
                       </Menu.Items>
                     </Transition>
                   </Menu>
+                  <Link
+                    href="/cart"
+                    className='px-3 py-2 '>
+                       <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
+                      <div className='text-[#a14e3a] text-2xl'>
+                        <FaShoppingBag />
+                      </div>
+                    </Badge>
+                  </Link>
 
                 </>) : (<Link href='/login' className="px-4 py-2 netflix font-medium rounded-3xl bg-[#a14e3a] text-white hover:bg-[#79bd3f] transition-colors duration-300 ease-in-out">
                   Login
@@ -240,9 +253,9 @@ export default function Header() {
                   )}
                 >
                   {item.name}
-                </a> 
+                </a>
               ))}
-                  <Dropdown overlay={getCategoryMenu()} placement="bottomLeft">
+              <Dropdown overlay={getCategoryMenu()} placement="bottomLeft">
                 <a
                   className={classNames(
                     'text-[#a14e3a] hover:text-[#79bd3f]',
@@ -262,15 +275,6 @@ export default function Header() {
                     )}
                   >
                     Your Profile
-                  </Link>
-                  <Link
-                    href='/cart'
-                    className={classNames(
-                      'text-[#a14e3a] hover:text-[#79bd3f]',
-                      'block px-3 py-2 text-lg font-medium netflix',
-                    )}
-                  >
-                    Cart
                   </Link>
                   <Link
                     href='/order'

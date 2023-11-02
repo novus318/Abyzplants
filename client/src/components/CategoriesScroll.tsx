@@ -65,7 +65,7 @@ interface CategoriesScrollProps {
               containerClass="carousel-container"
               additionalTransfrom={0}
               sliderClass=""
-              itemClass="p-2 sm:p-3 md:p-4 lg:p-5 xl:p-6"
+              itemClass="p-2 p-3 md:p-4 lg:p-5 xl:p-6"
             >
               {products?.map((item: any) => (
                   <Link href={`/details/${item._id}`} key={item._id}>
@@ -81,22 +81,22 @@ interface CategoriesScrollProps {
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-full h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
+                        className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                       />
                       <div className="p-4">
-                        <h3 className="font-semibold mb-2 uppercase sm:text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.name.substring(0, 10)}..
+                        <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
+                          {item.name.substring(0, 13)}..
                         </h3>
-                        <p className="text-gray-700 mb-2 sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                        <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
                           {item.description.substring(0, 43)}...
                         </p>
                         <div className="flex items-center mb-2">
                           {item.offerPercentage > 0 ? (
                             <>
-                              <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg mr-2">
+                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
                                 <s>{Number(item.price).toFixed(1)}</s>
                               </span>
-                              <span className="text-[#5f9231] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                              <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                                 {(
                                   ((100 - item.offerPercentage) / 100) * item.price
                                 ).toFixed(1)}{' '}
@@ -104,7 +104,7 @@ interface CategoriesScrollProps {
                               </span>
                             </>
                           ) : (
-                            <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                            <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                               {Number(item.price).toFixed(2)} AED
                             </span>
                           )}

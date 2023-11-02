@@ -21,7 +21,7 @@ interface Product {
   image: string;
   description: string;
   price: number;
-  quantity:number;
+  quantity: number;
   offerPercentage: number;
   category: {
     _id: string;
@@ -30,7 +30,7 @@ interface Product {
   sizes: string[];
   plantCare: String[];
 }
-interface photoUrls{
+interface photoUrls {
   image1: string;
   image2: string;
   image3: string;
@@ -261,26 +261,26 @@ const Details: React.FC = () => {
                     {selectedImage && <img src={selectedImage} alt="Product Image" className="w-full h-full object-cover" />}
                   </div>
                   <div className="mt-6 flex justify-center gap-4">
-                    {photos &&  (
-                    <>
-                      <img
-                        src={photos.image1}
-                        alt='ThumbnailImage1'
-                        className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                        onClick={() => handleThumbnailClick(photos.image1)}
-                      />
-                      <img
-                      src={photos.image2}
-                      alt='ThumbnailImage2'
-                      className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                      onClick={() => handleThumbnailClick(photos.image2)}
-                    />
-                    <img
-                    src={photos.image3}
-                    alt='ThumbnailImage3'
-                    className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                    onClick={() => handleThumbnailClick(photos.image3)}
-                  /></>
+                    {photos && (
+                      <>
+                        <img
+                          src={photos.image1}
+                          alt='ThumbnailImage1'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(photos.image1)}
+                        />
+                        <img
+                          src={photos.image2}
+                          alt='ThumbnailImage2'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(photos.image2)}
+                        />
+                        <img
+                          src={photos.image3}
+                          alt='ThumbnailImage3'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(photos.image3)}
+                        /></>
                     )}
                   </div>
                 </div>
@@ -343,38 +343,40 @@ const Details: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 flex space-x-4">
-                      {product.quantity > 0 ? (
-              <>
-                <button
-                  type="button"
-                  className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#8d4533] transition-colors duration-300"
-                  onClick={handleAddToCart}
-                >
-                  Add to Cart
-                </button>
-                <button
-                  type="button"
-                  className="bg-[#a14e3a] text-white py-2 px-4 rounded-md hover-bg-[#8d4533] transition-colors duration-300"
-                  onClick={handleBuyNow}
-                >
-                  Buy now
-                </button>
-              </>
-            ) : (
-              <div className="restocking-soon flex items-center text-red-500 text-lg font-medium">
-                Restocking Soon
-                <FaExclamationCircle className="icon text-red-500 ml-2" />
-              </div>
-            )}
+                      <div className="mt-4 flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                        {product.quantity > 0 ? (
+                          <>
+                            <button
+                              type="button"
+                              className="bg-[#5f9231] text-white py-2 px-4 md:px-6 rounded-md hover:bg-[#8d4533] transition-colors duration-300"
+                              onClick={handleAddToCart}
+                            >
+                              Add to Cart
+                            </button>
+                            <button
+                              type="button"
+                              className="bg-[#a14e3a] text-white py-2 px-4 md:px-6 rounded-md hover-bg-[#8d4533] transition-colors duration-300"
+                              onClick={handleBuyNow}
+                            >
+                              Buy now
+                            </button>
+                          </>
+                        ) : (
+                          <div className="restocking-soon flex items-center text-red-500 text-lg font-medium">
+                            Restocking Soon
+                            <FaExclamationCircle className="icon text-red-500 ml-2" />
+                          </div>
+                        )}
                         <button
                           type="button"
-                          className="bg-[#333] text-white py-2 px-4 rounded-md hover:bg-[#444] transition-colors duration-300"
+                          className="bg-[#333] text-white py-2 px-4 md:px-6 rounded-md hover:bg-[#444] flex items-center space-x-2 transition-colors duration-300"
                           onClick={handleShare}
                         >
-                          <FaShare /> Share
+                          <FaShare className="text-lg mr-2" />
+                          Share
                         </button>
                       </div>
+
                       <div className="my-3">
                         <label className="text-lg font-semibold">Select Delivery Location:</label>
                         <Select
@@ -394,23 +396,27 @@ const Details: React.FC = () => {
                       <p className="text-lg">
                         <strong>{selectedLocation.name}:</strong> {selectedLocation.days}
                       </p>
-                      {product.plantCare?.length > 0 && (<div className="bg-[#f5f5f5] p-6 rounded-lg shadow-md my-6">
-                        <h2 className="text-2xl font-semibold mb-4">Plant Care</h2>
-                        <ul className="grid grid-cols-1 gap-4">
-                          {product?.plantCare?.map((point, index) => (
-                            <li key={index} className="flex items-center">
-                              <span className="text-[#5f9231] mr-2"><FaArrowRight /></span>
-                              <p className="text-gray-700">{point}</p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>)}
-                      <div className="mt-8">
-                        <span className="text-xl text-[#5f9231] font-semibold">Details:</span>
-                        <p className="text-gray-600 mt-2 text-lg">
-                          {product.description}
-                        </p>
-                      </div>
+                      {product.plantCare?.length > 0 && (
+                          <div className="bg-[#f5f5f5] p-4 md:p-6 rounded-lg shadow-md my-6">
+                            <h2 className="text-base md:text-lg lg:text-xl font-semibold mb-4">Plant Care</h2>
+                            <ul className="space-y-2">
+                              {product?.plantCare?.map((point, index) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="text-[#5f9231] mt-1 mr-1 md:mt-0 md:mr-2">
+                                    <FaArrowRight />
+                                  </span>
+                                  <p className="text-base md:text-lg lg:text-xl text-gray-700">{point}</p>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        <div className="mt-4 md:mt-8">
+                          <span className="text-lg md:text-xl lg:text-2xl text-[#5f9231] font-semibold">Details:</span>
+                          <p className="text-base md:text-lg lg:text-xl text-gray-600 mt-2">
+                            {product.description}
+                          </p>
+                        </div>
                     </>
                   )}
                 </div>
@@ -442,22 +448,22 @@ const Details: React.FC = () => {
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="w-full hover:scale-105 h-auto object-cover sm:h-48 md:h-56 lg:h-64 xl:h-72"
+                          className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                         />
                         <div className="p-4">
-                          <h3 className="font-semibold mb-2 uppercase sm:text-xs md:text-sm lg:text-base xl:text-lg">
-                            {item.name.substring(0, 10)}..
+                          <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
+                            {item.name.substring(0, 13)}..
                           </h3>
-                          <p className="text-gray-700 mb-2 sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                          <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
                             {item.description.substring(0, 43)}...
                           </p>
                           <div className="flex items-center mb-2">
                             {item.offerPercentage > 0 ? (
                               <>
-                                <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg mr-2">
+                                <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
                                   <s>{Number(item.price).toFixed(1)}</s>
                                 </span>
-                                <span className="text-[#5f9231] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                                   {(
                                     ((100 - item.offerPercentage) / 100) * item.price
                                   ).toFixed(1)}{' '}
@@ -465,7 +471,7 @@ const Details: React.FC = () => {
                                 </span>
                               </>
                             ) : (
-                              <span className="text-[#a14e3a] font-semibold sm:text-xs md:text-sm lg:text-base xl:text-lg">
+                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                                 {Number(item.price).toFixed(2)} AED
                               </span>
                             )}
