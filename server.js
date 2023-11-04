@@ -24,7 +24,7 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 //routes
-app.use('/images', express.static(path.join(new URL(import.meta.url).pathname, '..', 'images')));
+app.use('/api/images', express.static(path.join(new URL(import.meta.url).pathname, '..', 'images')));
 app.use('/api/auth',authRoutes)
 app.use('/api/category',categoryRoutes)
 app.use('/api/product',productRoutes)
