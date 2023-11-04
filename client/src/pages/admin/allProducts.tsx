@@ -10,6 +10,11 @@ interface Product {
   name: string;
   description: string;
   price: number;
+  photo:{
+    image1:string;
+    image2:string;
+    image3:string;
+  }
   offerPercentage: number;
   code: string;
   image:string;
@@ -83,7 +88,7 @@ const AllProducts = () => {
                     </div>
                   )}
                   <img
-                    src={item.image}
+                    src={item.photo.image1}
                     alt={item.name}
                     className="w-full h-72 object-cover"
                   />

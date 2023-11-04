@@ -10,7 +10,11 @@ import ContactIcon from '@/components/ContactIcon';
 interface Product {
   _id: string;
   name: string;
-  image: string;
+  photo:{
+    image1: string;
+    image2: string;
+    image3: string;
+  }
   description: string;
   category: {
     name:string;
@@ -120,7 +124,7 @@ const Category = () => {
                         </div>
                       )}
                       <img
-                        src={item.image}
+                        src={item.photo.image1}
                         alt={item.name}
                         className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                       />

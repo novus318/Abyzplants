@@ -41,18 +41,9 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   photo: {
-    image1: {
-      data: Buffer,
-      contentType: String,
-    },
-    image2: {
-      data: Buffer,
-      contentType: String,
-    },
-    image3: {
-      data: Buffer,
-      contentType: String,
-    },
+    image1:String,
+    image2:String,
+    image3:String,
   },
   offerPercentage:{
     type: Number,

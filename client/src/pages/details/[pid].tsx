@@ -18,7 +18,11 @@ interface Product {
   _id: string;
   code: string;
   name: string;
-  image: string;
+  photo:{
+    image1: string;
+    image2: string;
+    image3: string;
+  }
   description: string;
   price: number;
   quantity: number;
@@ -30,14 +34,7 @@ interface Product {
   sizes: string[];
   plantCare: String[];
 }
-interface photoUrls {
-  image1: string;
-  image2: string;
-  image3: string;
-}
-interface Image {
-  url: string;
-}
+
 interface CartItem {
   _id: string;
   code: string;
@@ -65,7 +62,6 @@ const Details: React.FC = () => {
   const { addToCart } = useCart();
   const [selectedSizeError, setSelectedSizeError] = useState<string | null>(null);
   const [product, setProduct] = useState<Product | null>(null);
-  const [photos, setPhotos] = useState<photoUrls | null>(null);
   const [SimilarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -217,9 +213,8 @@ const Details: React.FC = () => {
       const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
       setProduct(data.product);
       getSimilarProduct(data?.product._id, data?.product.category._id);
-      if (data.photoUrls) {
-        setPhotos(data.photoUrls)
-        setSelectedImage(data.photoUrls.image1);
+      if (data.product.photo) {
+        setSelectedImage(data.product.photo.image1);
       }
       setLoading(false);
     } catch (error) {
@@ -261,25 +256,25 @@ const Details: React.FC = () => {
                     {selectedImage && <img src={selectedImage} alt="Product Image" className="w-full h-full object-cover" />}
                   </div>
                   <div className="mt-6 flex justify-center gap-4">
-                    {photos && (
+                    {product && (
                       <>
                         <img
-                          src={photos.image1}
+                          src={product.photo?.image1}
                           alt='ThumbnailImage1'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(photos.image1)}
+                          onClick={() => handleThumbnailClick(product.photo?.image1)}
                         />
                         <img
-                          src={photos.image2}
+                          src={product.photo?.image2}
                           alt='ThumbnailImage2'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(photos.image2)}
+                          onClick={() => handleThumbnailClick(product.photo?.image2)}
                         />
                         <img
-                          src={photos.image3}
+                          src={product.photo?.image3}
                           alt='ThumbnailImage3'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(photos.image3)}
+                          onClick={() => handleThumbnailClick(product.photo?.image3)}
                         /></>
                     )}
                   </div>
@@ -446,7 +441,7 @@ const Details: React.FC = () => {
                           </div>
                         )}
                         <img
-                          src={item.image}
+                          src={item.photo.image1}
                           alt={item.name}
                           className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                         />

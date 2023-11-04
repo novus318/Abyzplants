@@ -84,10 +84,47 @@ export default function Header() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="relative flex items-center justify-between h-20">
               <img
-                className="h-5 md:h-8 w-auto rounded-md"
+                className="md:h-8 w-auto rounded-md hidden md:block"
                 src={UAEFlag.src}
                 alt="UAE Flag"
               />
+
+              <div className="md:hidden">
+                <Disclosure.Button className="inline-flex items-center justify-center p-2 text-[#79bd3f] hover:text-[#a14e3a]">
+                  <span className="sr-only">Open main menu</span>
+                  {open ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 6h16M4 12h16m-7 6h7"
+                      />
+                    </svg>
+                  )}
+                </Disclosure.Button>
+              </div>
               <Link href='/'>
                 <div className="flex-shrink-0">
                   <img
@@ -97,16 +134,21 @@ export default function Header() {
                   />
                 </div>
               </Link>
+              <img
+                className="h-5 md:h-8 w-auto rounded-md md:hidden"
+                src={UAEFlag.src}
+                alt="UAE Flag"
+              />
               {auth?.user && (
-              <Link
-                    href="/cart"
-                    className='py-2 md:hidden'>
-                       <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
-                      <div className='text-[#a14e3a] text-xl'>
-                        <FaShoppingBag />
-                      </div>
-                    </Badge>
-                  </Link>
+                <Link
+                  href="/cart"
+                  className='py-2 md:hidden'>
+                  <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
+                    <div className='text-[#a14e3a] text-xl'>
+                      <FaShoppingBag />
+                    </div>
+                  </Badge>
+                </Link>
               )}
               <div className="hidden md:flex md:space-x-4">
                 {navigation.map((item) => (
@@ -190,7 +232,7 @@ export default function Header() {
                   <Link
                     href="/cart"
                     className='px-3 py-2 '>
-                       <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
+                    <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
                       <div className='text-[#a14e3a] text-2xl'>
                         <FaShoppingBag />
                       </div>
@@ -201,46 +243,8 @@ export default function Header() {
                   Login
                 </Link>)}
               </div>
-              <div className="md:hidden">
-                <Disclosure.Button className="inline-flex items-center justify-center p-2 text-[#79bd3f] hover:text-[#a14e3a]">
-                  <span className="sr-only">Open main menu</span>
-                  {open ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  ) : (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16m-7 6h7"
-                      />
-                    </svg>
-                  )}
-                </Disclosure.Button>
-              </div>
             </div>
           </div>
-
-
           <Disclosure.Panel className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navigation.map((item) => (

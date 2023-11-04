@@ -77,7 +77,7 @@ const BestSellers = () => {
                       </div>
                     )}
                     <img
-                      src={item.image}
+                      src={item.photo.image1}
                       alt={item.name}
                       className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
                     />

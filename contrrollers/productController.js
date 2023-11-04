@@ -2,7 +2,10 @@ import slugify from 'slugify'
 import productModel from '../models/productModel.js' 
 import categoryModel from "../models/categoryModel.js";
 import fs from 'fs'
+import path from 'path';
+import sharp from 'sharp';
 import dotenv from 'dotenv'
+import { fileURLToPath } from 'url';
 dotenv.config("../.env")
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -27,19 +30,48 @@ export const createProductController=async(req,res)=>{
         if(plantCare){
             product.plantCare =JSON.parse(plantCare)
         }
-        if(image1){
-            product.photo.image1.data =fs.readFileSync(image1.path)
-            product.photo.image1.contentType =image1.type
+
+        const saveImage = async (image, productId, index) => {
+            const ext = path.extname(image.name);
+            const fileName = `image${index + 1}_${productId}.webp`;
+
+            // Use fileURLToPath to get the current directory
+            const currentDir = path.dirname(fileURLToPath(import.meta.url));
+            const rootDir = path.resolve(currentDir, '../');
+            // Create the "images" folder if it doesn't exist
+            const imagesDir = path.join(rootDir, 'images');
+            if (!fs.existsSync(imagesDir)) {
+                fs.mkdirSync(imagesDir);
+            }
+
+            const imagePath = path.join(rootDir, 'images', fileName);
+            await sharp(image.path)
+                .toFormat('webp')
+                .toFile(imagePath);
+
+                const imageUrl = `${apiUrl}/images/${fileName}`;
+
+                if (index === 0) {
+                    product.photo.image1 = imageUrl;
+                } else if (index === 1) {
+                    product.photo.image2 = imageUrl;
+                } else if (index === 2) {
+                    product.photo.image3 = imageUrl;
+                }
+            };
+
+        if (image1) {
+            await saveImage(image1, product._id, 0);
         }
-        if(image2){
-            product.photo.image2.data =fs.readFileSync(image2.path)
-            product.photo.image2.contentType =image2.type
+
+        if (image2) {
+            await saveImage(image2, product._id, 1);
         }
-        if(image3){
-            product.photo.image3.data =fs.readFileSync(image3.path)
-            product.photo.image3.contentType =image3.type
+
+        if (image3) {
+            await saveImage(image3, product._id, 2);
         }
-        await product.save()
+        await product.save();
         res.status(201).send({
             success:true,
             message:'Product created successfully',
@@ -56,21 +88,13 @@ export const createProductController=async(req,res)=>{
 } 
 export const getProductController = async (req, res) => {
     try {
-        const products = await productModel.find({}).select('-photo').limit(15).sort({ createdAt: -1 });
-
-        const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-            return {
-                ...product._doc,
-                image: photoUrl,
-            };
-        }));
+        const products = await productModel.find({}).limit(15).sort({ createdAt: -1 });
 
         res.status(200).send({
             success: true,
-            totalCount: productsWithImageUrls.length,
+            totalCount: products.length,
             message: 'All products',
-            products: productsWithImageUrls,
+            products
         });
     } catch (error) {
         console.log(error);
@@ -84,20 +108,14 @@ export const getProductController = async (req, res) => {
 
 export const getRecommendedProductController= async(req,res)=>{
     try {
-        const products=await productModel.find({}).populate('category').select('-photo').limit(15).sort({createdAt:1})
-        const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-            return {
-                ...product._doc,
-                image: photoUrl,
-            };
-        }));
+        const products=await productModel.find({}).populate('category').limit(15).sort({createdAt:1})
+        
 
         res.status(200).send({
             success:true,
             totalCount:products.length,
             message:'All products',
-            products: productsWithImageUrls
+            products
         })
     } catch (error) {
         console.log(error)
@@ -113,7 +131,7 @@ export const getSingleProductController = async (req, res) => {
     try {
       const product = await productModel
         .findById(req.params.pid)
-        .populate('category').select('-photo');
+        .populate('category')
   
       if (!product) {
         return res.status(404).send({
@@ -122,15 +140,7 @@ export const getSingleProductController = async (req, res) => {
         });
       }
       
-      // Construct the image URLs
-      const photoUrls = {
-        image1: `${apiUrl}/api/product/product-photo1/${product._id}`,
-        image2: `${apiUrl}/api/product/product-photo2/${product._id}`,
-        image3: `${apiUrl}/api/product/product-photo3/${product._id}`,
-      };
-    
-  
-      res.status(200).send({product,photoUrls});
+      res.status(200).send({product});
     } catch (error) {
       console.error(error);
       res.status(500).send({
@@ -142,55 +152,6 @@ export const getSingleProductController = async (req, res) => {
 };
 
 
-  
-export const productPhoto1Controller=async(req,res)=>{
-    try {
-        const product=await productModel.findById(req.params.pid).select('photo')
-        if(product.photo.image1.data){
-            res.set('Content-type',product.photo.image1.contentType)
-            return res.status(200).send(product.photo.image1.data)
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            success:false,
-            message:'error while getting photo',
-            error
-        })
-    }
-}
-export const productPhoto2Controller=async(req,res)=>{
-    try {
-        const product=await productModel.findById(req.params.pid).select('photo')
-        if(product.photo.image2.data){
-            res.set('Content-type',product.photo.image2.contentType)
-            return res.status(200).send(product.photo.image2.data)
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            success:false,
-            message:'error while getting photo',
-            error
-        })
-    }
-}
-export const productPhoto3Controller=async(req,res)=>{
-    try {
-        const product=await productModel.findById(req.params.pid).select('photo')
-        if(product.photo.image3.data){
-            res.set('Content-type',product.photo.image3.contentType)
-            return res.status(200).send(product.photo.image3.data)
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send({
-            success:false,
-            message:'error while getting photo',
-            error
-        })
-    }
-}
 export const updateProductController=async(req,res)=>{
     try {
         const {name,slug,description,price,sizes,plantCare,quantity,offerPercentage}=req.fields
@@ -205,18 +166,45 @@ export const updateProductController=async(req,res)=>{
         if(plantCare){
             product.plantCare =JSON.parse(plantCare)
         }
-        if(image1){
-            product.photo.image1.data =fs.readFileSync(image1.path)
-            product.photo.image1.contentType =image1.type
-        }
-        if(image2){
-            product.photo.image2.data =fs.readFileSync(image2.path)
-            product.photo.image2.contentType =image2.type
-        }
-        if(image3){
-            product.photo.image3.data =fs.readFileSync(image3.path)
-            product.photo.image3.contentType =image3.type
-        }
+        const saveImage = async (image, productId, index) => {
+            const ext = path.extname(image.name);
+            const fileName = `image${index + 1}_${productId}.webp`;
+
+            // Use fileURLToPath to get the current directory
+            const currentDir = path.dirname(fileURLToPath(import.meta.url));
+            const rootDir = path.resolve(currentDir, '../');
+            // Create the "images" folder if it doesn't exist
+            const imagesDir = path.join(rootDir, 'images');
+            if (!fs.existsSync(imagesDir)) {
+                fs.mkdirSync(imagesDir);
+            }
+
+            const imagePath = path.join(rootDir, 'images', fileName);
+            await sharp(image.path)
+                .toFormat('webp')
+                .toFile(imagePath);
+
+                const imageUrl = `${apiUrl}/images/${fileName}`;
+
+                if (index === 0) {
+                    product.photo.image1 = imageUrl;
+                } else if (index === 1) {
+                    product.photo.image2 = imageUrl;
+                } else if (index === 2) {
+                    product.photo.image3 = imageUrl;
+                }
+            };
+            if (image1) {
+                await saveImage(image1, product._id, 0);
+            }
+    
+            if (image2) {
+                await saveImage(image2, product._id, 1);
+            }
+    
+            if (image3) {
+                await saveImage(image3, product._id, 2);
+            }
         await product.save()
         res.status(201).send({
             success:true,
@@ -232,10 +220,27 @@ export const updateProductController=async(req,res)=>{
         })
     }
 } 
+const deleteImagesByProductId = async (productId) => {
+    const currentDir = path.dirname(fileURLToPath(import.meta.url));
+    const rootDir = path.resolve(currentDir, '../');
+    const imagesDir = path.join(rootDir, 'images');
 
+    const imageFiles = fs.readdirSync(imagesDir);
+
+    imageFiles.forEach((imageFile) => {
+        if (imageFile.startsWith(`image1_${productId}.webp`) || 
+            imageFile.startsWith(`image2_${productId}.webp`) || 
+            imageFile.startsWith(`image3_${productId}.webp`)) {
+            const imagePath = path.join(imagesDir, imageFile);
+            fs.unlinkSync(imagePath);
+        }
+    });
+};
 export const deleteProductController =async(req,res)=>{
+    const id = req.params.pid
     try {
-        await productModel.findByIdAndDelete(req.params.pid).select("-photo")
+        deleteImagesByProductId(id);
+        await productModel.findByIdAndDelete(id)
         res.status(200).send({
             success:true,
             message:'Product deleted Successfully'
@@ -258,14 +263,8 @@ export const getCategoryController = async (req, res) => {
         return res.status(404).json({ message: 'Category not found' });
       }
       const products = await productModel.find({ category: categoryId });
-      const productsWithImageUrls = await Promise.all(products.map(async product => {
-        const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-        return {
-            ...product._doc,
-            image: photoUrl,
-        };
-    }));
-      res.status(200).json({ category, products: productsWithImageUrls });
+      
+      res.status(200).json({ category, products });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching category and products' });
     }
@@ -276,17 +275,11 @@ export const relatedProductontroller =async(req,res)=>{
         const products=await productModel.find({
             category:cid,
             _id:{$ne:pid}
-        }).select('-photo').limit(15).populate("category")
-        const productsWithImageUrls = await Promise.all(products.map(async product => {
-            const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-            return {
-                ...product._doc,
-                image: photoUrl,
-            };
-        }));
+        }).limit(15).populate("category")
+        
         res.status(200).send({
             success:true,
-            products:productsWithImageUrls
+            products
         })
     } catch (error) {
         console.log(error)
@@ -305,15 +298,9 @@ export const getProductByCategoryController = async (req, res) => {
       if (!category) {
         return res.status(404).json({ message: 'Category not found' });
       }
-      const products = await productModel.find({ category: categoryId }).select('-photo').limit(30);;
-      const productsWithImageUrls = await Promise.all(products.map(async product => {
-        const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-        return {
-            ...product._doc,
-            image: photoUrl,
-        };
-    }));
-      res.status(200).json({products: productsWithImageUrls});
+      const products = await productModel.find({ category: categoryId }).limit(30);;
+     
+      res.status(200).json({products});
     } catch (error) {
       res.status(500).json({ message: 'Error fetching category and products' });
     }

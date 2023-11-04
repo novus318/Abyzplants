@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import Spinner from '@/components/Spinner';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import Image from 'next/image';
 import { withAuth } from '@/components/withAuth';
 
 interface ProductData {
@@ -447,7 +446,7 @@ const CreateProduct = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8">
                 <div className="mb-4">
                   {formik.values.images.image1 && (
-                    <Image
+                    <img
                       src={URL.createObjectURL(formik.values.images.image1)}
                       alt="Category Image"
                       className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
@@ -468,7 +467,7 @@ const CreateProduct = () => {
                 </div>
                 <div className="mb-4">
                   {formik.values.images.image2 && (
-                    <Image
+                    <img
                       src={URL.createObjectURL(formik.values.images.image2)}
                       alt="Category Image"
                       className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
@@ -489,7 +488,7 @@ const CreateProduct = () => {
                 </div>
                 <div className="mb-4">
                   {formik.values.images.image3 && (
-                    <Image
+                    <img
                       src={URL.createObjectURL(formik.values.images.image3)}
                       alt="Category Image"
                       className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"

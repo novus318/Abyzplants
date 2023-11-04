@@ -8,6 +8,7 @@ import categoryRoutes from './routes/categoryRoute.js'
 import productRoutes from './routes/productRoute.js'
 import orderRoutes from './routes/orderRoute.js'
 import cors from 'cors'
+import path from "path"
 //configure env
 dotenv.config({ path: './.env' })
 
@@ -23,6 +24,7 @@ app.use(express.json())
 app.use(morgan('dev'))
 
 //routes
+app.use('/images', express.static(path.join(new URL(import.meta.url).pathname, '..', 'images')));
 app.use('/api/auth',authRoutes)
 app.use('/api/category',categoryRoutes)
 app.use('/api/product',productRoutes)

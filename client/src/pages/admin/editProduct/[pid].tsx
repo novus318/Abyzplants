@@ -16,6 +16,11 @@ interface Product {
     plantCare: string[];
     price: number;
     quantity:number;
+    photo:{
+        image1:string;
+        image2:string;
+        image3:string;
+    }
     offerPercentage: number;
     category: {
         _id: string;
@@ -23,11 +28,7 @@ interface Product {
     };
     sizes: string[];
 }
-interface photoUrls{
-    image1: any;
-    image2: any;
-    image3: any;
-  }
+
 const EditProduct = () => {
     const router = useRouter();
     const { pid } = router.query;
@@ -46,6 +47,11 @@ const EditProduct = () => {
         description: '',
         plantCare: [],
         price: 0,
+        photo:{
+            image1:'',
+            image2:'',
+            image3:'',
+        },
         quantity: 0,
         offerPercentage: 0,
         category: {
@@ -54,14 +60,12 @@ const EditProduct = () => {
         },
         sizes: [],
     });
-    const [photos, setPhotos] = useState<photoUrls | null>(null);
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
     const getSingleProduct = async () => {
         try {
             const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
             setProduct(data.product);
-            setPhotos(data.photoUrls)
             setSelectedSizes(data.product.sizes);
             setPlantCare(data.product.plantCare)
 
@@ -391,7 +395,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={photos?.image1}
+                                            src={product.photo.image1}
                                             alt="Image1"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -415,7 +419,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={photos?.image2}
+                                            src={product.photo.image2}
                                             alt="Image2"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -439,7 +443,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={photos?.image3}
+                                            src={product.photo.image3}
                                             alt="Image3"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />

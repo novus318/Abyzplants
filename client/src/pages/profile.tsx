@@ -8,7 +8,6 @@ import { useAuth } from '@/store/authContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import ReactInputMask from 'react-input-mask';
-import Image from 'next/image';
 
 const Profile = () => {
   const router = useRouter();
@@ -113,8 +112,8 @@ const Profile = () => {
               </h2>
               <div className="flex flex-col items-center space-y-4">
                 <div className="w-32 h-32 rounded-full overflow-hidden">
-                  <Image
-                    src={profile}
+                  <img
+                    src={profile.src}
                     alt="User Profile"
                     className="w-full h-full object-cover"
                   />
