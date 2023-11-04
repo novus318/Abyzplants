@@ -49,7 +49,7 @@ export const createProductController=async(req,res)=>{
                 .toFormat('webp')
                 .toFile(imagePath);
 
-                const imageUrl = `${apiUrl}/images/${fileName}`;
+                const imageUrl = `${apiUrl}/api/images/${fileName}`;
 
                 if (index === 0) {
                     product.photo.image1 = imageUrl;
