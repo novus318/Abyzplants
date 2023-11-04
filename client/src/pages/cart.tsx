@@ -134,6 +134,7 @@ const Cart: React.FC = () => {
         price: item.price,
         quantity: item.quantity,
         size: item.size,
+        image:item.image
       })),
       total: calculateTotal(),
       paymentMethod: 'Cash on Delivery',
@@ -180,6 +181,7 @@ const Cart: React.FC = () => {
               price: item.price,
               quantity: item.quantity,
               size: item.size,
+              image:item.image
             })),
             total: calculateTotal().toFixed(2),
           },

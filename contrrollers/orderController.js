@@ -14,22 +14,10 @@ export const createOrderController=async(req,res)=>{
     const { orderDetails, userDetails } = req.body;
     try {
      
-        const products = orderDetails.products
-        const productsWithImageUrls = await Promise.all(products.map(async product => {
-          const photoUrl = `${apiUrl}/api/product/product-photo1/${product._id}`;
-          return {
-            _id:product._id ,
-            code: product.code,
-            name: product.name ,
-            price: product.price ,
-            quantity: product.quantity,
-            size: product.size,
-              image: photoUrl,
-          };
-      }));
+        const products = orderDetails.products;
   
         const newOrder = await new orderModel({
-            products: productsWithImageUrls,
+            products,
             total: orderDetails.total,
             paymentMethod: orderDetails.paymentMethod,
             user: userDetails._id,

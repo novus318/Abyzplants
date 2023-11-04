@@ -45,6 +45,7 @@ const PaymentCompletePage = () => {
         price: item.price,
         quantity: item.quantity,
         size: item.size,
+        image:item.image,
       })),
       total: calculateTotal(),
       paymentMethod: 'Online',
