@@ -105,6 +105,56 @@ export const getProductController = async (req, res) => {
         });
     }
 }
+export const getAllProductNamesController = async (req, res) => {
+    try {
+      const products = await productModel.find({}, 'name');
+  
+      const productNames = products.map((product) => product.name);
+  
+      res.status(200).json({
+        success: true,
+        totalCount: productNames.length,
+        message: 'All product names',
+        productNames,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: 'Error in getting product names',
+        error: error.message,
+      });
+    }
+  };
+ 
+export const searchProductsController = async (req, res) => {
+    try {
+        const { keyword } = req.params; // Get the search keyword from the route parameter
+
+        // Use the keyword to search for products in name and description
+        const products = await productModel.find({
+            $or: [
+                { name: { $regex: new RegExp(keyword, 'i') } },
+                { description: { $regex: new RegExp(keyword, 'i') } },
+            ],
+        });
+
+        res.status(200).send({
+            success: true,
+            totalCount: products.length,
+            message: 'Products matching the search keyword',
+            products,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({
+            success: false,
+            message: 'Error in searching for products',
+            error: error.message,
+        });
+    }
+}
+
 
 export const getRecommendedProductController= async(req,res)=>{
     try {
