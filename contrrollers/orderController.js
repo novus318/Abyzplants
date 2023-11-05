@@ -2,33 +2,103 @@ import orderModel from '../models/orderModel.js'
 import userModel from "../models/userModel.js";
 import stripe from 'stripe';
 import dotenv from 'dotenv'
+import nodemailer from 'nodemailer';
 dotenv.config("../.env")
 
 const apiUrl = process.env.REACT_APP_API_URL;
 const appUrl = process.env.API_URL;
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 const stripeInstance = stripe(stripeSecretKey);
+const mailPass =process.env.MAIL_PASS
 
+const transporter = nodemailer.createTransport({
+  service:'hotmail',
+  auth: {
+    user: 'info@abyzplants.com',
+    pass: `${mailPass}#`,
+  },
+});
 
-export const createOrderController=async(req,res)=>{
-    const { orderDetails, userDetails } = req.body;
-    try {
-     
-        const products = orderDetails.products;
-  
-        const newOrder = await new orderModel({
-            products,
-            total: orderDetails.total,
-            paymentMethod: orderDetails.paymentMethod,
-            user: userDetails._id,
-            orderStatus: 'Processing', 
-          }).save();
-      
-          res.json({ success: true, message: 'Your order has been placed successfully check your email',newOrder});
-    } catch (error) {
-        res.status(500).json({ success: false, message: 'Order placement failed',error});
+export const createOrderController = async (req, res) => {
+  const { orderDetails, userDetails } = req.body;
+
+  try {
+    const user = await userModel.findById(userDetails._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
     }
-}
+
+    const products = orderDetails.products;
+
+    const newOrder = await new orderModel({
+      products,
+      total: orderDetails.total,
+      paymentMethod: orderDetails.paymentMethod,
+      user: userDetails._id,
+      orderStatus: 'Processing',
+    }).save();
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Your Order Confirmation',
+      html: `
+      <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+        <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+          <h1 style="color: #333; font-size: 24px;">Order Confirmation</h1>
+          <p>Dear ${user.name},</p>
+          <p>Thank you for placing your order with Abyzplants.</p>
+          <p><strong>Order Status:</strong> Processing</p>
+          <p><strong>Order Amount:</strong> ${orderDetails.total} AED</p>
+          <p><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
+          <p><strong>Order Date:</strong> ${new Date().toDateString()}</p>
+          <p>We are happy to inform you that your order with Abyzplants has been successfully placed and is currently being processed. Your order is on the way.</p>
+          <p>Company Details:</p>
+          <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+          <p>International City - Dubai - United Arab Emirates</p>
+          <ul>
+            <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+            <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+          </ul>
+        </div>
+      </div>
+      `,
+    };
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+
+    const emailInfo = await sendEmail();
+
+    res.json({
+      success: true,
+      message: 'Your order has been placed successfully. Check your email',
+      newOrder,
+      emailInfo
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Order placement failed',
+      error,
+    });
+  }
+};
+
 
 export const getOrdersByUserIdController = async (req, res) => {
     const userId = req.params.pid;
@@ -157,10 +227,6 @@ export const getOrdersByUserIdController = async (req, res) => {
   }
   
 
-
-
-
-
  export const updateOrderStatusAndSendNotification = async (req, res) => {
    try {
      const orderId = req.params.orderId;
@@ -171,9 +237,270 @@ export const getOrdersByUserIdController = async (req, res) => {
      if (!updatedOrder) {
        return res.status(404).json({ success: false, message: 'Order not found' });
      }
+     switch (newStatus) {
+      case 'Order Shipped':
+       await sendOrderShippedNotification(updatedOrder)
+        break;
+      case 'Order Delivered':
+        await sendOrderDeliveredNotification(updatedOrder);
+        break;
+      case 'Order Cancelled':
+        await sendOrderCancelledNotification(updatedOrder);
+        break;
+      case 'Unable to Process':
+        await sendUnableToProcessNotification(updatedOrder);
+        break;
+      case 'Refunded':
+        await sendRefundedNotification(updatedOrder);
+        break;
+      default:
+        break;
+    }
 
      res.status(200).json({ success: true, message: 'Order status updated and SMS notification sent' });
    } catch (error) {
      res.status(500).json({ success: false, message: 'Error updating order status', error });
    }
  };
+ const sendOrderDeliveredNotification = async (updatedOrder) =>{
+  try {
+    const user = await userModel.findById(updatedOrder.user);
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Your Order Delivered',
+      html: `
+        <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+            <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+            <h1 style="color: #333; font-size: 24px;">Order Delivered</h1>
+            <p>Dear ${user.name},</p>
+            <p>We are delighted to inform you that your order with Abyzplants has been successfully delivered.</p>
+            <p><strong>Order Status:</strong> Delivered</p>
+            <p><strong>Order Amount: </strong>${updatedOrder.total} AED</p>
+            <p><strong>Payment Method:</strong> ${updatedOrder.paymentMethod}</p>
+            <p><strong>Delivery Date:</strong> ${new Date().toDateString()}</p>
+            <p>Thank you for choosing Abyzplants. We hope you are satisfied with your order. If you have any feedback or inquiries, please feel free to contact us.</p>
+            <p>Company Details:</p>
+            <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+            <p>International City - Dubai - United Arab Emirates</p>
+            <ul>
+              <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+              <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+            </ul>
+          </div>
+        </div>
+      `,
+    };
+    
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+    sendEmail()
+  } catch (error) {
+    console.log(error)
+  }
+};
+ const sendOrderShippedNotification = async (updatedOrder) =>{
+  try {
+    const user = await userModel.findById(updatedOrder.user);
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Your Order Has Been Shipped',
+      html: `
+        <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+            <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+            <h1 style="color: #333; font-size: 24px;">Your Order Has Been Shipped</h1>
+            <p>Dear ${user.name},</p>
+            <p>We are excited to inform you that your order with Abyzplants has been shipped and is on its way to you.</p>
+            <p><strong>Order Status:</strong> Shipped</p>
+            <p><strong>Order Amount:</strong>${updatedOrder.total} AED</p>
+            <p><strong>Expected Delivery Date : </strong> Within 2 days</p>
+            <p>If you have any questions or need assistance, please don't hesitate to reach out to our customer support team. Thank you for choosing us for your online shopping needs.</p>
+            <p>Company Details:</p>
+            <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+            <p>International City - Dubai - United Arab Emirates</p>
+            <ul>
+              <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+              <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+            </ul>
+          </div>
+        </div>
+      `,
+    };
+    
+    
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+    sendEmail()
+  } catch (error) {
+    console.log(error)
+  }
+ }
+ const sendOrderCancelledNotification = async (updatedOrder) =>{
+  try {
+    const user = await userModel.findById(updatedOrder.user);
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Your Order Has Been Cancelled',
+      html: `
+        <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+            <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+            <h1 style="color: #333; font-size: 24px;">Your Order Has Been Cancelled</h1>
+            <p>Dear ${user.name},</p>
+            <p>We regret to inform you that your order with Abyzplants has been cancelled.</p>
+            <p><strong>Order Status:</strong> Cancelled</p>
+            <p><strong>Order Amount:</strong> ${updatedOrder.total} AED</p>
+            <p>If you have any questions or require further assistance regarding this cancellation, please don't hesitate to contact us.</p>
+            <p>Company Details:</p>
+            <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+            <p>International City - Dubai - United Arab Emirates</p>
+            <ul>
+              <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+              <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+            </ul>
+          </div>
+        </div>
+      `,
+    };
+    
+    
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+    sendEmail()
+  } catch (error) {
+    console.log(error)
+  }
+ }
+ const sendUnableToProcessNotification = async (updatedOrder) =>{
+  try {
+    const user = await userModel.findById(updatedOrder.user);
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Unable to Process Your Order',
+      html: `
+        <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+            <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+            <h1 style="color: #333; font-size: 24px;">Unable to Process Your Order</h1>
+            <p>Dear ${user.name},</p>
+            <p>We regret to inform you that we are unable to process your order with Abyzplants at this time.</p>
+            <p><strong>Order Status:</strong> Unable to Process</p>
+            <p><strong>Order Amount:</strong> ${updatedOrder.total} AED</p>
+            <p>If you have any questions or concerns regarding this issue, please don't hesitate to contact us for further assistance.</p>
+            <p>Company Details:</p>
+            <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+            <p>International City - Dubai - United Arab Emirates</p>
+            <ul>
+              <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+              <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+            </ul>
+          </div>
+        </div>
+      `,
+    };
+    
+    
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+    sendEmail()
+  } catch (error) {
+    console.log(error)
+  }
+ }
+ const sendRefundedNotification = async (updatedOrder) =>{
+  try {
+    const user = await userModel.findById(updatedOrder.user);
+
+    const mailOptions = {
+      from: 'info@abyzplants.com',
+      to: user.email,
+      subject: 'Refund Confirmation for Your Order',
+      html: `
+        <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+          <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+            <img style="background-color: #ffffff;" src="https://upload.wikimedia.org/wikipedia/commons/1/15/Abyzplants_logo.png" alt="Abyzplants Logo" width="200">
+            <h1 style="color: #333; font-size: 24px;">Refund Confirmation</h1>
+            <p>Dear ${user.name},</p>
+            <p>We are pleased to inform you that a refund has been processed for your order with Abyzplants.</p>
+            <p><strong>Order Status:</strong> Refunded</p>
+            <p><strong>Refund Amount:</strong> ${updatedOrder.total} AED</p>
+            <p>The refund has been successfully processed, and the refunded amount should be reflected in your account within a few business days. If you have any questions or require further assistance, please feel free to contact us.</p>
+            <p>Company Details:</p>
+            <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+            <p>International City - Dubai - United Arab Emirates</p>
+            <ul>
+              <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+              <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+            </ul>
+          </div>
+        </div>
+      `,
+    };
+    
+    
+
+    const sendEmail = () => {
+      return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(info);
+          }
+        });
+      });
+    };
+    sendEmail()
+  } catch (error) {
+    console.log(error)
+  }
+ }
