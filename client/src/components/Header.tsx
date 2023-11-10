@@ -95,7 +95,13 @@ export default function Header() {
     localStorage.removeItem('user');
     router.push('/');
   };
-
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${apiUrl}/api/category/get-category`);
+      setCategories(response.data.category);
+    } catch (error) {
+    }
+  };
   useEffect(() => {
     const fetchNames = async () => {
       try {
@@ -106,6 +112,7 @@ export default function Header() {
       }
     };
     fetchNames();
+    fetchCategories();
   }, []);
 
   return (
