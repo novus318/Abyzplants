@@ -5,8 +5,10 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import {subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
-
+import { subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
+import { Modal } from 'antd';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface Product {
   _id: string;
@@ -32,6 +34,48 @@ const Order = () => {
   const [loading, setLoading] = useState(true);
   const [orderData, setOrderData] = useState<Order[] | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('thisWeek');
+  const [returnModalVisible, setReturnModalVisible] = useState(false);
+  const [returnId, setReturnId] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    number: '',
+    account: '',
+    iban: '',
+    reason: ''
+  });
+
+  const handleInputChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleFormSubmit = async () => {
+    setLoading(true);
+    try {
+      const newStatus = 'Return';
+      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/status`, { newStatus, formData });
+
+      if (response.status === 200) {
+
+
+      }
+    } catch (error) {
+      setLoading(false);
+    }
+  }
+  const showReturnModal = (id: any) => {
+    setReturnId(id)
+    setReturnModalVisible(true);
+  };
+
+  const handleReturnCancel = () => {
+    setReturnId('')
+    setReturnModalVisible(false);
+  };
+
   useEffect(() => {
     const checkUserExistence = async () => {
       try {
@@ -112,23 +156,23 @@ const Order = () => {
 
     return new Date(dateString).toLocaleString(undefined, options);
   };
-  const handleCancelOrder = async (orderId:any) => {
-   if(window.confirm('Are you sure you want to Cancel Order')){
-    setLoading(true);
-    try {
-      const newStatus = 'Order Cancelled';
-      const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus });
-  
-      if (response.status === 200) {
-    
-        window.location.reload();
+  const handleCancelOrder = async (orderId: any) => {
+    if (window.confirm('Are you sure you want to Cancel Order')) {
+      setLoading(true);
+      try {
+        const newStatus = 'Order Cancelled';
+        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus });
+
+        if (response.status === 200) {
+
+          window.location.reload();
+        }
+      } catch (error) {
+        setLoading(false);
       }
-    } catch (error) {
-      setLoading(false);
-    } 
-   }
+    }
   }
-  
+
 
   return (
     <>
@@ -217,17 +261,25 @@ const Order = () => {
                         </div>
                       ))}
                       <div className="text-center mt-4">
-                        {!(order.status === 'Refunded' || order.status === 'Order Cancelled' || order.status === 'Order Delivered' || order.status === 'Order Shipped') ? (
+                        {!(order.status === 'Refunded' || order.status === 'Order Cancelled' || order.status === 'Order Delivered' || order.status === 'Return' || order.status === 'Order Shipped') ? (
                           <button
-                          onClick={() => handleCancelOrder(order._id)} className="text-red-500 rounded-md hover:text-red-700 cursor-pointer">
+                            onClick={() => handleCancelOrder(order._id)} className="text-red-500 rounded-md hover:text-red-700 cursor-pointer">
                             Cancel Order
                           </button>
                         ) : null}
 
                         {order.status === 'Order Delivered' ? (
-                          <button className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer">
+                          <button
+                            onClick={() => showReturnModal(order._id)}
+                            className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer">
                             Return
                           </button>
+                        ) : null}
+                        {order.status === 'Return' ? (
+                          <p className="text-[#5f9231] rounded-md hover:text-[#4a7327]">Your return request is being Processing and {order.total - 13} AED will be refunded</p>
+                        ) : null}
+                        {order.status === 'Refunded' ? (
+                          <p className="text-[#5f9231] rounded-md hover:text-[#4a7327]">Your Amount {order.total - 13} AED is being refunded</p>
                         ) : null}
                       </div>
                     </div>
@@ -243,6 +295,92 @@ const Order = () => {
           <Footer />
         </div>
       )}
+      <Modal
+        title="Return Order"
+        visible={returnModalVisible}
+        onCancel={handleReturnCancel}
+        footer={null}
+        className="rounded-md"
+      >
+        <div className="p-4">
+          <p className="text-red-500">A charge of 13 AED will be deducted for the return.</p>
+          <p className="text-gray-600 text-xs text-center">
+            *The refunded amount will be credited to your account after deducting the applicable fee.
+          </p>
+          <p className="text-[#5f9231] mb-2">Please fill out the following details to initiate the refund process.</p>
+          <form onSubmit={handleFormSubmit} className="space-y-4">
+            <div className="flex flex-col space-y-2">
+              <PhoneInput
+                international
+                defaultCountry="AE"
+                value={formData.number}
+                onChange={(value) => handleInputChange({ target: { name: 'number', value } })}
+                placeholder="Phone Number"
+                maxLength={16}
+                required
+                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
+              />
+            </div>
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Account holder Name"
+                required
+                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
+              />
+            </div>
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                id="account"
+                name="account"
+                value={formData.account}
+                onChange={handleInputChange}
+                placeholder="Your Account Number"
+                required
+                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
+              />
+            </div>
+
+            <div className="flex flex-col space-y-2">
+              <input
+                type="text"
+                id="iban"
+                name="iban"
+                value={formData.iban}
+                onChange={handleInputChange}
+                placeholder="IBAN"
+                required
+                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
+              />
+            </div>
+            <div className="flex flex-col space-y-2">
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                placeholder="Reason"
+                required
+                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
+              />
+            </div>
+
+            <div className="text-center">
+              <button
+                type="submit"
+                className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#4a7327] transition duration-300"
+              >
+                Submit
+              </button>
+            </div>
+          </form>
+        </div>
+      </Modal>
     </>
   );
 };

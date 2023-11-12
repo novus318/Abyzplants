@@ -1,11 +1,69 @@
 import Footer from '@/components/Footer'
 import Header from '@/components/Header'
-import React from 'react'
+import React, { useState } from 'react'
 import contactImage from '@/images/contact.webp';
 import ContactIcon from '@/components/ContactIcon';
 import Layout from '@/components/Layout';
-
+import emailjs from 'emailjs-com';
 const Page = () => {
+  const SERVICE_ID_EMAIL = 'service_l87oe7i';
+  const EMAILJS_TEMPLATE_ID = 'template_ntrghpd';
+  const EMAIL_USER_ID = '_qu2bpegrIX8h-mmQ';
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: '',
+  });
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+  
+
+    const form = document.createElement('form');
+  
+  
+    form.method = 'post'; 
+    form.action = ''; 
+    const nameField = document.createElement('input');
+    nameField.type = 'text';
+    nameField.name = 'name';
+    nameField.value = formData.name;
+    form.appendChild(nameField);
+  
+    const emailField = document.createElement('input');
+    emailField.type = 'text';
+    emailField.name = 'email';
+    emailField.value = formData.email;
+    form.appendChild(emailField);
+  
+  
+    const messageField = document.createElement('textarea');
+    messageField.name = 'message';
+    messageField.value = formData.message;
+    form.appendChild(messageField);
+  
+    document.body.appendChild(form);
+  
+    setFormData({
+      name: '',
+    email: '',
+    message: '',
+    })
+    emailjs.sendForm(SERVICE_ID_EMAIL, EMAILJS_TEMPLATE_ID, form, EMAIL_USER_ID)
+      .then((result) => {
+        console.log('Email sent successfully!', result.text);
+        
+      }, (error) => {
+        console.error('Email could not be sent:', error);
+      });
+  
+    document.body.removeChild(form);
+  };
+  
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
   return (
     <Layout title='Abyzplants - Contact Us'
    description=
@@ -24,7 +82,7 @@ const Page = () => {
             We value your feedback and inquiries. Feel free to get in touch with us through the form below.
           </p>
           <div className="max-w-md mx-auto">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit} >
               <div className="relative">
                 <div className="mb-6">
                   <img
@@ -37,6 +95,8 @@ const Page = () => {
                   type="text"
                   id="name"
                   name="name"
+                  value={formData.name}
+                  onChange={handleChange}
                   className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
                   placeholder="Your Name"
                   required
@@ -47,6 +107,8 @@ const Page = () => {
                   type="email"
                   id="email"
                   name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
                   placeholder="Your Email Address"
                   required
@@ -56,6 +118,8 @@ const Page = () => {
                 <textarea
                   id="message"
                   name="message"
+                  value={formData.message}
+                  onChange={handleChange}
                   className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
                   placeholder="Your Message"
                   required

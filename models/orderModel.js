@@ -21,7 +21,7 @@ user: {
 },
 status:{
   type: String,
-    enum: ['Processing', 'Ready to Ship', 'Order Shipped', 'Order Delivered', 'Order Cancelled','Unable to Process','Refunded'],
+    enum: ['Processing', 'Ready to Ship', 'Order Shipped', 'Order Delivered', 'Order Cancelled','Unable to Process','Return','Refunded'],
     default: 'Processing',
 }
 },{timestamps:true});

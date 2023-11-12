@@ -204,8 +204,8 @@ const Dashboard: React.FC = () => {
         console.error('Error updating order status:', error);
       });
   };
-  
-  
+
+
   return (
     <div className="flex">
       <AdminSidebar />
@@ -265,11 +265,12 @@ const Dashboard: React.FC = () => {
             <tbody className="bg-white">
               {filteredOrders.map((order) => (
                 <tr
-                key={order._id}
-                className={`ring-gray-500 ring-1 ${
-                  order.status === 'Order Cancelled' ? 'bg-red-50' : ''
-                }`}
-              >
+                  key={order._id}
+                  className={`ring-gray-500 ring-1 ${order.status === 'Order Cancelled' ? 'bg-red-50' : order.status === 'Return'
+                    ? 'bg-green-50'
+                    : ''
+                    }`}
+                >
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 font-medium text-gray-900">
                     {order._id.substring(16)}
                   </td>
@@ -290,14 +291,30 @@ const Dashboard: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
                     {order.status === 'Order Cancelled' ? (
-                      'Cancelled'
+                      order.paymentMethod === 'Cash on Delivery' ? (
+                        'Cancelled'
+                      ) : (
+                        <Select
+                          defaultValue={order.status}
+                          style={{ width: 150 }}
+                          onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
+                        >
+                          <Option value="Refunded">Refunded</Option>
+                        </Select>
+                      )
+                    ) : order.status === 'Return' ? (
+                      <Select
+                        defaultValue={order.status}
+                        style={{ width: 150 }}
+                        onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
+                      >
+                        <Option value="Refunded">Refunded</Option>
+                      </Select>
                     ) : (
                       <Select
                         defaultValue={order.status}
                         style={{ width: 150 }}
-                        onChange={(newStatus) =>
-                          handleStatusChange(order._id, newStatus)
-                        }
+                        onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
                       >
                         <Option value="Processing">Processing</Option>
                         <Option value="Ready to Ship">Ready to Ship</Option>
@@ -309,6 +326,8 @@ const Dashboard: React.FC = () => {
                       </Select>
                     )}
                   </td>
+
+
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500 grid gap-4">
                     {order.status === 'Order Cancelled' ? (
                       <span>Actions Disabled</span>

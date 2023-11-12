@@ -163,7 +163,7 @@ const AuthPage = () => {
               className={`appearance-none relative block w-full px-3 py-3 border ${
                 formik.touched.phone && formik.errors.phone ? 'border-red-500' : 'border-[#a14e3a]'
               } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-[#a14e3a] focus:border-[#a14e3a] focus:z-10 sm:text-sm`}
-              placeholder="Phone Number (+971 5XX XXX XXXX)"
+              placeholder="Phone Number"
               value={formik.values.phone}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
