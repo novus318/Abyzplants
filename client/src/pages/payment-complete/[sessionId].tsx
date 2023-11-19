@@ -46,6 +46,7 @@ const PaymentCompletePage = () => {
         quantity: item.quantity,
         size: item.size,
         image:item.image,
+        status:'Processing'
       })),
       total: calculateTotal(),
       paymentMethod: 'Online',

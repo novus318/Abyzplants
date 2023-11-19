@@ -21,7 +21,6 @@ interface Order {
     city: string;
     address: string;
   };
-  status: string;
   createdAt: string;
 }
 
@@ -32,6 +31,7 @@ interface Product {
   quantity: number;
   size: string;
   code: string;
+  status: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -187,8 +187,8 @@ const Dashboard: React.FC = () => {
 
     return new Date(dateTime).toLocaleString(undefined, options);
   };
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    Axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus })
+  const handleStatusChange = (orderId: string,productId:string,newStatus: string) => {
+    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus })
       .then((response) => {
         if (response.data.success) {
           const updatedOrders = orders.map((order) =>
@@ -196,6 +196,7 @@ const Dashboard: React.FC = () => {
           );
           setOrders(updatedOrders);
           setFilteredOrders(updatedOrders);
+          window.location.reload()
         } else {
           // Handle the error.
         }
@@ -255,9 +256,6 @@ const Dashboard: React.FC = () => {
                   Total
                 </th>
                 <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -266,10 +264,7 @@ const Dashboard: React.FC = () => {
               {filteredOrders.map((order) => (
                 <tr
                   key={order._id}
-                  className={`ring-gray-500 ring-1 ${order.status === 'Order Cancelled' ? 'bg-red-50' : order.status === 'Return'
-                    ? 'bg-green-50'
-                    : ''
-                    }`}
+                  className='ring-gray-500 ring-1'
                 >
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 font-medium text-gray-900">
                     {order._id.substring(16)}
@@ -289,60 +284,15 @@ const Dashboard: React.FC = () => {
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
                     {order.total.toFixed(2)} AED
                   </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.status === 'Order Cancelled' ? (
-                      order.paymentMethod === 'Cash on Delivery' ? (
-                        'Cancelled'
-                      ) : (
-                        <Select
-                          defaultValue={order.status}
-                          style={{ width: 150 }}
-                          onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
-                        >
-                          <Option value="Refunded">Refunded</Option>
-                        </Select>
-                      )
-                    ) : order.status === 'Return' ? (
-                      <Select
-                        defaultValue={order.status}
-                        style={{ width: 150 }}
-                        onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
-                      >
-                        <Option value="Refunded">Refunded</Option>
-                      </Select>
-                    ) : (
-                      <Select
-                        defaultValue={order.status}
-                        style={{ width: 150 }}
-                        onChange={(newStatus) => handleStatusChange(order._id, newStatus)}
-                      >
-                        <Option value="Processing">Processing</Option>
-                        <Option value="Ready to Ship">Ready to Ship</Option>
-                        <Option value="Order Shipped">Order Shipped</Option>
-                        <Option value="Order Delivered">Order Delivered</Option>
-                        <Option value="Order Cancelled">Order Cancelled</Option>
-                        <Option value="Unable to Process">Unable to Process</Option>
-                        <Option value="Refunded">Refunded</Option>
-                      </Select>
-                    )}
-                  </td>
-
-
                   <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500 grid gap-4">
-                    {order.status === 'Order Cancelled' ? (
-                      <span>Actions Disabled</span>
-                    ) : (
-                      <>
-                        <button onClick={() => handleViewClick(order)} className="text-indigo-600 hover:text-indigo-900">
-                          View
-                        </button>
-                        <Link href={`/admin/bill/${order._id}`} target="_blank">
-                          <button className="text-green-600 hover:text-green-900">
-                            Print
-                          </button>
-                        </Link>
-                      </>
-                    )}
+                    <button onClick={() => handleViewClick(order)} className="text-indigo-600 hover:text-indigo-900">
+                      View
+                    </button>
+                    <Link href={`/admin/bill/${order._id}`} target="_blank">
+                      <button className="text-green-600 hover:text-green-900">
+                        Print
+                      </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
@@ -354,6 +304,7 @@ const Dashboard: React.FC = () => {
           title="Order Details"
           visible={modalVisible}
           onCancel={() => setModalVisible(false)}
+          width={1000}
           footer={[
             <Button key="back" onClick={() => setModalVisible(false)}>
               Close
@@ -364,12 +315,77 @@ const Dashboard: React.FC = () => {
           {selectedOrder && (
             <div>
               <h2 className="text-2xl font-semibold">Product Details</h2>
-              <Table
-                columns={columns}
-                dataSource={selectedOrder.products}
-                rowKey={(record) => record._id}
-                className="w-full mt-4"
-              />
+              <table className="w-full border-collapse border border-gray-300 mt-4">
+            <thead>
+              <tr>
+                <th className="p-3 text-center">Name</th>
+                <th className="p-3 text-center">Code</th>
+                <th className="p-3 text-center">Price</th>
+                <th className="p-3 text-center">Qty</th>
+                <th className="p-3 text-center">Size</th>
+                <th className="p-3 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedOrder.products.map((product) => (
+                <tr
+                  key={product._id}
+                  className={
+                    product.status === 'Order Cancelled'
+                      ? 'bg-red-100'
+                      : product.status === 'Return'
+                      ? 'bg-yellow-100'
+                      : product.status === 'Order Delivered' || product.status === 'Refunded'
+                      ? 'bg-green-100'
+                      : 'bg-gray-100'
+                  }
+                >
+                  <td className="p-3 text-center">{product.name}</td>
+                  <td className="p-3 text-center">{product.code}</td>
+                  <td className="p-3 text-center">{product.price}</td>
+                  <td className="p-3 text-center">{product.quantity}</td>
+                  <td className="p-3 text-center">{product.size || 'N/A'}</td>
+                  <td className="p-3 text-center">
+                    {product.status === 'Order Cancelled' ? (
+                      selectedOrder.paymentMethod === 'Cash on Delivery' ? (
+                        'Cancelled'
+                      ) : (
+                        <Select
+                          defaultValue={product.status}
+                          style={{ width: 150 }}
+                          onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
+                        >
+                          <Option value="Refunded">Refunded</Option>
+                        </Select>
+                      )
+                    ) : product.status === 'Return' ? (
+                      <Select
+                        defaultValue={product.status}
+                        style={{ width: 150 }}
+                        onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
+                      >
+                        <Option value="Refunded">Refunded</Option>
+                      </Select>
+                    ) : (
+                      <Select
+                        defaultValue={product.status}
+                        style={{ width: 150 }}
+                        onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
+                      >
+                        <Option value="Processing">Processing</Option>
+                        <Option value="Ready to Ship">Ready to Ship</Option>
+                        <Option value="Order Shipped">Order Shipped</Option>
+                        <Option value="Order Delivered">Order Delivered</Option>
+                        <Option value="Order Cancelled">Order Cancelled</Option>
+                        <Option value="Unable to Process">Unable to Process</Option>
+                        <Option value="Refunded">Refunded</Option>
+                      </Select>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
               <h3 className="text-xl font-semibold mt-6">Payment : {selectedOrder.paymentMethod}</h3>
               <h2 className="text-2xl font-semibold mt-6">User Address</h2>
               <p className="mb-2">Address: {selectedOrder.user?.address}</p>

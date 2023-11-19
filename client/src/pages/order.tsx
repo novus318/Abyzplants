@@ -17,6 +17,7 @@ interface Product {
   price: number;
   quantity: number;
   size: string;
+  status: string;
 }
 
 interface Order {
@@ -24,7 +25,6 @@ interface Order {
   products: Product[];
   total: number;
   paymentMethod: string;
-  status: string;
   createdAt: string;
 }
 
@@ -36,6 +36,7 @@ const Order = () => {
   const [selectedFilter, setSelectedFilter] = useState<string>('thisWeek');
   const [returnModalVisible, setReturnModalVisible] = useState(false);
   const [returnId, setReturnId] = useState('');
+  const [returnProductId, setReturnProductId] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     number: '',
@@ -56,7 +57,7 @@ const Order = () => {
     setLoading(true);
     try {
       const newStatus = 'Return';
-      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/status`, { newStatus, formData });
+      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { newStatus, formData });
 
       if (response.status === 200) {
 
@@ -66,13 +67,15 @@ const Order = () => {
       setLoading(false);
     }
   }
-  const showReturnModal = (id: any) => {
+  const showReturnModal = (id: any,productId: any) => {
     setReturnId(id)
+    setReturnProductId(productId)
     setReturnModalVisible(true);
   };
 
   const handleReturnCancel = () => {
     setReturnId('')
+    setReturnProductId('')
     setReturnModalVisible(false);
   };
 
@@ -156,12 +159,12 @@ const Order = () => {
 
     return new Date(dateString).toLocaleString(undefined, options);
   };
-  const handleCancelOrder = async (orderId: any) => {
+  const handleCancelOrder = async (orderId: any,productId: any) => {
     if (window.confirm('Are you sure you want to Cancel Order')) {
       setLoading(true);
       try {
         const newStatus = 'Order Cancelled';
-        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/status`, { newStatus });
+        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus });
 
         if (response.status === 200) {
 
@@ -227,15 +230,6 @@ const Order = () => {
                           <p className="text-[#5f9231] font-semibold text-xl md:text-2xl">
                             Total: {order.total.toFixed(2)} AED
                           </p>
-                          <p className='text-lg font-semibold text-[#5f9231]'>
-                            Status: <span className={`text-lg font-semibold ${order.status === 'Processing' ? 'text-[#5f9231]' :
-                              order.status === 'Ready to Ship' ? 'text-[#5f9231]' :
-                                order.status === 'Order Shipped' ? 'text-[#5f9231]' :
-                                  order.status === 'Order Delivered' ? 'text-[#5f9231]' :
-                                    order.status === 'Order Cancelled' ? 'text-[#dc3545]' :
-                                      order.status === 'Unable to Process' ? 'text-[#ff8c00]' :
-                                        order.status === 'Refunded' && 'text-[#5f9231]'}`}>{order.status}</span>
-                          </p>
 
                         </div>
                       </div>
@@ -249,39 +243,54 @@ const Order = () => {
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-16 h-20 object-cover rounded-lg mb-4 md:mr-4"
+                              className="w-16 h-20 object-cover rounded-lg mb-4 md:mr-4 md:w-24 md:h-32"
                             />
                           </Link>
-                          <div>
-                            <p className="text-[#5f9231] font-semibold text-lg">{product.name}</p>
-                            <p className="text-gray-500 text-sm">Price: {product.price.toFixed(2)} AED</p>
-                            <p className="text-gray-500 text-sm">Quantity: {product.quantity}</p>
-                            <p className="text-gray-500 text-sm">Size: {product.size}</p>
+                          <div className="flex flex-col md:flex-row w-full">
+                            <div className="md:flex-shrink">
+                              <p className="text-[#5f9231] font-semibold text-lg mb-2">{product.name}</p>
+                              <p className="text-gray-500 text-sm mb-2">Price: {product.price.toFixed(2)} AED</p>
+                              <p className="text-gray-500 text-sm mb-2">Quantity: {product.quantity}</p>
+                              <p className="text-gray-500 text-sm mb-2">Size: {product.size}</p>
+                            </div>
+                            <div className="md:ml-auto md:text-right mt-4 md:mt-0">
+                              <p className='text-lg font-semibold text-[#5f9231] mb-2'>
+                                Status: <span className={`text-lg font-semibold ${product.status === 'Processing' ? 'text-[#5f9231]' :
+                                  product.status === 'Ready to Ship' ? 'text-[#5f9231]' :
+                                    product.status === 'Order Shipped' ? 'text-[#5f9231]' :
+                                      product.status === 'Order Delivered' ? 'text-[#5f9231]' :
+                                        product.status === 'Order Cancelled' ? 'text-[#dc3545]' :
+                                          product.status === 'Unable to Process' ? 'text-[#ff8c00]' :
+                                            product.status === 'Refunded' && 'text-[#5f9231]'}`}>{product.status}</span>
+                              </p>
+                              <div className="text-center">
+                                {!(product.status === 'Refunded' || product.status === 'Order Cancelled' || product.status === 'Order Delivered' || product.status === 'Return' || product.status === 'Order Shipped') ? (
+                                  <button
+                                    onClick={() => handleCancelOrder(order._id,product._id)}
+                                    className="text-red-500 rounded-md hover:text-red-700 cursor-pointer mr-2 bg-gray-100 px-4 py-1">
+                                    Cancel Order
+                                  </button>
+                                ) : null}
+
+                                {product.status === 'Order Delivered' ? (
+                                  <button
+                                    onClick={() => showReturnModal(order._id,product._id)}
+                                    className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer mr-2 bg-gray-100 px-4 py-1">
+                                    Return
+                                  </button>
+                                ) : null}
+                                {product.status === 'Return' ? (
+                                  <p className="text-[#5f9231] rounded-md mb-2">Your return request is being processed & {((product.price * product.quantity) - 13).toFixed(2)} AED will be refunded</p>
+                                ) : null}
+                                {product.status === 'Refunded' ? (
+                                  <p className="text-[#5f9231] rounded-md mb-2">Your amount of {((product.price * product.quantity) - 13).toFixed(2)} AED has been refunded</p>
+                                ) : null}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       ))}
-                      <div className="text-center mt-4">
-                        {!(order.status === 'Refunded' || order.status === 'Order Cancelled' || order.status === 'Order Delivered' || order.status === 'Return' || order.status === 'Order Shipped') ? (
-                          <button
-                            onClick={() => handleCancelOrder(order._id)} className="text-red-500 rounded-md hover:text-red-700 cursor-pointer">
-                            Cancel Order
-                          </button>
-                        ) : null}
 
-                        {order.status === 'Order Delivered' ? (
-                          <button
-                            onClick={() => showReturnModal(order._id)}
-                            className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer">
-                            Return
-                          </button>
-                        ) : null}
-                        {order.status === 'Return' ? (
-                          <p className="text-[#5f9231] rounded-md hover:text-[#4a7327]">Your return request is being Processing and {order.total - 13} AED will be refunded</p>
-                        ) : null}
-                        {order.status === 'Refunded' ? (
-                          <p className="text-[#5f9231] rounded-md hover:text-[#4a7327]">Your Amount {order.total - 13} AED is being refunded</p>
-                        ) : null}
-                      </div>
                     </div>
                   ))}
                 </div>
