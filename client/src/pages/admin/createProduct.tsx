@@ -12,8 +12,10 @@ interface ProductData {
   name: string;
   code:string;
   description: string;
-  price: string;
-  sizes: string[];
+  sizes: {
+    name: string;
+    price: string;
+  }[];
   plantCare: string[];
   category: string;
   quantity: number;
@@ -42,7 +44,6 @@ const CreateProduct = () => {
       return value.length === 5;
     }),
     description: Yup.string().required('Description is required'),
-    price: Yup.string().required('Price is required'),
     category: Yup.string().required('Category is required'),
     plantCare: Yup.array()
       .of(Yup.string())
@@ -70,7 +71,6 @@ const CreateProduct = () => {
       code:'',
       description: '',
       plantCare: [],
-      price: '',
       sizes: [],
       category: '',
       quantity: 0,
@@ -81,16 +81,15 @@ const CreateProduct = () => {
     onSubmit: async (values) => {
       setLoading(true);
       const sortedSizes = [...values.sizes].sort((size1, size2) => {
-        const size1Digits = parseInt(size1.split('-')[0]);
-        const size2Digits = parseInt(size2.split('-')[0]);
+        const size1Digits = parseInt(size1.name.split('-')[0]);
+        const size2Digits = parseInt(size2.name.split('-')[0]);
         return size1Digits - size2Digits;
-      });
+      });      
       const formData = new FormData();
       formData.append('name', values.name);
       formData.append('code', values.code);
       formData.append('description', values.description);
       formData.append('plantCare', JSON.stringify([...values.plantCare]));
-      formData.append('price', values.price);
       formData.append('sizes', JSON.stringify(sortedSizes));
       formData.append('category', values.category);
       formData.append('quantity', values.quantity.toString());
@@ -131,13 +130,19 @@ const CreateProduct = () => {
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target;
-
+  
     if (type === 'checkbox') {
       const checkbox = e.target as HTMLInputElement;
       const updatedSizes = checkbox.checked
-        ? [...formik.values.sizes, value]
-        : formik.values.sizes.filter((size) => size !== value);
-
+        ? [...formik.values.sizes, { name: value, price: 0 }]
+        : formik.values.sizes.filter((size) => size.name !== value);
+  
+      formik.setFieldValue('sizes', updatedSizes);
+    } else if (type === 'number') {
+      const sizeName = name.replace('price_', '');
+      const updatedSizes = formik.values.sizes.map((size) =>
+        size.name === sizeName ? { ...size, price: parseFloat(value) } : size
+      );
       formik.setFieldValue('sizes', updatedSizes);
     } else {
       formik.setFieldValue(name, value);
@@ -313,30 +318,13 @@ const CreateProduct = () => {
                   </button>
                 )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                <div className="mb-4">
-                  <label htmlFor="price" className="block text-gray-700 text-sm font-semibold mb-2">
-                    Price
-                  </label>
-                  <input
-                    type="text"
-                    id="price"
-                    name="price"
-                    value={formik.values.price}
-                    onChange={handleInputChange}
-                    className="border border-gray-300 rounded-md p-2 w-full"
-                    required
-                  />
-                  {formik.touched.price && formik.errors.price && (
-                    <div className="text-red-500 text-sm mt-1">{formik.errors.price}</div>
-                  )}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
                 <div className="mb-4">
                   <label htmlFor="quantity" className="block text-gray-700 text-sm font-semibold mb-2">
                     Quantity
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     id="quantity"
                     name="quantity"
                     value={formik.values.quantity}
@@ -388,58 +376,118 @@ const CreateProduct = () => {
                 <label className="block text-gray-700 text-sm font-semibold mb-2">
                   Sizes
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-5">
                   {unit === 'cm' && ['5-10 cm', '10-20 cm', '20-30 cm', '30-40 cm', '40-50 cm', '50-60 cm', '60-70 cm', '70-80 cm', '80-90 cm', '90-100 cm', '100-120 cm', '120-140 cm', '140-160 cm', '160-180 cm', '180-200 cm', '200-220 cm', '220-240 cm', '240-260 cm', '260-280 cm', '280-300 cm'].map((size) => (
-                    <label key={size} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="sizes"
-                        value={`${size}`}
-                        checked={formik.values.sizes.includes(`${size}`)}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      <span className="text-gray-700">{size}</span>
-                    </label>
+                   <div key={size} className="flex items-center">
+                   <label className="flex items-center">
+                     <input
+                       type="checkbox"
+                       name="sizes"
+                       value={size}
+                       checked={formik.values.sizes.some((s) => s.name === size)}
+                       onChange={handleInputChange}
+                       className="mr-2"
+                     />
+                     <span className="text-gray-700">{size}</span>
+                   </label>
+                   {formik.values.sizes.some((s) => s.name === size) && (
+                     <input
+                       type="number"
+                       name={`price_${size}`}
+                       placeholder="Price"
+                       disabled={!formik.values.sizes.some((s) => s.name === size)}
+                       value={
+                         formik.values.sizes.find((s) => s.name === size)?.price || ''
+                       }
+                       onChange={handleInputChange}
+                       className="ml-2 border border-gray-300 rounded-md p-1"
+                     />
+                   )}
+                 </div>
                   ))}
                   {unit === 'L' && ['50 ml','100 ml','150 ml','200 ml','250 ml','300 ml','350 ml','400 ml','450 ml','500 ml','750 ml','1 L','1.5 L','2 L','3 L','4 L','5 L','6 L','7 L','8 L','9 L','10 L','15 L','20 L','25 L','30 L','35 L','40 L','45 L','50 L'].map((size) => (
-                    <label key={size} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="sizes"
-                        value={`${size}`}
-                        checked={formik.values.sizes.includes(`${size}`)}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      <span className="text-gray-700">{size}</span>
-                    </label>
+                     <div key={size} className="flex items-center">
+                     <label className="flex items-center">
+                       <input
+                         type="checkbox"
+                         name="sizes"
+                         value={size}
+                         checked={formik.values.sizes.some((s) => s.name === size)}
+                         onChange={handleInputChange}
+                         className="mr-2"
+                       />
+                       <span className="text-gray-700">{size}</span>
+                     </label>
+                     {formik.values.sizes.some((s) => s.name === size) && (
+                       <input
+                         type="number"
+                         name={`price_${size}`}
+                         placeholder="Price"
+                         disabled={!formik.values.sizes.some((s) => s.name === size)}
+                         value={
+                           formik.values.sizes.find((s) => s.name === size)?.price || ''
+                         }
+                         onChange={handleInputChange}
+                         className="ml-2 border border-gray-300 rounded-md p-1"
+                       />
+                     )}
+                   </div>
                   ))}
                   {unit === 'kg' && ['10 g', '20 g', '30 g','40 g','50 g','100 g','150 g','200 g','250 g','300 g','350 g','400 g','450 g','500 g','1 kg','2 kg','3 kg','4 kg','5 kg','6 kg','7 kg','8 kg','9 kg','10 kg','15 kg','20 kg','25 kg','30 kg','35 kg','40 kg','45 kg','50 kg'].map((size) => (
-                    <label key={size} className="flex items-center">
+                    <div key={size} className="flex items-center">
+                    <label className="flex items-center">
                       <input
                         type="checkbox"
                         name="sizes"
-                        value={`${size}`}
-                        checked={formik.values.sizes.includes(`${size}`)}
+                        value={size}
+                        checked={formik.values.sizes.some((s) => s.name === size)}
                         onChange={handleInputChange}
                         className="mr-2"
                       />
                       <span className="text-gray-700">{size}</span>
                     </label>
+                    {formik.values.sizes.some((s) => s.name === size) && (
+                      <input
+                        type="number"
+                        name={`price_${size}`}
+                        placeholder="Price"
+                        disabled={!formik.values.sizes.some((s) => s.name === size)}
+                        value={
+                          formik.values.sizes.find((s) => s.name === size)?.price || ''
+                        }
+                        onChange={handleInputChange}
+                        className="ml-2 border border-gray-300 rounded-md p-1"
+                      />
+                    )}
+                  </div>
                   ))}
                   {unit === 'count' && ['set 1','set 2','set 3','set 4','set 5','set 6','set 7','set 8','set 9','set 10','set 12','set 14','set 15','set 18','set 20','set 25','set 30','bulk'].map((size) => (
-                    <label key={size} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        name="sizes"
-                        value={`${size}`}
-                        checked={formik.values.sizes.includes(`${size}`)}
-                        onChange={handleInputChange}
-                        className="mr-2"
-                      />
-                      <span className="text-gray-700">{size}</span>
-                    </label>
+                     <div key={size} className="flex items-center">
+                     <label className="flex items-center">
+                       <input
+                         type="checkbox"
+                         name="sizes"
+                         value={size}
+                         checked={formik.values.sizes.some((s) => s.name === size)}
+                         onChange={handleInputChange}
+                         className="mr-2"
+                       />
+                       <span className="text-gray-700">{size}</span>
+                     </label>
+                     {formik.values.sizes.some((s) => s.name === size) && (
+                       <input
+                         type="number"
+                         name={`price_${size}`}
+                         placeholder="Price"
+                         disabled={!formik.values.sizes.some((s) => s.name === size)}
+                         value={
+                           formik.values.sizes.find((s) => s.name === size)?.price || ''
+                         }
+                         onChange={handleInputChange}
+                         className="ml-2 border border-gray-300 rounded-md p-1"
+                       />
+                     )}
+                   </div>
                   ))}
                 </div>
               </div>

@@ -11,11 +11,11 @@ dotenv.config("../.env")
 const apiUrl = process.env.REACT_APP_API_URL;
 export const createProductController=async(req,res)=>{
     try {
-        const {name,code,slug,description,plantCare,price,sizes,category,quantity,offerPercentage}=req.fields
+        const {name,code,slug,description,plantCare,sizes,category,quantity,offerPercentage}=req.fields
         const {image1,image2,image3} =req.files
        
         const existingProduct = await productModel.findOne({ $or: [{ code }, { slug }] });
-
+        console.log(sizes)
         if (existingProduct) {
           return res.status(400).send({
             success: false,
@@ -204,14 +204,15 @@ export const getSingleProductController = async (req, res) => {
 
 export const updateProductController=async(req,res)=>{
     try {
-        const {name,slug,description,price,sizes,plantCare,quantity,offerPercentage}=req.fields
+        const {name,slug,description,sizes,plantCare,quantity,offerPercentage}=req.fields
         const {image1,image2,image3} =req.files
-        
+        const parsedSizes = JSON.parse(sizes);
+       if(parsedSizes){
         const product=await productModel.findByIdAndUpdate(req.params.pid,{
-            ...req.fields,slug:slugify(name)
+            name,slug,description,quantity,offerPercentage,slug:slugify(name)
         },{new:true})
          if(sizes){
-            product.sizes =JSON.parse(sizes)
+           product.sizes = parsedSizes
         }
         if(plantCare){
             product.plantCare =JSON.parse(plantCare)
@@ -256,10 +257,10 @@ export const updateProductController=async(req,res)=>{
                 await saveImage(image3, product._id, 2);
             }
         await product.save()
+       }
         res.status(201).send({
             success:true,
             message:'Product updated successfully',
-            product
         })
     } catch (error) {
         console.log(error)

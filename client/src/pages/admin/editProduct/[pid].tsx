@@ -14,7 +14,6 @@ interface Product {
     code:string;
     description: string;
     plantCare: string[];
-    price: number;
     quantity:number;
     photo:{
         image1:string;
@@ -26,8 +25,12 @@ interface Product {
         _id: string;
         name: string;
     };
-    sizes: string[];
+    sizes: {
+        name: string;
+        price: any;
+      }[];
 }
+
 
 const EditProduct = () => {
     const router = useRouter();
@@ -46,7 +49,6 @@ const EditProduct = () => {
         code:'',
         description: '',
         plantCare: [],
-        price: 0,
         photo:{
             image1:'',
             image2:'',
@@ -60,15 +62,20 @@ const EditProduct = () => {
         },
         sizes: [],
     });
-    const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+    const [selectedSizes, setSelectedSizes] = useState<Product['sizes']>([]);
+
 
     const getSingleProduct = async () => {
         try {
             const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
+            const Sizes = data.product.sizes.map((size:any) => ({
+                name: size.name,
+                price: parseFloat(size.price),
+              }));
             setProduct(data.product);
-            setSelectedSizes(data.product.sizes);
+            setSelectedSizes(Sizes);
             setPlantCare(data.product.plantCare)
-
+            console.log(data.product.sizes)
             setLoading(false);
         } catch (error) {
             window.location.reload();
@@ -84,15 +91,15 @@ const EditProduct = () => {
         try {
             setLoading(true);
             const sortedSizes = [...selectedSizes].sort((size1, size2) => {
-                const size1Digits = parseInt(size1.split('-')[0]);
-                const size2Digits = parseInt(size2.split('-')[0]);
+                const size1Digits = parseInt(size1.name.split('-')[0]);
+                const size2Digits = parseInt(size2.name.split('-')[0]);
                 return size1Digits - size2Digits;
             });
             const formData = new FormData();
             formData.append('name', product.name);
             formData.append('description', product.description);
             formData.append('plantCare', JSON.stringify(plantCare));
-            formData.append('price', product.price.toString());
+            formData.append('sizes', JSON.stringify(sortedSizes));
             formData.append('quantity', product.quantity.toString());
             formData.append('offerPercentage', product.offerPercentage.toString());
             if (image1File) {
@@ -104,7 +111,7 @@ const EditProduct = () => {
             if (image3File) {
                 formData.append('image3', image3File);
             }
-            formData.append('sizes', JSON.stringify(sortedSizes));
+            
 
             const response = await axios.put(
                 `${apiUrl}/api/product/update-product/${pid}`,
@@ -150,16 +157,28 @@ const EditProduct = () => {
         });
     };
 
-    const handleSizeCheckboxChange = (size: string) => {
-        // Toggle the selected size
-        setSelectedSizes((prevSizes) => {
-            if (prevSizes.includes(size)) {
-                return prevSizes.filter((s) => s !== size);
-            } else {
-                return [...prevSizes, size];
-            }
+    const handleSizeCheckboxChange = (size:any) => {
+        const isSelected = selectedSizes.find((s) => s.name === size);
+        if (isSelected) {
+          // Remove size if already selected
+          const updatedSelectedSizes = selectedSizes.filter((s) => s.name !== size);
+          setSelectedSizes(updatedSelectedSizes);
+        } else {
+          // Add size if not already selected
+          const updatedSelectedSizes = [...selectedSizes, { name: size, price: '' }];
+          setSelectedSizes(updatedSelectedSizes);
+        }
+      };
+      const handlePriceInputChange = (size:any, value:any) => {
+        const updatedSelectedSizes = selectedSizes.map((s) => {
+          if (s.name === size) {
+            return { ...s, price: parseFloat(value) };
+          }
+          return s;
         });
-    };
+        setSelectedSizes(updatedSelectedSizes);
+      };
+      
 
     const handleDelete = async () => {
         try {
@@ -278,21 +297,6 @@ const EditProduct = () => {
                                 </button>
                             )}
                         </div>
-
-                        <div className="mb-4">
-                            <label htmlFor="price" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Price
-                            </label>
-                            <input
-                                type="number"
-                                id="price"
-                                name="price"
-                                value={product.price}
-                                onChange={handleInputChange}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                                required
-                            />
-                        </div>
                         <div className="mb-4">
                             <label htmlFor="quantity" className="block text-gray-700 text-sm font-semibold mb-2">
                             Quantity
@@ -343,45 +347,66 @@ const EditProduct = () => {
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 Sizes
                             </label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {unit === 'cm' && ['5-10 cm', '10-20 cm', '20-30 cm', '30-40 cm', '40-50 cm', '50-60 cm', '60-70 cm', '70-80 cm', '80-90 cm', '90-100 cm', '100-120 cm', '120-140 cm', '140-160 cm', '160-180 cm', '180-200 cm', '200-220 cm', '220-240 cm', '240-260 cm', '260-280 cm', '280-300 cm'].map((size) => (
-                                    <label key={size} className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            name="sizes"
-                                            value={`${size}`}
-                                            checked={selectedSizes?.includes(size)}
-                                            onChange={() => handleSizeCheckboxChange(size)}
-                                            className="mr-2"
-                                        />
-                                        <span className="text-gray-700">{size}</span>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
+                                {unit === 'cm' && ['5-10 cm', '10-20 cm', '20-30 cm', '30-40 cm', '40-50 cm', '50-60 cm', '60-70 cm', '70-80 cm', '80-90 cm', '90-100 cm', '100-120 cm', '120-140 cm', '140-160 cm', '160-180 cm', '180-200 cm', '200-220 cm', '220-240 cm', '240-260 cm', '260-280 cm', '280-300 cm'].map((size) => {
+                                   const isSelected = selectedSizes.find((s) => s.name === size);
+
+                                   return (
+                                     <div key={size} className="flex items-center">
+                                       <label className="flex items-center">
+                                         <input
+                                           type="checkbox"
+                                           name={size}
+                                           checked={!!isSelected}
+                                           onChange={() => handleSizeCheckboxChange(size)}
+                                           className="mr-2"
+                                         />
+                                         <span className="text-gray-700">{size}</span>
+                                       </label>
+                                       {isSelected && (
+                                         <input
+                                           type="number"
+                                           placeholder="Price"
+                                           value={isSelected.price}
+                                           onChange={(e) => handlePriceInputChange(size, e.target.value)}
+                                           className="ml-2 border border-gray-300 rounded-md p-1"
+                                         />
+                                       )}
+                                     </div>
+                                )})}
+                                {unit === 'L' && ['50 ml','100 ml','150 ml','200 ml','250 ml','300 ml','350 ml','400 ml','450 ml','500 ml','750 ml','1 L','1.5 L','2 L','3 L','4 L','5 L','6 L','7 L','8 L','9 L','10 L','15 L','20 L','25 L','30 L','35 L','40 L','45 L','50 L'].map((size) => (
+                                    <div key={size} className="flex items-center">
+                                    <label className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        name="sizes"
+                                        className="mr-2"
+                                      />
+                                      <span className="text-gray-700">{size}</span>
                                     </label>
+                                      <input
+                                        type="number"
+                                        placeholder="Price"
+                                        className="ml-2 border border-gray-300 rounded-md p-1"
+                                      />
+                                  </div>
                                 ))}
-                                {unit === 'L' && ['500 ml', '1 l', '2 l'].map((size) => (
-                                    <label key={size} className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            name="sizes"
-                                            value={`${size}`}
-                                            checked={selectedSizes.includes(size)}
-                                            onChange={() => handleSizeCheckboxChange(size)}
-                                            className="mr-2"
-                                        />
-                                        <span className="text-gray-700">{size} L</span>
-                                    </label>
-                                ))}
-                                {unit === 'kg' && ['500 g', '1 kg', '2 kg'].map((size) => (
-                                    <label key={size} className="flex items-center">
-                                        <input
-                                            type="checkbox"
-                                            name="sizes"
-                                            value={`${size}`}
-                                            checked={selectedSizes.includes(size)}
-                                            onChange={() => handleSizeCheckboxChange(size)}
-                                            className="mr-2"
-                                        />
-                                        <span className="text-gray-700">{size}</span>
-                                    </label>
+                                {unit === 'kg' && ['10 g', '20 g', '30 g','40 g','50 g','100 g','150 g','200 g','250 g','300 g','350 g','400 g','450 g','500 g','1 kg','2 kg','3 kg','4 kg','5 kg','6 kg','7 kg','8 kg','9 kg','10 kg','15 kg','20 kg','25 kg','30 kg','35 kg','40 kg','45 kg','50 kg'].map((size) => (
+                                   <div key={size} className="flex items-center">
+                                   <label className="flex items-center">
+                                     <input
+                                       type="checkbox"
+                                       name="sizes"
+                                       className="mr-2"
+                                     />
+                                     <span className="text-gray-700">{size}</span>
+                                   </label>
+                                     <input
+                                       type="number"
+                                       placeholder="Price"
+                                       className="ml-2 border border-gray-300 rounded-md p-1"
+                                     />
+                                 </div>
                                 ))}
                             </div>
                         </div>

@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 
+const sizeSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+  },
+  price: {
+    type: String,
+    required: true,
+  },
+});
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,15 +33,7 @@ const productSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  price: {
-    type: String,
-    required: true,
-  },
-  sizes: [
-    {
-      type: String,
-    },
-  ],
+  sizes: [sizeSchema],
   category: {
     type: mongoose.ObjectId,
     ref: 'category',
@@ -41,11 +44,11 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   photo: {
-    image1:String,
-    image2:String,
-    image3:String,
+    image1: String,
+    image2: String,
+    image3: String,
   },
-  offerPercentage:{
+  offerPercentage: {
     type: Number,
     required: true,
   }
