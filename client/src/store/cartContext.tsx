@@ -39,6 +39,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
       if(cart.length > 0){
         localStorage.setItem('cart', JSON.stringify(cart));
+        const clearCartTimeout = setTimeout(() => {
+          setCart([]);
+          localStorage.removeItem('cart');
+        }, 14 * 24 * 60 * 60 * 1000);
+        return () => clearTimeout(clearCartTimeout);
       }
   }, [cart]);
 

@@ -93,7 +93,6 @@ export default function Header() {
       token: '',
     });
     localStorage.removeItem('user');
-    localStorage.removeItem('cart');
     router.push('/');
   };
   const fetchCategories = async () => {
