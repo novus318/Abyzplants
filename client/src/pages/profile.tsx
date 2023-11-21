@@ -120,6 +120,7 @@ const Profile = () => {
                 </div>
                 <div className="text-lg font-semibold">{auth.user?.name}</div>
               </div>
+              <div className="text-red-500 text-sm mt-2"><span className='align-middle'>* </span>Click on Edit Profile to update details</div>
               <form className="rounded-md space-y-4 mb-4">
                 <div>
                   <input

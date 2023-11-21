@@ -42,9 +42,10 @@ const PaymentCompletePage = () => {
         _id: item._id,
         code: item.code,
         name: item.name,
-        price: item.price,
+        price: item.sizes.price,
+        offer: item.offerPercentage,
         quantity: item.quantity,
-        size: item.size,
+        size: item.sizes.name,
         image:item.image,
         status:'Processing'
       })),
@@ -78,7 +79,14 @@ const PaymentCompletePage = () => {
   };
 
   const calculateSubtotal = () => {
-    return cart.reduce((total, item) => total + item.quantity * item.price, 0);
+    return cart.reduce((total, item) => {
+      const itemPrice = item.sizes.price;
+      const discountedPrice = item.offerPercentage > 0
+        ? itemPrice - (itemPrice * item.offerPercentage / 100)
+        : itemPrice;
+  
+      return total + item.quantity * discountedPrice;
+    }, 0);
   };
 
   const calculateShippingFee = (subtotal: number) => {

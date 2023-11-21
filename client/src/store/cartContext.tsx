@@ -5,8 +5,11 @@ interface CartItem {
   _id: string;
   code: string;
   name: string;
-  price: number;
-  size: string;
+  offerPercentage: number;
+  sizes: {
+    name: string;
+    price: number;
+  }
   quantity: number;
   image:string;
 }
@@ -40,7 +43,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [cart]);
 
   const addToCart = (item: CartItem) => {
-    const itemIndex = cart.findIndex((cartItem) => cartItem._id === item._id && cartItem.size === item.size);
+    const itemIndex = cart.findIndex((cartItem) => cartItem._id === item._id && cartItem.sizes.name === item.sizes.name);
 
     if (itemIndex !== -1) {
       const updatedCart = [...cart];
@@ -52,7 +55,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
   const removeItem = (itemId: string, itemSize: string) => {
     const updatedCart = cart.filter(
-      (cartItem) => !(cartItem._id === itemId && cartItem.size === itemSize)
+      (cartItem) => !(cartItem._id === itemId && cartItem.sizes.name === itemSize)
     );
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
@@ -61,7 +64,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const changeQuantity = (itemId: string, itemSize: string, newQuantity: number) => {
     
       const updatedCart = cart.map((cartItem) => {
-        if (cartItem._id === itemId && cartItem.size === itemSize) {
+        if (cartItem._id === itemId && cartItem.sizes.name === itemSize) {
           return { ...cartItem, quantity: newQuantity };
         }
         return cartItem;

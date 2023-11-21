@@ -12,7 +12,9 @@ interface Order {
     _id: string;
     code: string;
     name: string;
+    status: string;
     price: number;
+    offer: number;
     quantity: number;
     size: string;
   }[];
@@ -124,14 +126,22 @@ const Bill: React.FC = () => {
                 </thead>
                 <tbody>
                   {order.products.map((product, i) => (
-                    <tr key={i}>
-                      <td className="border text-center">{product.code}</td>
-                      <td className="border text-center">{product.name}</td>
-                      <td className="border text-center">{product.price.toFixed(2)}</td>
-                      <td className="border text-center">{product.quantity}</td>
-                      <td className="border text-center">{product.size}</td>
-                      <td className="border text-center">{(product.price * product.quantity).toFixed(2)}</td>
-                    </tr>
+                    product.status !== 'Order Cancelled' && (
+                      <tr key={i}>
+                        <td className="border text-center">{product.code}</td>
+                        <td className="border text-center">{product.name}</td>
+                        <td className="border text-center">
+                          {product.offer
+                            ? (product.price * (1 - product.offer / 100)).toFixed(2)
+                            : product.price.toFixed(2)}
+                        </td>
+                        <td className="border text-center">{product.quantity}</td>
+                        <td className="border text-center">{product.size}</td>
+                        <td className="border text-center">
+                          {((product.price * (1 - product.offer / 100)) * product.quantity).toFixed(2)} AED
+                        </td>
+                      </tr>
+                    )
                   ))}
                   <br />
                   <tr>
@@ -139,14 +149,18 @@ const Bill: React.FC = () => {
                     <td></td>
                     <td className="text-center font-bold">Total Quantity:</td>
                     <td className="border text-center font-bold">
-                      {order.products.reduce((total, product) => total + product.quantity, 0)}
+                      {order.products.reduce((total, product) => {
+                        return product.status !== 'Order Cancelled' ? total + product.quantity : total;
+                      }, 0)}
                     </td>
                     <td className="text-center font-bold">Subtotal:</td>
                     <td className="border text-center font-bold">
                       {order.products
-                        .reduce((total, product) => total + product.price * product.quantity, 0)
+                        .filter(product => product.status !== 'Order Cancelled')
+                        .reduce((total, product) => total + (product.price * (1 - product.offer / 100)) * product.quantity, 0)
                         .toFixed(2)} AED
                     </td>
+
                   </tr>
                   <br />
                   <tr>
@@ -171,7 +185,16 @@ const Bill: React.FC = () => {
                     <td></td>
                     <td></td>
                     <td className='font-bold text-lg text-right'>Total :</td>
-                    <td className='font-semibold border text-lg text-center'>{order.total.toFixed(2)} AED</td>
+                    <td className='font-semibold border text-lg text-center'>{(() => {
+        const subtotal = order.products
+          .filter(product => product.status !== 'Order Cancelled')
+          .reduce((total, product) => total + (product.price * (1 - product.offer / 100)) * product.quantity, 0);
+
+        const shippingCost = order.total < 100 ? 13 : 0;
+        const totalAmount = (subtotal + shippingCost).toFixed(2);
+
+        return `${totalAmount} AED`;
+      })()}</td>
                   </tr>
                 </tbody>
               </table>

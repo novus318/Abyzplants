@@ -341,6 +341,7 @@ const EditProduct = () => {
                                 <option value="cm">cm</option>
                                 <option value="L">L</option>
                                 <option value="kg">kg</option>
+                                <option value="count">count</option>
                             </select>
                         </div>
                         <div className="mb-4">
@@ -374,40 +375,84 @@ const EditProduct = () => {
                                        )}
                                      </div>
                                 )})}
-                                {unit === 'L' && ['50 ml','100 ml','150 ml','200 ml','250 ml','300 ml','350 ml','400 ml','450 ml','500 ml','750 ml','1 L','1.5 L','2 L','3 L','4 L','5 L','6 L','7 L','8 L','9 L','10 L','15 L','20 L','25 L','30 L','35 L','40 L','45 L','50 L'].map((size) => (
-                                    <div key={size} className="flex items-center">
-                                    <label className="flex items-center">
-                                      <input
-                                        type="checkbox"
-                                        name="sizes"
-                                        className="mr-2"
-                                      />
-                                      <span className="text-gray-700">{size}</span>
-                                    </label>
-                                      <input
-                                        type="number"
-                                        placeholder="Price"
-                                        className="ml-2 border border-gray-300 rounded-md p-1"
-                                      />
-                                  </div>
-                                ))}
-                                {unit === 'kg' && ['10 g', '20 g', '30 g','40 g','50 g','100 g','150 g','200 g','250 g','300 g','350 g','400 g','450 g','500 g','1 kg','2 kg','3 kg','4 kg','5 kg','6 kg','7 kg','8 kg','9 kg','10 kg','15 kg','20 kg','25 kg','30 kg','35 kg','40 kg','45 kg','50 kg'].map((size) => (
-                                   <div key={size} className="flex items-center">
-                                   <label className="flex items-center">
-                                     <input
-                                       type="checkbox"
-                                       name="sizes"
-                                       className="mr-2"
-                                     />
-                                     <span className="text-gray-700">{size}</span>
-                                   </label>
-                                     <input
-                                       type="number"
-                                       placeholder="Price"
-                                       className="ml-2 border border-gray-300 rounded-md p-1"
-                                     />
-                                 </div>
-                                ))}
+                                {unit === 'L' && ['50 ml','100 ml','150 ml','200 ml','250 ml','300 ml','350 ml','400 ml','450 ml','500 ml','750 ml','1 L','1.5 L','2 L','3 L','4 L','5 L','6 L','7 L','8 L','9 L','10 L','15 L','20 L','25 L','30 L','35 L','40 L','45 L','50 L'].map((size) => {
+                                    const isSelected = selectedSizes.find((s) => s.name === size);
+
+                                    return (
+                                      <div key={size} className="flex items-center">
+                                        <label className="flex items-center">
+                                          <input
+                                            type="checkbox"
+                                            name={size}
+                                            checked={!!isSelected}
+                                            onChange={() => handleSizeCheckboxChange(size)}
+                                            className="mr-2"
+                                          />
+                                          <span className="text-gray-700">{size}</span>
+                                        </label>
+                                        {isSelected && (
+                                          <input
+                                            type="number"
+                                            placeholder="Price"
+                                            value={isSelected.price}
+                                            onChange={(e) => handlePriceInputChange(size, e.target.value)}
+                                            className="ml-2 border border-gray-300 rounded-md p-1"
+                                          />
+                                        )}
+                                      </div>
+                                 )})}
+                                {unit === 'kg' && ['10 g', '20 g', '30 g','40 g','50 g','100 g','150 g','200 g','250 g','300 g','350 g','400 g','450 g','500 g','1 kg','2 kg','3 kg','4 kg','5 kg','6 kg','7 kg','8 kg','9 kg','10 kg','15 kg','20 kg','25 kg','30 kg','35 kg','40 kg','45 kg','50 kg'].map((size) => {
+                                    const isSelected = selectedSizes.find((s) => s.name === size);
+
+                                    return (
+                                      <div key={size} className="flex items-center">
+                                        <label className="flex items-center">
+                                          <input
+                                            type="checkbox"
+                                            name={size}
+                                            checked={!!isSelected}
+                                            onChange={() => handleSizeCheckboxChange(size)}
+                                            className="mr-2"
+                                          />
+                                          <span className="text-gray-700">{size}</span>
+                                        </label>
+                                        {isSelected && (
+                                          <input
+                                            type="number"
+                                            placeholder="Price"
+                                            value={isSelected.price}
+                                            onChange={(e) => handlePriceInputChange(size, e.target.value)}
+                                            className="ml-2 border border-gray-300 rounded-md p-1"
+                                          />
+                                        )}
+                                      </div>
+                                 )})}
+                                {unit === 'count' && ['set 1','set 2','set 3','set 4','set 5','set 6','set 7','set 8','set 9','set 10','set 12','set 14','set 15','set 18','set 20','set 25','set 30','bulk'].map((size) => {
+                                    const isSelected = selectedSizes.find((s) => s.name === size);
+
+                                    return (
+                                      <div key={size} className="flex items-center">
+                                        <label className="flex items-center">
+                                          <input
+                                            type="checkbox"
+                                            name={size}
+                                            checked={!!isSelected}
+                                            onChange={() => handleSizeCheckboxChange(size)}
+                                            className="mr-2"
+                                          />
+                                          <span className="text-gray-700">{size}</span>
+                                        </label>
+                                        {isSelected && (
+                                          <input
+                                            type="number"
+                                            placeholder="Price"
+                                            value={isSelected.price}
+                                            onChange={(e) => handlePriceInputChange(size, e.target.value)}
+                                            className="ml-2 border border-gray-300 rounded-md p-1"
+                                          />
+                                        )}
+                                      </div>
+                                 )})}
                             </div>
                         </div>
 

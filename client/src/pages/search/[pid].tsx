@@ -20,7 +20,10 @@ interface Product {
     name:string;
     _id:number;
   }
-  price: number;
+  sizes: {
+    name: string;
+    price: number;
+  }[];
   offerPercentage: number;
 }
 
@@ -51,9 +54,9 @@ const Search = () => {
     if (sortOrder) {
       const sorted = products.slice().sort((a, b) => {
         if (sortOrder === 'lowToHigh') {
-          return a.price - b.price;
+          return a.sizes[0].price - b.sizes[0].price;
         } else {
-          return b.price - a.price;
+          return b.sizes[0].price - a.sizes[0].price;
         }
       });
 
@@ -134,18 +137,18 @@ const Search = () => {
                           {item.offerPercentage > 0 ? (
                             <>
                               <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
-                                <s>{Number(item.price).toFixed(1)}</s>
+                                <s>{Number(item.sizes[0].price).toFixed(1)}</s>
                               </span>
                               <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                                 {(
-                                  ((100 - item.offerPercentage) / 100) * item.price
+                                  ((100 - item.offerPercentage) / 100) * item.sizes[0].price
                                 ).toFixed(1)}{' '}
                                 AED
                               </span>
                             </>
                           ) : (
                             <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.price).toFixed(2)} AED
+                              {Number(item.sizes[0].price).toFixed(2)} AED
                             </span>
                           )}
                         </div>

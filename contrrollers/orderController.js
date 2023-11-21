@@ -33,7 +33,7 @@ export const createOrderController = async (req, res) => {
     }
 
     const products = orderDetails.products;
-
+    const totalPrice = orderDetails.total.toFixed(2)
     const newOrder = await new orderModel({
       products,
       total: orderDetails.total,
@@ -74,7 +74,7 @@ export const createOrderController = async (req, res) => {
         <h1 style="color: #333; font-size: 24px;">Order Confirmation</h1>
         <p>Dear ${user.name},</p>
         <p>Thank you for placing your order with Abyzplants.</p>
-        <p><strong>Order Amount:</strong> ${orderDetails.total} AED</p>
+        <p><strong>Order Amount:</strong> ${totalPrice} AED</p>
         <p><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
         <p><strong>Order Date:</strong> ${new Date().toDateString()}</p>
 
@@ -128,7 +128,6 @@ export const getOrdersByUserIdController = async (req, res) => {
     const userId = req.params.pid;
   
     try {
-        console.log('User ID:', userId);
       const orders = await orderModel.find({ user: userId }).exec();
   
       if (orders) {
@@ -252,14 +251,15 @@ export const getOrdersByUserIdController = async (req, res) => {
   
   export const returnOrderStatusAndSendNotification = async (req, res) => {
     try {
-      console.log(req.body)
+      (req.body)
       const orderId = req.params.orderId;
       const productId = req.params.productId;
       const newStatus = req.body.newStatus; 
       const accountDetails = req.body.formData
- 
+      const size = req.body.returnProductSize;
+
       const updatedOrder = await orderModel.findOneAndUpdate(
-        { _id: orderId, 'products._id': productId },
+        { _id: orderId, 'products._id': productId, 'products.size': size },
         { $set: { 'products.$.status': newStatus } },
         { new: true }
       );
@@ -270,7 +270,7 @@ export const getOrdersByUserIdController = async (req, res) => {
       if(newStatus === 'Return'){
         const mailOptions = {
           from: 'info@abyzplants.com',
-          to: 'nizamudheen.tech@gmail.com',
+          to: 'abyzplants@gmail.com',
           subject: 'Customer returned order',
           html: `
       <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
@@ -314,49 +314,55 @@ export const getOrdersByUserIdController = async (req, res) => {
       res.status(500).json({ success: false, message: 'Error updating order status', error });
     }
   };
- export const updateOrderStatusAndSendNotification = async (req, res) => {
-   try {
-     const orderId = req.params.orderId;
-     const productId = req.params.productId;
-     const newStatus = req.body.newStatus; 
-
-     const updatedOrder = await orderModel.findOneAndUpdate(
-      { _id: orderId, 'products._id': productId },
-      { $set: { 'products.$.status': newStatus } },
-      { new: true }
-    );
-    const updatedProduct = updatedOrder.products.find(product => product._id.toString() === productId);
-     if (!updatedOrder) {
-       return res.status(404).json({ success: false, message: 'Order not found' });
-     }
-     switch (newStatus) {
-      case 'Order Shipped':
-       await sendOrderShippedNotification(updatedOrder,updatedProduct,orderId)
-        break;
-      case 'Order Delivered':
-        await sendOrderDeliveredNotification(updatedOrder,updatedProduct,orderId);
-        break;
-      case 'Order Cancelled':
-        await sendOrderCancelledNotification(updatedOrder,updatedProduct,orderId);
-        break;
-      case 'Unable to Process':
-        await sendUnableToProcessNotification(updatedOrder,updatedProduct,orderId);
-        break;
-      case 'Refunded':
-        await sendRefundedNotification(updatedOrder,updatedProduct,orderId);
-        break;
-      default:
-        break;
+  export const updateOrderStatusAndSendNotification = async (req, res) => {
+    try {
+      const orderId = req.params.orderId;
+      const productId = req.params.productId;
+      const newStatus = req.body.newStatus;
+      const size = req.body.size;
+  
+      const updatedOrder = await orderModel.findOneAndUpdate(
+        { _id: orderId, 'products._id': productId, 'products.size': size },
+        { $set: { 'products.$.status': newStatus } },
+        { new: true }
+      );
+  
+      if (!updatedOrder) {
+        return res.status(404).json({ success: false, message: 'Product not found in the order or size does not match' });
+      }
+  
+      const updatedProduct = updatedOrder.products.find(product => product._id.toString() === productId);
+  
+      switch (newStatus) {
+        case 'Order Shipped':
+          await sendOrderShippedNotification(updatedOrder, updatedProduct, orderId);
+          break;
+        case 'Order Delivered':
+          await sendOrderDeliveredNotification(updatedOrder, updatedProduct, orderId);
+          break;
+        case 'Order Cancelled':
+          await sendOrderCancelledNotification(updatedOrder, updatedProduct, orderId);
+          break;
+        case 'Unable to Process':
+          await sendUnableToProcessNotification(updatedOrder, updatedProduct, orderId);
+          break;
+        case 'Refunded':
+          await sendRefundedNotification(updatedOrder, updatedProduct, orderId);
+          break;
+        default:
+          break;
+      }
+  
+      res.status(200).json({ success: true, message: 'Order status updated and SMS notification sent' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Error updating order status', error });
     }
-
-     res.status(200).json({ success: true, message: 'Order status updated and SMS notification sent' });
-   } catch (error) {
-     res.status(500).json({ success: false, message: 'Error updating order status', error });
-   }
- };
+  };
+  
  const sendOrderDeliveredNotification = async (updatedOrder,product,orderId) =>{
   try {
     const user = await userModel.findById(updatedOrder.user);
+    const totalPrice = updatedOrder.total.toFixed(2)
     const productDetails = `
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
       <thead>
@@ -389,7 +395,7 @@ export const getOrdersByUserIdController = async (req, res) => {
             <p>Dear ${user.name},</p>
             <p>We are delighted to inform you that your order with Abyzplants has been successfully delivered.</p>
             <p><strong>Order ID:</strong> ${orderId.substring(16)}</p>
-            <p><strong>Order Amount: </strong>${updatedOrder.total} AED</p>
+            <p><strong>Order Amount: </strong>${totalPrice} AED</p>
             <p><strong>Payment Method:</strong> ${updatedOrder.paymentMethod}</p>
             <p><strong>Delivery Date:</strong> ${new Date().toDateString()}</p>
             <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Details</h2>
@@ -421,12 +427,13 @@ export const getOrdersByUserIdController = async (req, res) => {
     };
     sendEmail()
   } catch (error) {
-    console.log(error)
+    (error)
   }
 };
  const sendOrderShippedNotification = async (updatedOrder,product,orderId) =>{
   try {
     const user = await userModel.findById(updatedOrder.user);
+    const totalPrice = updatedOrder.total.toFixed(2)
     const productDetails = `
   <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <thead>
@@ -459,7 +466,7 @@ export const getOrdersByUserIdController = async (req, res) => {
             <p>Dear ${user.name},</p>
             <p>We are excited to inform you that your order with Abyzplants has been shipped and is on its way to you.</p>
             <p><strong>Order ID:</strong> ${orderId.substring(16)}</p>
-            <p><strong>Order Amount:</strong>${updatedOrder.total} AED</p>
+            <p><strong>Order Amount:</strong>${totalPrice} AED</p>
             <p><strong>Expected Delivery Date : </strong> Within 2 days</p>
             <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Details</h2>
             ${productDetails}
@@ -491,12 +498,13 @@ export const getOrdersByUserIdController = async (req, res) => {
     };
     sendEmail()
   } catch (error) {
-    console.log(error)
+    (error)
   }
  }
  const sendOrderCancelledNotification = async (updatedOrder,product,orderId) =>{
   try {
     const user = await userModel.findById(updatedOrder.user);
+    const totalPrice = updatedOrder.total.toFixed(2)
     const productDetails = `
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
       <thead>
@@ -529,7 +537,7 @@ export const getOrdersByUserIdController = async (req, res) => {
             <p>Dear ${user.name},</p>
             <p>We regret to inform you that your order with Abyzplants has been cancelled.</p>
             <p><strong>Order ID:</strong> ${orderId.substring(16)}</p>
-            <p><strong>Order Amount:</strong> ${updatedOrder.total} AED</p>
+            <p><strong>Order Amount:</strong> ${totalPrice} AED</p>
             <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Details</h2>
             ${productDetails}
             <p>If you have any questions or require further assistance regarding this cancellation, please don't hesitate to contact us.</p>
@@ -560,12 +568,13 @@ export const getOrdersByUserIdController = async (req, res) => {
     };
     sendEmail()
   } catch (error) {
-    console.log(error)
+    (error)
   }
  }
  const sendUnableToProcessNotification = async (updatedOrder,product,orderId) =>{
   try {
     const user = await userModel.findById(updatedOrder.user);
+    const totalPrice = updatedOrder.total.toFixed(2)
     const productDetails = `
     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
       <thead>
@@ -598,7 +607,7 @@ export const getOrdersByUserIdController = async (req, res) => {
             <p>Dear ${user.name},</p>
             <p>We regret to inform you that we are unable to process your order with Abyzplants at this time.</p>
             <p><strong>Order ID:</strong> ${orderId.substring(16)}</p>
-            <p><strong>Order Amount:</strong> ${updatedOrder.total} AED</p>
+            <p><strong>Order Amount:</strong> ${totalPrice} AED</p>
             <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Details</h2>
             ${productDetails}
             <p>If you have any questions or concerns regarding this issue, please don't hesitate to contact us for further assistance.</p>
@@ -629,7 +638,7 @@ export const getOrdersByUserIdController = async (req, res) => {
     };
     sendEmail()
   } catch (error) {
-    console.log(error)
+    (error)
   }
  }
  const sendRefundedNotification = async (updatedOrder,product,orderId) =>{
@@ -697,6 +706,6 @@ export const getOrdersByUserIdController = async (req, res) => {
     };
     sendEmail()
   } catch (error) {
-    console.log(error)
+    (error)
   }
  }

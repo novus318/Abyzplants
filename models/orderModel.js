@@ -13,10 +13,7 @@ const productSchema = new mongoose.Schema({
     enum: ['Processing', 'Ready to Ship', 'Order Shipped', 'Order Delivered', 'Order Cancelled', 'Unable to Process', 'Return', 'Refunded'],
     default: 'Processing',
   },
-  canceledQuantity: {
-    type: Number,
-    default: 0,
-  },
+  offer:Number,
 });
 
 const orderSchema = new mongoose.Schema({

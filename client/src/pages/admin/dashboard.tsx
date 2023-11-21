@@ -28,6 +28,7 @@ interface Product {
   _id: string;
   name: string;
   price: number;
+  offer: number;
   quantity: number;
   size: string;
   code: string;
@@ -187,8 +188,8 @@ const Dashboard: React.FC = () => {
 
     return new Date(dateTime).toLocaleString(undefined, options);
   };
-  const handleStatusChange = (orderId: string,productId:string,newStatus: string) => {
-    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus })
+  const handleStatusChange = (orderId: string, productId: string, newStatus: string,size:any) => {
+    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size })
       .then((response) => {
         if (response.data.success) {
           const updatedOrders = orders.map((order) =>
@@ -316,76 +317,80 @@ const Dashboard: React.FC = () => {
             <div>
               <h2 className="text-2xl font-semibold">Product Details</h2>
               <table className="w-full border-collapse border border-gray-300 mt-4">
-            <thead>
-              <tr>
-                <th className="p-3 text-center">Name</th>
-                <th className="p-3 text-center">Code</th>
-                <th className="p-3 text-center">Price</th>
-                <th className="p-3 text-center">Qty</th>
-                <th className="p-3 text-center">Size</th>
-                <th className="p-3 text-center">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedOrder.products.map((product) => (
-                <tr
-                  key={product._id}
-                  className={
-                    product.status === 'Order Cancelled'
-                      ? 'bg-red-100'
-                      : product.status === 'Return'
-                      ? 'bg-yellow-100'
-                      : product.status === 'Order Delivered' || product.status === 'Refunded'
-                      ? 'bg-green-100'
-                      : 'bg-gray-100'
-                  }
-                >
-                  <td className="p-3 text-center">{product.name}</td>
-                  <td className="p-3 text-center">{product.code}</td>
-                  <td className="p-3 text-center">{product.price}</td>
-                  <td className="p-3 text-center">{product.quantity}</td>
-                  <td className="p-3 text-center">{product.size || 'N/A'}</td>
-                  <td className="p-3 text-center">
-                    {product.status === 'Order Cancelled' ? (
-                      selectedOrder.paymentMethod === 'Cash on Delivery' ? (
-                        'Cancelled'
-                      ) : (
-                        <Select
-                          defaultValue={product.status}
-                          style={{ width: 150 }}
-                          onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
-                        >
-                          <Option value="Refunded">Refunded</Option>
-                        </Select>
-                      )
-                    ) : product.status === 'Return' ? (
-                      <Select
-                        defaultValue={product.status}
-                        style={{ width: 150 }}
-                        onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
-                      >
-                        <Option value="Refunded">Refunded</Option>
-                      </Select>
-                    ) : (
-                      <Select
-                        defaultValue={product.status}
-                        style={{ width: 150 }}
-                        onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus)}
-                      >
-                        <Option value="Processing">Processing</Option>
-                        <Option value="Ready to Ship">Ready to Ship</Option>
-                        <Option value="Order Shipped">Order Shipped</Option>
-                        <Option value="Order Delivered">Order Delivered</Option>
-                        <Option value="Order Cancelled">Order Cancelled</Option>
-                        <Option value="Unable to Process">Unable to Process</Option>
-                        <Option value="Refunded">Refunded</Option>
-                      </Select>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                <thead>
+                  <tr>
+                    <th className="p-3 text-center">Name</th>
+                    <th className="p-3 text-center">Code</th>
+                    <th className="p-3 text-center">Price</th>
+                    <th className="p-3 text-center">Qty</th>
+                    <th className="p-3 text-center">Size</th>
+                    <th className="p-3 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedOrder.products.map((product) => (
+                    <tr
+                      key={product._id}
+                      className={
+                        product.status === 'Order Cancelled'
+                          ? 'bg-red-100'
+                          : product.status === 'Return'
+                            ? 'bg-yellow-100'
+                            : product.status === 'Order Delivered' || product.status === 'Refunded'
+                              ? 'bg-green-100'
+                              : 'bg-gray-100'
+                      }
+                    >
+                      <td className="p-3 text-center">{product.name}</td>
+                      <td className="p-3 text-center">{product.code}</td>
+                      <td className="p-3 text-center">
+                        {product.offer
+                          ? (product.price * (1 - product.offer / 100)).toFixed(2)
+                          : product.price.toFixed(2)} AED
+                      </td>
+                      <td className="p-3 text-center">{product.quantity}</td>
+                      <td className="p-3 text-center">{product.size || 'N/A'}</td>
+                      <td className="p-3 text-center">
+                        {product.status === 'Order Cancelled' ? (
+                          selectedOrder.paymentMethod === 'Cash on Delivery' ? (
+                            'Cancelled'
+                          ) : (
+                            <Select
+                              defaultValue={product.status}
+                              style={{ width: 150 }}
+                              onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                            >
+                              <Option value="Refunded">Refunded</Option>
+                            </Select>
+                          )
+                        ) : product.status === 'Return' ? (
+                          <Select
+                            defaultValue={product.status}
+                            style={{ width: 150 }}
+                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                          >
+                            <Option value="Refunded">Refunded</Option>
+                          </Select>
+                        ) : (
+                          <Select
+                            defaultValue={product.status}
+                            style={{ width: 150 }}
+                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                          >
+                            <Option value="Processing">Processing</Option>
+                            <Option value="Ready to Ship">Ready to Ship</Option>
+                            <Option value="Order Shipped">Order Shipped</Option>
+                            <Option value="Order Delivered">Order Delivered</Option>
+                            <Option value="Order Cancelled">Order Cancelled</Option>
+                            <Option value="Unable to Process">Unable to Process</Option>
+                            <Option value="Refunded">Refunded</Option>
+                          </Select>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               <h3 className="text-xl font-semibold mt-6">Payment : {selectedOrder.paymentMethod}</h3>
               <h2 className="text-2xl font-semibold mt-6">User Address</h2>
               <p className="mb-2">Address: {selectedOrder.user?.address}</p>

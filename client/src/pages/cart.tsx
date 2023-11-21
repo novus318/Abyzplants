@@ -23,7 +23,6 @@ const Cart: React.FC = () => {
   const [zip, setZip] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [isEditable, setIsEditable] = useState(false);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
 
@@ -56,8 +55,6 @@ const Cart: React.FC = () => {
   }, [router]);
 
   const handleUpdateClick = () => {
-    setIsEditable(false);
-    setLoading(true);
     const updatedProfile = {
       ...auth.user,
       city,
@@ -78,22 +75,13 @@ const Cart: React.FC = () => {
 
           ls.user = response.data.updatedUser;
           localStorage.setItem('user', JSON.stringify(ls));
-
-          toast.success('Profile Updated successfully');
-        } else {
-          toast.error(response.data.message);
         }
       })
       .catch((error) => {
-        toast.error('Error updating profile');
+        toast.error('Error updating shipping');
       })
-      .finally(() => {
-        setLoading(false);
-      });
   };
-  const handleEditClick = () => {
-    setIsEditable(true);
-  };
+ 
 
   const handleQuantityChange = (itemId: string, itemSize: string, quantity: number) => {
     changeQuantity(itemId, itemSize, quantity);
@@ -108,7 +96,14 @@ const Cart: React.FC = () => {
   };
 
   const calculateSubtotal = () => {
-    return cart.reduce((total, item) => total + item.quantity * item.price, 0);
+    return cart.reduce((total, item) => {
+      const itemPrice = item.sizes.price;
+      const discountedPrice = item.offerPercentage > 0
+        ? itemPrice - (itemPrice * item.offerPercentage / 100)
+        : itemPrice;
+  
+      return total + item.quantity * discountedPrice;
+    }, 0);
   };
 
   const calculateShippingFee = (subtotal: number) => {
@@ -131,9 +126,10 @@ const Cart: React.FC = () => {
         _id: item._id,
         code: item.code,
         name: item.name,
-        price: item.price,
+        price: item.sizes.price,
+        offer: item.offerPercentage,
         quantity: item.quantity,
-        size: item.size,
+        size: item.sizes.name,
         image:item.image,
         status:'Processing'
       })),
@@ -179,9 +175,10 @@ const Cart: React.FC = () => {
               _id: item._id,
               code: item.code,
               name: item.name,
-              price: item.price,
+              price: item.sizes.price,
+              offer: item.offerPercentage,
               quantity: item.quantity,
-              size: item.size,
+              size: item.sizes.name,
               image:item.image,
               status:'Processing'
             })),
@@ -202,6 +199,7 @@ const Cart: React.FC = () => {
 
 
   const handleCheckout = () => {
+    handleUpdateClick()
     if (selectedPaymentMethod === '') {
       toast.error('Please select a payment method...');
     } else if (selectedPaymentMethod === 'cod') {
@@ -248,14 +246,21 @@ const Cart: React.FC = () => {
                             </Link>
                             <div className="ml-4 flex-1">
                               <h2 className="text-lg font-semibold text-gray-800">{item.name}</h2>
-                              <p className="text-gray-500 mt-1">Size: {item.size}</p>
-                              <p className="text-gray-500 mt-1">Price: {Number(item.price).toFixed(2)} AED</p>
+                              <p className="text-gray-500 mt-1">Size: {item.sizes.name}</p>
+                              {item?.offerPercentage > 0 ? (
+                                <p className="text-gray-500 mt-1"> Price: <span><s>{Number(item.sizes.price).toFixed(2)} AED</s></span> {(
+                                  ((100 - item.offerPercentage) / 100) * item.sizes.price
+                                ).toFixed(2)}{' '}
+                                AED</p>
+                                ):(
+                                  <p className="text-gray-500 mt-1">Price: {Number(item.sizes.price).toFixed(2)} AED</p>
+                                )}
                             </div>
                             <div className="flex items-center">
                               {item.quantity > 1 ? (
                                 <button
                                   className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
-                                  onClick={() => handleQuantityChange(item._id, item.size, item.quantity - 1)}
+                                  onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity - 1)}
                                 >
                                   <FaMinus size={16} />
                                 </button>
@@ -265,13 +270,13 @@ const Cart: React.FC = () => {
                               </span>
                               <button
                                 className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
-                                onClick={() => handleQuantityChange(item._id, item.size, item.quantity + 1)}
+                                onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity + 1)}
                               >
                                 <FaPlus size={16} />
                               </button>
                               <button
                                 className="text-[#a14e3a] ml-2 sm:ml-4"
-                                onClick={() => handleRemoveItem(item._id, item.size)}
+                                onClick={() => handleRemoveItem(item._id, item.sizes.name)}
                               >
                                 <FaTimes size={22} />
                               </button>
@@ -287,7 +292,8 @@ const Cart: React.FC = () => {
                       <h2 className="text-xl font-semibold text-[#5f9231]">Order Summary</h2>
                       <div className="flex justify-between mt-4">
                         <span>Subtotal:</span>
-                        <span className="text-[#5f9231]">{calculateSubtotal().toFixed(2)} AED</span>
+                        <span className="text-[#5f9231]">
+                          {calculateSubtotal().toFixed(2)} AED</span>
                       </div>
                       <div className="flex justify-between mt-2">
                         <span>Shipping:</span>
@@ -314,9 +320,7 @@ const Cart: React.FC = () => {
                             placeholder="Phone Number (+971 5XX XXX XXXX)"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className={`w-full px-4 py-2 rounded-lg border ${isEditable ? 'border-gray-300' : 'border-[#5f9231]'
-                              } focus:outline-none ${isEditable ? '' : 'text-[#5f9231]'} text-base`}
-                            disabled={!isEditable}
+                            className='w-full px-4 py-2 rounded-lg border border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
                           />
                         </div>
                         <div className="mt-2">
@@ -324,9 +328,7 @@ const Cart: React.FC = () => {
                             placeholder="Address"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            className={`w-full px-4 py-2 rounded-lg border ${isEditable ? 'border-gray-300' : 'border-[#5f9231]'
-                              } focus:outline-none ${isEditable ? '' : 'text-[#5f9231]'} text-base`}
-                            disabled={!isEditable}
+                            className='w-full px-4 py-2 rounded-lg border border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
                           />
                         </div>
                         <div className="mt-2 flex items-center">
@@ -336,9 +338,8 @@ const Cart: React.FC = () => {
                               placeholder="City"
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
-                              className={`w-full px-4 py-2 rounded-lg border ${isEditable ? 'border-gray-300' : 'border-[#5f9231]'
-                                } focus:outline-none ${isEditable ? '' : 'text-[#5f9231]'} text-base`}
-                              disabled={!isEditable}
+                              className='w-full px-4 py-2 rounded-lg border  border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
+
                             />
                           </div>
                           <div className="w-1/2">
@@ -347,29 +348,9 @@ const Cart: React.FC = () => {
                               placeholder="ZIP Code"
                               value={zip}
                               onChange={(e) => setZip(e.target.value)}
-                              className={`w-full px-4 py-2 rounded-lg border ${isEditable ? 'border-gray-300' : 'border-[#5f9231]'
-                                } focus:outline-none ${isEditable ? '' : 'text-[#5f9231]'} text-base`}
-                              disabled={!isEditable}
+                              className='w-full px-4 py-2 rounded-lg border  border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
                             />
                           </div>
-                        </div>
-
-                        <div className="mt-4">
-                          {isEditable ? (
-                            <button
-                              onClick={handleUpdateClick}
-                              className="w-full bg-[#5f9231] text-white py-2 rounded-md hover:bg-[#a14e3a] focus:outline-none focus:ring focus:ring-offset-2 focus:ring-[#a14e3a]"
-                            >
-                              Confirm Shipping
-                            </button>
-                          ) : (
-                            <button
-                              onClick={handleEditClick}
-                              className="w-full bg-[#a14e3a] text-white py-2 rounded-md hover-bg-[#5f9231] focus:outline-none focus:ring focus:ring-offset-2 focus:ring-[#a14e3a]"
-                            >
-                              Edit Shipping
-                            </button>
-                          )}
                         </div>
                       </div>
                       <div className="mt-4">
