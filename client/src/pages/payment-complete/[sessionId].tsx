@@ -46,6 +46,7 @@ const PaymentCompletePage = () => {
         offer: item.offerPercentage,
         quantity: item.quantity,
         size: item.sizes.name,
+        pots: item.pots,
         image:item.image,
         status:'Processing'
       })),

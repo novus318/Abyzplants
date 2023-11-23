@@ -31,6 +31,11 @@ interface Product {
   offer: number;
   quantity: number;
   size: string;
+  pots:
+  {
+    potName: string;
+    potPrice: number;
+  }
   code: string;
   status: string;
 }
@@ -137,34 +142,6 @@ const Dashboard: React.FC = () => {
       setFilteredOrders(filtered);
     }
   };
-
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Code',
-      dataIndex: 'code',
-      key: 'code',
-    },
-    {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
-    },
-    {
-      title: 'Qty',
-      dataIndex: 'quantity',
-      key: 'quantity',
-    },
-    {
-      title: 'Size',
-      dataIndex: 'size',
-      key: 'size',
-    },
-  ];
 
   const handleViewClick = (order: Order) => {
     setSelectedOrder(order);
@@ -344,12 +321,20 @@ const Dashboard: React.FC = () => {
                       <td className="p-3 text-center">{product.name}</td>
                       <td className="p-3 text-center">{product.code}</td>
                       <td className="p-3 text-center">
+                        {product.pots?.potPrice ? 
+                        (<>
                         {product.offer
-                          ? (product.price * (1 - product.offer / 100)).toFixed(2)
-                          : product.price.toFixed(2)} AED
+                          ? ((Number(product.price) + Number(product.pots.potPrice)) * (1 - product.offer / 100)).toFixed(2)
+                          : (Number(product.price) + Number(product.pots.potPrice)).toFixed(2)}
+                          </>):
+                          (<>
+                          {product.offer
+                            ? (product.price * (1 - product.offer / 100)).toFixed(2)
+                            : product.price.toFixed(2)}
+                            </>)} AED
                       </td>
                       <td className="p-3 text-center">{product.quantity}</td>
-                      <td className="p-3 text-center">{product.size || 'N/A'}</td>
+                      <td className="p-3 text-center">{product.size || 'N/A'} {product.pots?.potPrice && `/ ${product.pots.potName}`}</td>
                       <td className="p-3 text-center">
                         {product.status === 'Order Cancelled' ? (
                           selectedOrder.paymentMethod === 'Cash on Delivery' ? (

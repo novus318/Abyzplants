@@ -18,6 +18,11 @@ interface Product {
   offer: number;
   quantity: number;
   size: string;
+  pots:
+  {
+    potName: string;
+    potPrice: number;
+  }
   status: string;
 }
 
@@ -253,11 +258,19 @@ const Order = () => {
                           <div className="flex flex-col md:flex-row w-full">
                             <div className="md:flex-shrink">
                               <p className="text-[#5f9231] font-semibold text-lg mb-2">{product.name}</p>
-                              {product.offer ? (<p className="text-gray-500 text-sm mb-2">Discount Price:  {(((100 - product.offer) / 100) * product.price
-                              ).toFixed(2)}{' '} AED</p>)
-                              :(<p className="text-gray-500 text-sm mb-2">Price: {product.price.toFixed(2)} AED</p>)}
+                              {product.offer ? (
+                              <>
+                              {product.pots?.potPrice ? 
+                              (<p className="text-gray-500 text-sm mb-2">Discount Price:  {(((100 - product.offer) / 100) * (Number(product.price) + Number(product.pots?.potPrice))
+                              ).toFixed(2)}{' '} AED</p>):
+                              (<p className="text-gray-500 text-sm mb-2">Discount Price:  {(((100 - product.offer) / 100) * product.price
+                              ).toFixed(2)}{' '} AED</p>)}</>
+                              )
+                              :(<>
+                              {product.pots?.potPrice ?(<p className="text-gray-500 text-sm mb-2">Price: {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED</p>)
+                              :(<p className="text-gray-500 text-sm mb-2">Price: {product.price.toFixed(2)} AED</p>)}</>)}
                               <p className="text-gray-500 text-sm mb-2">Quantity: {product.quantity}</p>
-                              <p className="text-gray-500 text-sm mb-2">Size: {product.size}</p>
+                              <p className="text-gray-500 text-sm mb-2">Size: {product.size} {product.pots && `/ ${product.pots.potName}`}</p>
                             </div>
                             <div className="md:ml-auto md:text-right mt-4 md:mt-0">
                               <p className='text-lg font-semibold text-[#5f9231] mb-2'>

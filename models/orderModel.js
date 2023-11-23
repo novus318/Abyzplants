@@ -7,6 +7,10 @@ const productSchema = new mongoose.Schema({
   price: Number,
   quantity: Number,
   size: String,
+  pots: {
+    potName: String,
+    potPrice: Number,
+  },
   image: String,
   status: {
     type: String,

@@ -1,5 +1,16 @@
 import mongoose from 'mongoose';
 
+const potSchema = new mongoose.Schema({
+  potName: {
+    type: String,
+    required: true,
+  },
+  potPrice: {
+    type: String,
+    required: true,
+  },
+});
+
 const sizeSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -8,6 +19,10 @@ const sizeSchema = new mongoose.Schema({
   price: {
     type: String,
     required: true,
+  },
+  pots: {
+    type: [potSchema],
+    required: false, 
   },
 });
 

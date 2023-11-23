@@ -9,13 +9,14 @@ import { fileURLToPath } from 'url';
 dotenv.config("../.env")
 
 const apiUrl = process.env.REACT_APP_API_URL;
+
+
 export const createProductController=async(req,res)=>{
     try {
         const {name,code,slug,description,plantCare,sizes,category,quantity,offerPercentage}=req.fields
         const {image1,image2,image3} =req.files
        
         const existingProduct = await productModel.findOne({ $or: [{ code }, { slug }] });
-        console.log(sizes)
         if (existingProduct) {
           return res.status(400).send({
             success: false,
@@ -78,7 +79,6 @@ export const createProductController=async(req,res)=>{
             product
         })
     } catch (error) {
-        console.log(error)
         res.status(500).send({
             success:false,
             error,
@@ -97,7 +97,6 @@ export const getProductController = async (req, res) => {
             products
         });
     } catch (error) {
-        console.log(error);
         res.status(500).send({
             success: false,
             message: 'Error in getting products',
@@ -146,7 +145,7 @@ export const searchProductsController = async (req, res) => {
             products,
         });
     } catch (error) {
-        console.log(error);
+    
         res.status(500).send({
             success: false,
             message: 'Error in searching for products',
@@ -168,7 +167,7 @@ export const getRecommendedProductController= async(req,res)=>{
             products
         })
     } catch (error) {
-        console.log(error)
+    
         res.status(500).send({
             
             success:false,
@@ -263,7 +262,7 @@ export const updateProductController=async(req,res)=>{
             message:'Product updated successfully',
         })
     } catch (error) {
-        console.log(error)
+    
         res.status(500).send({
             success:false,
             error,
@@ -297,7 +296,7 @@ export const deleteProductController =async(req,res)=>{
             message:'Product deleted Successfully'
         })
     } catch (error) {
-        console.log(error)
+    
         res.status(500).send({
             success:false,
             message:'Error while deleting product',
@@ -333,7 +332,7 @@ export const relatedProductontroller =async(req,res)=>{
             products
         })
     } catch (error) {
-        console.log(error)
+    
         res.status(400).send({
             success:false,
             message:'Error while getting product',

@@ -258,11 +258,18 @@ export const getOrdersByUserIdController = async (req, res) => {
       const accountDetails = req.body.formData
       const size = req.body.returnProductSize;
 
-      const updatedOrder = await orderModel.findOneAndUpdate(
-        { _id: orderId, 'products._id': productId, 'products.size': size },
-        { $set: { 'products.$.status': newStatus } },
-        { new: true }
-      );
+      const query = { _id: orderId };
+      const update = {
+        $set: {
+          'products.$[product].status': newStatus
+        }
+      };
+      const options = {
+        arrayFilters: [{ 'product._id': productId, 'product.size': size }],
+        new: true
+      };
+      
+      const updatedOrder = await orderModel.findOneAndUpdate(query, update, options);
  
       if (!updatedOrder) {
         return res.status(404).json({ success: false, message: 'Order not found' });
@@ -320,12 +327,19 @@ export const getOrdersByUserIdController = async (req, res) => {
       const productId = req.params.productId;
       const newStatus = req.body.newStatus;
       const size = req.body.size;
-  
-      const updatedOrder = await orderModel.findOneAndUpdate(
-        { _id: orderId, 'products._id': productId, 'products.size': size },
-        { $set: { 'products.$.status': newStatus } },
-        { new: true }
-      );
+
+      const query = { _id: orderId };
+      const update = {
+        $set: {
+          'products.$[product].status': newStatus
+        }
+      };
+      const options = {
+        arrayFilters: [{ 'product._id': productId, 'product.size': size }],
+        new: true
+      };
+      
+      const updatedOrder = await orderModel.findOneAndUpdate(query, update, options);
   
       if (!updatedOrder) {
         return res.status(404).json({ success: false, message: 'Product not found in the order or size does not match' });

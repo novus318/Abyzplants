@@ -16,7 +16,12 @@ import { Select } from 'antd';
 const { Option } = Select;
 interface ProductSize {
   name: string;
-  price: number; 
+  price: number;
+  pots:
+  {
+    potName: string;
+    potPrice: number;
+  }[]
 }
 interface Product {
   _id: string;
@@ -44,6 +49,7 @@ interface CartItem {
   name: string;
   image: string;
   sizes: ProductSize[]
+  pots: ProductSize['pots']
   quantity: number;
   offerPercentage: number;
 }
@@ -68,6 +74,8 @@ const Similar: React.FC = () => {
   const [SimilarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSizes, setSelectedSizes] = useState<Product['sizes']>([]);
+  const [selectedPots, setSelectedPots] = useState<ProductSize['pots']>([]);
+
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(locations[0]);
@@ -121,6 +129,7 @@ const Similar: React.FC = () => {
             code: product.code,
             name: product.name,
             sizes: selectedSizes,
+            pots: selectedPots,
             offerPercentage: product.offerPercentage,
             quantity: quantity,
             image: selectedImage,
@@ -148,13 +157,14 @@ const Similar: React.FC = () => {
           return;
         }
         else if (product) {
-         
+
           const item: CartItem = {
             _id: product._id,
             code: product.code,
             name: product.name,
             offerPercentage: product.offerPercentage,
             sizes: selectedSizes,
+            pots: selectedPots,
             quantity: quantity,
             image: selectedImage,
           };
@@ -180,9 +190,10 @@ const Similar: React.FC = () => {
   };
 
   const handleSizeSelection = (size: ProductSize) => {
-    const selectedSize = product?.sizes.find((s:any) => s.name === size.name);
+    const selectedSize = product?.sizes.find((s: any) => s.name === size.name);
     if (selectedSize) {
       setSelectedSizes(selectedSize as any);
+      setSelectedPots((selectedSize as any).pots[0]);
     }
   };
 
@@ -208,6 +219,7 @@ const Similar: React.FC = () => {
       setProduct(data.product);
       getSimilarProduct(data?.product._id, data?.product.category._id);
       setSelectedSizes(data.product.sizes[0])
+      setSelectedPots(data?.product.sizes[0]?.pots[0])
       if (data.product.photo) {
         setSelectedImage(data.product.photo.image1);
       }
@@ -283,10 +295,24 @@ const Similar: React.FC = () => {
                         {product.offerPercentage ? (
                           <>
                             <span className="text-[#a14e3a] font-semibold">
-                              {(((100 - product.offerPercentage) / 100) * (selectedSizes as any)?.price).toFixed(2)} AED
+                              {(selectedPots as any)?.potPrice ? (
+                                (
+                                  ((100 - product.offerPercentage) / 100) * (Number((selectedSizes as any)?.price) + Number((selectedPots as any).potPrice))
+                                ).toFixed(2)
+                              ) : (
+                                (((100 - product.offerPercentage) / 100) * (selectedSizes as any)?.price).toFixed(2)
+                              )} AED
                             </span>
+
                             <span className="text-gray-500 ml-2 line-through">
-                              {Number((selectedSizes as any)?.price).toFixed(2)} AED
+                              {(selectedPots as any)?.potPrice ? (
+                                (
+                                  Number((selectedSizes as any)?.price) +
+                                  Number((selectedPots as any)?.potPrice)
+                                ).toFixed(2)
+                              ) : (
+                                Number((selectedSizes as any)?.price).toFixed(2)
+                              )} AED
                             </span>
                             <span className="text-[#5f9231] ml-2">
                               {product.offerPercentage}% OFF
@@ -294,23 +320,31 @@ const Similar: React.FC = () => {
                           </>
                         ) : (
                           <span className="text-[#a14e3a] font-semibold">
-                            {Number((selectedSizes as any)?.price).toFixed(2)} AED
+                            {(selectedPots as any)?.potPrice ? (
+                              (
+                                Number((selectedSizes as any)?.price) +
+                                Number((selectedPots as any)?.potPrice)
+                              ).toFixed(2)
+                            ) : (
+                              Number((selectedSizes as any)?.price).toFixed(2)
+                            )} AED
                           </span>
                         )}
+
                       </p>
 
                       <div className="mt-4">
-                        <p className="text-xl">Size</p>
+                        <p className="text-sm text-gray-600">choose size</p>
                         {selectedSizeError && (
                           <p className="text-red-500">{selectedSizeError}</p>
                         )}
                         <div className="flex flex-wrap">
-                          {product?.sizes.map((size:any, index:any) => (
+                          {product?.sizes.map((size: any, index: any) => (
                             <button
                               key={index}
                               className={`${(selectedSizes as any)?.name === size.name
-                                  ? 'bg-[#5f9231] text-white'
-                                  : 'bg-gray-200 text-[#5f9231]'
+                                ? 'bg-[#5f9231] text-white'
+                                : 'bg-gray-200 text-[#5f9231]'
                                 } py-2 px-4 rounded-md m-2 hover:ring-[#8d4533] hover:ring-2 transition-colors duration-300`}
                               onClick={() => handleSizeSelection(size)}
                             >
@@ -319,9 +353,28 @@ const Similar: React.FC = () => {
                           ))}
                         </div>
                       </div>
+                      {(selectedSizes as any)?.pots.length >0 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-gray-600">choose pot</p>
+                          <div className="flex flex-wrap">
+                            {(selectedSizes as any)?.pots?.map((pot: any, index: any) => (
+                              <button
+                                key={index}
+                                className={`${selectedPots === pot
+                                  ? 'bg-[#5f9231] text-white'
+                                  : 'bg-gray-200 text-[#5f9231]'
+                                  } py-2 px-4 rounded-md m-2 hover:ring-[#8d4533] hover:ring-2 transition-colors duration-300`}
+                                onClick={() => setSelectedPots(pot)}
+                              >
+                                {pot.potName}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="mt-4">
-                        <p className="text-xl">Quantity</p>
+                        <p className="text-sm text-gray-600">Quantity</p>
                         <div className="flex items-center space-x-4 py-3">
                           <span onClick={handleDecrementQuantity} className="cursor-pointer ring-[#a14f3a27] ring-1 rounded-sm p-1">
                             <FaMinus className="text-[#5f9231] text-2xl" />
@@ -368,7 +421,7 @@ const Similar: React.FC = () => {
                       </div>
 
                       <div className="my-3">
-                        <label className="text-lg font-semibold">Select Delivery Location:</label>
+                        <label className="text-base font-semibold">Select Delivery Location:</label>
                         <Select
                           value={selectedLocation.name}
                           onChange={(value) => handleLocationChange(value)}
@@ -387,23 +440,23 @@ const Similar: React.FC = () => {
                         <strong>{selectedLocation.name}:</strong> {selectedLocation.days}
                       </p>
                       {product.plantCare?.length > 0 && (
-                        <div className="bg-[#f5f5f5] p-4 md:p-6 rounded-lg shadow-md my-6">
-                          <h2 className="text-base md:text-lg lg:text-xl font-semibold mb-4">Plant Care</h2>
+                        <div className="bg-[#f5f5f5] p-4 md:p-6 rounded-lg shadow-md my-2">
+                          <h2 className="text-sm md:text-base lg:text-lg font-semibold mb-4">Plant Care</h2>
                           <ul className="space-y-2">
                             {product?.plantCare?.map((point, index) => (
                               <li key={index} className="flex items-start">
-                                <span className="text-[#5f9231] mt-1 mr-1 md:mt-0 md:mr-2">
+                                <span className="text-[#5f9231] mr-1 md:mr-2 my-auto">
                                   <FaArrowRight />
                                 </span>
-                                <p className="text-base md:text-lg lg:text-xl text-gray-700">{point}</p>
+                                <p className="text-xs md:text-sm lg:text-base text-gray-700">{point}</p>
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
                       <div className="mt-4 md:mt-8">
-                        <span className="text-lg md:text-xl lg:text-2xl text-[#5f9231] font-semibold">Details:</span>
-                        <p className="text-base md:text-lg lg:text-xl text-gray-600 mt-2">
+                        <span className="text-sm md:text-base lg:text-lg text-[#5f9231] font-semibold">Details:</span>
+                        <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-2">
                           {product.description}
                         </p>
                       </div>
@@ -427,47 +480,62 @@ const Similar: React.FC = () => {
                   {SimilarProducts?.map((item) => (
                     <Link href={`/details/${item._id}`} key={item._id}>
                       <div
-                        key={item._id}
-                        className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
-                      >
-                        {item.offerPercentage > 0 && (
-                          <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                            {item.offerPercentage}% OFF
-                          </div>
-                        )}
-                        <img
-                          src={item.photo.image1}
-                          alt={item.name}
-                          className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
-                        />
-                        <div className="p-4">
-                          <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
-                            {item.name.substring(0, 13)}..
-                          </h3>
-                          <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
-                            {item.description.substring(0, 43)}...
-                          </p>
-                          <div className="flex items-center mb-2">
-                            {item.offerPercentage > 0 ? (
-                              <>
-                                <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
+                      key={item._id}
+                      className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
+                    >
+                      {item.offerPercentage > 0 && (
+                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
+                          {item.offerPercentage}% OFF
+                        </div>
+                      )}
+                      <img
+                        src={item.photo?.image1}
+                        alt={item.name}
+                        className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
+                      />
+                      <div className="p-4">
+                        <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
+                          {item.name.substring(0, 13)}..
+                        </h3>
+                        <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
+                          {item.description.substring(0, 43)}...
+                        </p>
+                        <div className="flex items-center mb-2">
+                          {item.offerPercentage > 0 ? (
+                            <>
+                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
+                                {item.sizes[0].pots[0] ?
+                                 (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
                                   <s>{Number(item.sizes[0].price).toFixed(1)}</s>
-                                </span>
-                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                  {(
-                                    ((100 - item.offerPercentage) / 100) * item.sizes[0].price
-                                  ).toFixed(1)}{' '}
-                                  AED
-                                </span>
-                              </>
-                            ) : (
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {Number(item.sizes[0].price).toFixed(2)} AED
+                                )}
                               </span>
-                            )}
-                          </div>
+                              {item.sizes[0]?.pots[0] ? (
+                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                                {(
+                                  ((100 - item.offerPercentage) / 100) * (Number(item.sizes[0].price) +
+                                  Number(item.sizes[0].pots[0].potPrice))
+                                ).toFixed(1)} AED
+                              </span>                              
+                              ):
+                              (<span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                                {(
+                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0].price)
+                                ).toFixed(1)}{' '}
+                                AED
+                              </span>)}
+                            </>
+                          ) : (
+                            <>
+                            {item.sizes[0].pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                            {(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED
+                            </span>):(<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                              {Number(item.sizes[0].price).toFixed(2)} AED
+                            </span>)}
+                            </>
+                          )}
                         </div>
                       </div>
+                    </div>
                     </Link>
                   ))}
                 </Carousel>

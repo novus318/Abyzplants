@@ -98,13 +98,17 @@ const Cart: React.FC = () => {
   const calculateSubtotal = () => {
     return cart.reduce((total, item) => {
       const itemPrice = item.sizes.price;
+      const potPrice = item.pots?.potPrice || 0; // Assuming potPrice is optional
+  
+      const totalPrice = (Number(itemPrice) + Number(potPrice));
       const discountedPrice = item.offerPercentage > 0
-        ? itemPrice - (itemPrice * item.offerPercentage / 100)
-        : itemPrice;
+        ? totalPrice - (totalPrice * item.offerPercentage / 100)
+        : totalPrice;
   
       return total + item.quantity * discountedPrice;
     }, 0);
   };
+  
 
   const calculateShippingFee = (subtotal: number) => {
     if (subtotal >= 100) {
@@ -130,6 +134,7 @@ const Cart: React.FC = () => {
         offer: item.offerPercentage,
         quantity: item.quantity,
         size: item.sizes.name,
+        pots: item.pots,
         image:item.image,
         status:'Processing'
       })),
@@ -179,6 +184,7 @@ const Cart: React.FC = () => {
               offer: item.offerPercentage,
               quantity: item.quantity,
               size: item.sizes.name,
+              pots: item.pots,
               image:item.image,
               status:'Processing'
             })),
@@ -246,14 +252,24 @@ const Cart: React.FC = () => {
                             </Link>
                             <div className="ml-4 flex-1">
                               <h2 className="text-lg font-semibold text-gray-800">{item.name}</h2>
-                              <p className="text-gray-500 mt-1">Size: {item.sizes.name}</p>
+                              <p className="text-gray-500 mt-1 text-sm">Size: {item.sizes.name} {item.pots && `/ ${item.pots.potName}`}</p>
                               {item?.offerPercentage > 0 ? (
-                                <p className="text-gray-500 mt-1"> Price: <span><s>{Number(item.sizes.price).toFixed(2)} AED</s></span> {(
-                                  ((100 - item.offerPercentage) / 100) * item.sizes.price
+                                <>
+                                {item.pots?.potPrice ?
+                                (<p className="text-gray-500 mt-1 text-sm font-medium"> Price: <span><s>{(Number(item.sizes.price) + Number(item.pots?.potPrice)).toFixed(2)} AED</s></span> {(
+                                  ((100 - item.offerPercentage) / 100) * (Number(item.sizes.price) + Number(item.pots?.potPrice))
                                 ).toFixed(2)}{' '}
-                                AED</p>
+                                AED</p>):
+                                (<p className="text-gray-500 mt-1 text-sm font-medium"> Price: <span><s>{Number(item.sizes.price).toFixed(2)} AED</s></span> {(
+                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes.price)
+                                ).toFixed(2)}{' '}
+                                AED</p>)}</>
                                 ):(
-                                  <p className="text-gray-500 mt-1">Price: {Number(item.sizes.price).toFixed(2)} AED</p>
+                                  <>
+                                  {item.pots?.potPrice ? (
+                                  <p className="text-gray-500 mt-1 text-sm font-medium">Price: {(Number(item.sizes.price) + Number(item.pots?.potPrice)).toFixed(2)} AED</p>):
+                                  (<p className="text-gray-500 mt-1 text-sm font-medium">Price: {Number(item.sizes.price).toFixed(2)} AED</p>)}
+                                  </>
                                 )}
                             </div>
                             <div className="flex items-center">

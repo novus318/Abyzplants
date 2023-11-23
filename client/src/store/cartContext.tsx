@@ -10,6 +10,10 @@ interface CartItem {
     name: string;
     price: number;
   }
+  pots:{
+    potName: string;
+    potPrice: number;
+  },
   quantity: number;
   image:string;
 }
