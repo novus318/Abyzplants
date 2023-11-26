@@ -37,7 +37,7 @@ const Footer = () => {
         <div className="md:w-1/3 text-center mb-4">
           <h3 className="text-2xl font-semibold mb-2">Connect With Us</h3>
           <div className="flex space-x-4 justify-center">
-            <a href="https://www.facebook.com/people/Abyzplants/61553170792288/" target="_blank" className="text-white hover:text-[#5f9231] transition-colors duration-300">
+            <a href="https://www.facebook.com/profile.php?id=61553170792288" target="_blank" className="text-white hover:text-[#5f9231] transition-colors duration-300">
               <FaFacebook size={30} />
             </a>
             <a href="https://www.instagram.com/abyz_plants/"  target="_blank" className="text-white hover:text-[#5f9231] transition-colors duration-300">

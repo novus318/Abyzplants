@@ -6,6 +6,7 @@ import connectDB from "./config/db.js"
 import authRoutes from './routes/authRoute.js'
 import categoryRoutes from './routes/categoryRoute.js'
 import productRoutes from './routes/productRoute.js'
+import potRoutes from './routes/potRoute.js'
 import orderRoutes from './routes/orderRoute.js'
 import cors from 'cors'
 import path from "path"
@@ -26,9 +27,11 @@ app.use(morgan('dev'))
 //routes
 app.use('/api/logo', express.static(path.join(new URL(import.meta.url).pathname, '..', 'logo')));
 app.use('/api/images', express.static(path.join(new URL(import.meta.url).pathname, '..', 'images')));
+app.use('/api/Potimages', express.static(path.join(new URL(import.meta.url).pathname, '..', 'Potimages')));
 app.use('/api/auth',authRoutes)
 app.use('/api/category',categoryRoutes)
 app.use('/api/product',productRoutes)
+app.use('/api/pot',potRoutes)
 app.use('/api/order',orderRoutes)
 //rest api
 app.get('/api',(req,res)=>{

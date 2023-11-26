@@ -98,7 +98,7 @@ const Cart: React.FC = () => {
   const calculateSubtotal = () => {
     return cart.reduce((total, item) => {
       const itemPrice = item.sizes.price;
-      const potPrice = item.pots?.potPrice || 0; // Assuming potPrice is optional
+      const potPrice = item.pots?.potPrice || 0;
   
       const totalPrice = (Number(itemPrice) + Number(potPrice));
       const discountedPrice = item.offerPercentage > 0
@@ -304,7 +304,7 @@ const Cart: React.FC = () => {
                     </div>
                   </div>
                   <div className="col-span-12 md:col-span-4">
-                    <div className="bg-white rounded-lg shadow p-4">
+                    <div className="bg-white rounded-lg shadow p-4 mb-2">
                       <h2 className="text-xl font-semibold text-[#5f9231]">Order Summary</h2>
                       <div className="flex justify-between mt-4">
                         <span>Subtotal:</span>

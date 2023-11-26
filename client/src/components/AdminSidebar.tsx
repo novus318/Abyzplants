@@ -47,6 +47,11 @@ const AdminSidebar = () => {
               </Link>
             </li>
             <li className="mb-3">
+              <Link href="/admin/createPot" className="text-white flex items-center">
+                <FaPlus className="mr-2" /> Create Pot
+              </Link>
+            </li>
+            <li className="mb-3">
               <Link href="/admin/allProducts" className="text-white flex items-center">
                 <FaList className="mr-2" /> All Products
               </Link>

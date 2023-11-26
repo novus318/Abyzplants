@@ -428,7 +428,7 @@ const EditProduct = () => {
                                                             onChange={(e) => handlePriceInputChange(size, e.target.value)}
                                                             className="ml-2 border border-gray-300 rounded-md p-1"
                                                         />
-                                                        {['Default nursery Pot', 'White Ceramic Pot','Steel Pot','Hanging Pot'].map((potType) => {
+                                                        {['Default nursery Pot', 'White Ceramic Pot','Steel Pot','Hanging Pot','Clear glass','Self watering Pot'].map((potType) => {
                                                             const isSelectedPot = isSelected.pots?.find((p) => p.potName === potType);
                                                             return (
                                                                 <div key={potType} className="ml-2 flex items-center">

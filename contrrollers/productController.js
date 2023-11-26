@@ -88,12 +88,19 @@ export const createProductController=async(req,res)=>{
 } 
 export const getProductController = async (req, res) => {
     try {
-        const products = await productModel.find({}).limit(15).sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = 16;  // Adjust this based on your desired page size
+
+        const products = await productModel
+            .find({})
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * pageSize)
+            .limit(pageSize);
 
         res.status(200).send({
             success: true,
             totalCount: products.length,
-            message: 'All products',
+            message: 'Products fetched successfully',
             products
         });
     } catch (error) {
@@ -103,7 +110,26 @@ export const getProductController = async (req, res) => {
             error: error.message,
         });
     }
-}
+};
+
+export const getTotalProductCount = async (req, res) => {
+    try {
+        const totalCount = await productModel.countDocuments({});
+        
+        res.status(200).send({
+            success: true,
+            totalCount: totalCount,
+            message: 'Total product count fetched successfully',
+        });
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error in getting total product count',
+            error: error.message,
+        });
+    }
+};
+
 export const getAllProductNamesController = async (req, res) => {
     try {
       const products = await productModel.find({}, 'name');
@@ -128,9 +154,8 @@ export const getAllProductNamesController = async (req, res) => {
  
 export const searchProductsController = async (req, res) => {
     try {
-        const { keyword } = req.params; // Get the search keyword from the route parameter
+        const { keyword } = req.params;
 
-        // Use the keyword to search for products in name and description
         const products = await productModel.find({
             $or: [
                 { name: { $regex: new RegExp(keyword, 'i') } },
@@ -306,26 +331,34 @@ export const deleteProductController =async(req,res)=>{
 }
 export const getCategoryController = async (req, res) => {
     try {
-      const categoryId = req.params.pid;
-      const category = await categoryModel.findById(categoryId);
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = 16; 
+        const categoryId = req.params.pid;
+        const category = await categoryModel.findById(categoryId);
   
-      if (!category) {
-        return res.status(404).json({ message: 'Category not found' });
-      }
-      const products = await productModel.find({ category: categoryId });
+        if (!category) {
+            return res.status(404).json({ message: 'Category not found' });
+        }
+
+        const totalProductsCount = await productModel.countDocuments({ category: categoryId });
+
+        const products = await productModel.find({ category: categoryId }).sort({ createdAt: -1 })
+            .skip((page - 1) * pageSize)
+            .limit(pageSize);
       
-      res.status(200).json({ category, products });
+        res.status(200).json({ category, products, totalCount: totalProductsCount });
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching category and products' });
+        res.status(500).json({ message: 'Error fetching category and products' });
     }
-  };
+};
+
 export const relatedProductontroller =async(req,res)=>{
     try {
         const {pid,cid}=req.params
         const products=await productModel.find({
             category:cid,
             _id:{$ne:pid}
-        }).limit(15).populate("category")
+        }).limit(16).populate("category")
         
         res.status(200).send({
             success:true,
@@ -342,8 +375,12 @@ export const relatedProductontroller =async(req,res)=>{
 }
 export const getProductByCategoryController = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = 16; 
       const categoryId = req.params.pid;
-      const category = await categoryModel.findById(categoryId);
+      const category = await categoryModel.findById(categoryId).sort({ createdAt: -1 })
+      .skip((page - 1) * pageSize)
+      .limit(pageSize);;
   
       if (!category) {
         return res.status(404).json({ message: 'Category not found' });

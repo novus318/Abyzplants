@@ -450,7 +450,7 @@ const CreateProduct = () => {
                             onChange={handleInputChange}
                             className="ml-2 border border-gray-300 rounded-md p-1 w-24"
                           />
-                          {['Default nursery Pot', 'White Ceramic Pot','Steel Pot','Hanging Pot'].map((potType) => (
+                          {['Default nursery Pot', 'White Ceramic Pot','Steel Pot','Hanging Pot','Clear glass','Self watering Pot'].map((potType) => (
                             <div key={potType} className="ml-2 flex items-center">
                               <label className="flex items-center">
                                 <input

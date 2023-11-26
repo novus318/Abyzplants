@@ -44,14 +44,17 @@ const Category = () => {
   const [loading, setLoading] = useState(true);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [sortOrder, setSortOrder] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
    if(pid){
     axios
-    .get<{ products: Product[],category:category}>(`${apiUrl}/api/product/get-byCategory/${pid}`)
+    .get(`${apiUrl}/api/product/get-byCategory/${pid}`)
     .then((response) => {
       setCategory(response.data.category)
       setProducts(response.data.products);
+      setTotalCount(response.data.totalCount)
       setLoading(false);
     })
     .catch((error) => {
@@ -59,6 +62,19 @@ const Category = () => {
     });
    }
   }, [pid]);
+  const fetchNextPage = async () => {
+    try {
+      const nextPage = currentPage + 1;
+      const response = await axios.get(`${apiUrl}/api/product/get-byCategory/${pid}?page=${nextPage}`);
+      const newProducts = response.data.products;
+
+      if (newProducts.length > 0) {
+        setProducts((prevProducts) => [...prevProducts, ...newProducts]);
+        setCurrentPage(nextPage);
+      }
+    } catch (error) {
+    }
+  };
 
   useEffect(() => {
     if (sortOrder) {
@@ -112,7 +128,7 @@ const Category = () => {
                 </button>
               </div>
             </div>
-            <p className="mb-4 text-gray-600">Total Plants: {filteredProducts.length}</p>
+            <p className="mb-4 text-gray-600">Total Plants: {totalCount}</p>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredProducts.length === 0 ? (
@@ -183,6 +199,16 @@ const Category = () => {
                 ))
               )}
             </div>
+            {filteredProducts.length !== totalCount && (
+                <div className="text-center mt-4">
+                  <button
+                    className="bg-[#5f9231] text-white py-2 px-4 rounded-md"
+                    onClick={fetchNextPage}
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
           </div>
           <Footer />
         </div>

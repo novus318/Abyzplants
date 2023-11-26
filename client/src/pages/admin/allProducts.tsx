@@ -33,7 +33,16 @@ const AllProducts = () => {
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   useEffect(() => {
+    axios
+    .get<{ totalCount: number }>(`${apiUrl}/api/product/get-productCount`)
+    .then((response) => {
+      setTotalCount(response.data.totalCount);
+    })
+    .catch((error) => {
+    });
     axios.get<{ products: Product[] }>(`${apiUrl}/api/product/get-product`)
       .then((response) => {
         setProducts(response.data.products);
@@ -43,7 +52,21 @@ const AllProducts = () => {
       .catch((error) => {
         window.location.reload()
       });
-  }, []);
+  }, [apiUrl]);
+  const fetchNextPage = async () => {
+    try {
+      const nextPage = currentPage + 1;
+      const response = await axios.get(`${apiUrl}/api/product/get-product?page=${nextPage}`);
+      const newProducts = response.data.products;
+
+      if (newProducts.length > 0) {
+        setProducts((prevProducts) => [...prevProducts, ...newProducts]);
+        setSearchResults((prevProducts) => [...prevProducts, ...newProducts]);
+        setCurrentPage(nextPage);
+      }
+    } catch (error) {
+    }
+  };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const text = e.target.value;
@@ -79,7 +102,7 @@ const AllProducts = () => {
                   className="border border-gray-300 rounded-md p-2 w-full"
                 />
               </div>
-
+              <p className="mb-4 text-gray-600">Total Plants: {totalCount}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {searchResults.length === 0 ? (
                   <p>No matching products found</p>
@@ -147,6 +170,16 @@ const AllProducts = () => {
             ))
           )}
         </div>
+        {searchResults.length !== totalCount && (
+                <div className="text-center mt-4">
+                  <button
+                    className="bg-[#5f9231] text-white py-2 px-4 rounded-md"
+                    onClick={fetchNextPage}
+                  >
+                    Load More
+                  </button>
+                </div>
+              )}
       </div>
       </main>
       </div>)}
