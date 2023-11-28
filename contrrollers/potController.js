@@ -3,8 +3,11 @@ import path from 'path';
 import sharp from 'sharp';
 import { fileURLToPath } from 'url';
 import slugify from 'slugify'
-import potModel from '../models/potModel.js';
+import dotenv from 'dotenv'
+import potModel from '../models/productPotModel.js';
+dotenv.config("../.env")
 
+const apiUrl = process.env.REACT_APP_API_URL;
 export const createPotController=async(req,res)=>{
     try {
         const {name,
@@ -15,39 +18,35 @@ export const createPotController=async(req,res)=>{
             sizes,
             quantity,
             offerPercentage,
-            color,imageName1,imageName2,imageName3,imageName4,imageName5,imageName6,imageName7}=req.fields
+            colors,imageName1,imageName2,imageName3,imageName4,imageName5,imageName6,imageName7}=req.fields
             const {image1,image2,image3,image4,image5,image6,image7}=req.files
-            console.log('one1')
-            const existingProduct = await potModel.findOne({ $or: [{ code }, { slug }] });
-            console.log('one2')
-        if (existingProduct) {
-            console.log('start')
-          return res.status(400).send({
-            success: false,
-            message: 'A product with the same code already exists.',
-          });
-        }
-        const product=new potModel({name,code,description,sizeOption,quantity,offerPercentage,slug:slugify(name)})
+
+            const existingProduct = await potModel.findOne({ code });
+
+            if (existingProduct) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'Product with the provided code already exists.',
+                });
+            }
+         const newPot = new potModel({ name,code,description,sizeOption,quantity,offerPercentage,slug:slugify(name)})
         if(sizes){
-            product.sizes =JSON.parse(sizes)
-            console.log('one')
+            newPot.sizes =JSON.parse(sizes)
         }
-        if(color){
-            product.color =JSON.parse(color)
-            console.log('two')
+        if(colors){
+            newPot.colors =JSON.parse(colors)
         }
         if(specifications){
-            product.specifications =JSON.parse(specifications)
-            console.log('thrree')
+            newPot.specifications =JSON.parse(specifications)
         }
-        const saveImage = async (image, productId,index) => {
+        const saveImage = async (image,PotId,index) => {
             const ext = path.extname(image.name);
-            const fileName = `image${index + 1}_${productId}.webp`;
+            const fileName = `image${index + 1}_${PotId}.webp`;
 
             // Use fileURLToPath to get the current directory
             const currentDir = path.dirname(fileURLToPath(import.meta.url));
             const rootDir = path.resolve(currentDir, '../');
-            // Create the "images" folder if it doesn't exist
+            // Create the folder if it doesn't exist
             const imagesDir = path.join(rootDir, 'Potimages');
             if (!fs.existsSync(imagesDir)) {
                 fs.mkdirSync(imagesDir);
@@ -61,65 +60,65 @@ export const createPotController=async(req,res)=>{
                 const imageUrl = `${apiUrl}/api/Potimages/${fileName}`;
                 
                 if (index === 0) {
-                    product.images.image1 = imageUrl;
+                    newPot.images.image1 = imageUrl;
                 } else if (index === 1) {
-                    product.images.image2 = imageUrl;
+                    newPot.images.image2 = imageUrl;
                 } else if (index === 2) {
-                    product.images.image3 = imageUrl;
+                    newPot.images.image3 = imageUrl;
                 }
                 else if (index === 3) {
-                    product.images.image4 = imageUrl;
+                    newPot.images.image4 = imageUrl;
                 }
                 else if (index === 4) {
-                    product.images.image5 = imageUrl;
+                    newPot.images.image5 = imageUrl;
                 }
                 else if (index === 5) {
-                    product.images.image6 = imageUrl;
+                    newPot.images.image6 = imageUrl;
                 }
-                else if (index === 6) {
-                    product.images.image7 = imageUrl;
+                else {
+                    newPot.images.image7 = imageUrl;
                 }
               
             };
-            console.log('one')
             if (image1) {
-                await saveImage(image1, product._id, 0);
-                product.images.imageName1 = imageName1;
+                await saveImage(image1, newPot._id, 0);
+                newPot.images.imageName1 = imageName1;
             }
     
             if (image2) {
-                await saveImage(image2, product._id, 1);
-                product.images.imageName2 = imageName2;
+                await saveImage(image2, newPot._id, 1);
+                newPot.images.imageName2 = imageName2;
             }
     
             if (image3) {
-                await saveImage(image3, product._id, 2);
-                product.images.imageName3 = imageName3;
+                await saveImage(image3, newPot._id, 2);
+                newPot.images.imageName3 = imageName3;
             }
             if (image4) {
-                await saveImage(image4, product._id, 3);
-                product.images.imageName4 = imageName4;
+                await saveImage(image4, newPot._id, 3);
+                newPot.images.imageName4 = imageName4;
             }
             if (image5) {
-                await saveImage(image5, product._id, 4);
-                product.images.imageName5 = imageName5;
+                await saveImage(image5, newPot._id, 4);
+                newPot.images.imageName5 = imageName5;
             }
             if (image6) {
-                await saveImage(image6, product._id, 5);
-                product.images.imageName6 = imageName6;
+                await saveImage(image6, newPot._id, 5);
+                newPot.images.imageName6 = imageName6;
             }
             if (image7) {
-                await saveImage(image7, product._id, 6);
-                product.images.imageName7 = imageName7;
+                await saveImage(image7, newPot._id, 6);
+                newPot.images.imageName7 = imageName7;
             }
 
-            await product.save();
+            await newPot.save();
         res.status(201).send({
             success:true,
             message:'Product created successfully',
-            product
+            product:newPot
         })
     } catch (error) {
+        console.error('Error in creating product:', error);
         res.status(500).send({
             success:false,
             error,
@@ -131,26 +130,23 @@ export const createPotController=async(req,res)=>{
 export const updatePotController=async(req,res)=>{
     try {
         const {name,
-            code,
             description,
             specifications,
-            sizeOption,
             sizes,
             quantity,
             offerPercentage,
-            color,}=req.fields
-        const {imageName1,imageName2,imageName3,imageName4,imageName5,imageName6,imageName7}=req.body
+            colors,imageName1,imageName2,imageName3,imageName4,imageName5,imageName6,imageName7}=req.fields
         const {image1,image2,image3,image4,image5,image6,image7}=req.files
         const parsedSizes = JSON.parse(sizes);
        if(parsedSizes){
         const product=await potModel.findByIdAndUpdate(req.params.pid,{
-            name,description,quantity,offerPercentage,sizeOption,code,slug:slugify(name)
+            name,description,quantity,offerPercentage,slug:slugify(name)
         },{new:true})
          if(sizes){
            product.sizes = parsedSizes
         }
-        if(color){
-            product.color =JSON.parse(color)
+        if(colors){
+            product.colors =JSON.parse(colors)
         }
         if(specifications){
             product.specifications =JSON.parse(specifications)
@@ -173,7 +169,7 @@ export const updatePotController=async(req,res)=>{
                 .toFormat('webp')
                 .toFile(imagePath);
 
-                const imageUrl = `${apiUrl}/api/images/${fileName}`;
+                const imageUrl = `${apiUrl}/api/Potimages/${fileName}`;
 
                 if (index === 0) {
                     product.images.image1 = imageUrl;
@@ -232,7 +228,7 @@ export const updatePotController=async(req,res)=>{
             message:'Product updated successfully',
         })
     } catch (error) {
-    
+        console.log(error)
         res.status(500).send({
             success:false,
             error,
@@ -311,7 +307,7 @@ export const getSinglePotController = async (req, res) => {
 const deleteImagesByProductId = async (productId) => {
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const rootDir = path.resolve(currentDir, '../');
-    const imagesDir = path.join(rootDir, 'images');
+    const imagesDir = path.join(rootDir, 'Potimages');
 
     const imageFiles = fs.readdirSync(imagesDir);
 

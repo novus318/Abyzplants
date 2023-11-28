@@ -1,7 +1,6 @@
 import express from "express";
 import ExpressFormidable from "express-formidable";
 import { createProductController, deleteProductController, getAllProductNamesController, getCategoryController, getProductByCategoryController, getProductController, getRecommendedProductController, getSingleProductController, getTotalProductCount, relatedProductontroller, searchProductsController, updateProductController } from "../contrrollers/productController.js";
-import { createPotController } from "../contrrollers/potController.js";
 
 const router = express.Router()
 

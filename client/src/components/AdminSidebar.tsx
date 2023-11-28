@@ -1,6 +1,6 @@
 import React from 'react';
 import Sidebar from 'react-sidebar';
-import { FaPlus, FaList, FaUsers } from 'react-icons/fa';
+import { FaPlus, FaList, FaUsers, FaUpload, FaFirstOrder } from 'react-icons/fa';
 import Link from 'next/link';
 
 const AdminSidebar = () => {
@@ -33,7 +33,7 @@ const AdminSidebar = () => {
           <ul className="list-none p-0 m-0">
             <li className="mb-3">
               <Link href="/admin/dashboard" className="text-white flex items-center">
-                <FaPlus className="mr-2" /> Orders
+                <FaFirstOrder className="mr-2" /> Orders
               </Link>
             </li>
             <li className="mb-3">
@@ -52,8 +52,18 @@ const AdminSidebar = () => {
               </Link>
             </li>
             <li className="mb-3">
+              <Link href="/admin/banner" className="text-white flex items-center">
+                <FaUpload className="mr-2" /> Banner
+              </Link>
+            </li>
+            <li className="mb-3">
               <Link href="/admin/allProducts" className="text-white flex items-center">
                 <FaList className="mr-2" /> All Products
+              </Link>
+            </li>
+            <li className="mb-3">
+              <Link href="/admin/allPots" className="text-white flex items-center">
+                <FaList className="mr-2" /> All Pots
               </Link>
             </li>
             <li className="mb-3">

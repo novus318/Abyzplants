@@ -378,9 +378,8 @@ export const getProductByCategoryController = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const pageSize = 16; 
       const categoryId = req.params.pid;
-      const category = await categoryModel.findById(categoryId).sort({ createdAt: -1 })
-      .skip((page - 1) * pageSize)
-      .limit(pageSize);;
+      const category = await categoryModel.findById(categoryId).sort({ createdAt: -1 }).limit(pageSize)
+      .skip((page - 1) * pageSize);
   
       if (!category) {
         return res.status(404).json({ message: 'Category not found' });

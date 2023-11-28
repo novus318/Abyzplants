@@ -69,13 +69,12 @@ export default function Header() {
   };
   
 
-  const handleKeyPress = (e:any) => {
-    if (e.key === 'Enter') {
+  const handleKeyPress = (e: any) => {
+    if (e.key === 'Enter' || e.key === 'Search') {
       handleSearchSubmit(searchInput);
     }
   };
   
-
   const getCategoryMenu = () => (
     <AntdMenu>
       {categories.map((category) => (
@@ -364,7 +363,7 @@ export default function Header() {
             className="fixed top-0 right-0 h-16 bg-white w-full p-4 mt-16 z-50"
           >
             <input
-              type="text"
+              type="search"
               placeholder="Search..."
               className="w-full p-2 border rounded-md focus:outline-none"
               value={searchInput}

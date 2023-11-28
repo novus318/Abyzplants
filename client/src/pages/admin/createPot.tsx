@@ -110,6 +110,8 @@ const CreatePot = () => {
                 if (response.data.success) {
                     toast.success('Product created successfully!');
                     formik.resetForm();
+                    setSelectedOption('')
+                    setSizes([])
                     setLoading(false);
                 }
                 else {
@@ -209,7 +211,7 @@ return (
             <div className="flex flex-col md:flex-row">
                 <AdminSidebar />
                 <main className="flex-1 p-4 md:ml-64">
-                    <h1 className="text-3xl font-semibold mb-6">Create Product</h1>
+                    <h1 className="text-3xl font-semibold mb-6">Create Pot</h1>
                     <form onSubmit={formik.handleSubmit} className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="mb-2">

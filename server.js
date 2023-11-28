@@ -28,6 +28,7 @@ app.use(morgan('dev'))
 app.use('/api/logo', express.static(path.join(new URL(import.meta.url).pathname, '..', 'logo')));
 app.use('/api/images', express.static(path.join(new URL(import.meta.url).pathname, '..', 'images')));
 app.use('/api/Potimages', express.static(path.join(new URL(import.meta.url).pathname, '..', 'Potimages')));
+app.use('/api/Bannerimages', express.static(path.join(new URL(import.meta.url).pathname, '..', 'Bannerimages')));
 app.use('/api/auth',authRoutes)
 app.use('/api/category',categoryRoutes)
 app.use('/api/product',productRoutes)

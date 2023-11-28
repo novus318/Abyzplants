@@ -40,7 +40,10 @@ const potSchema = new mongoose.Schema({
       type: String,
     },
   ],
-  sizeOptions:String,
+  sizeOption:{
+    type:String,
+    required:true
+  },
   sizes: [sizeSchema],
   quantity: {
     type: Number,
@@ -69,4 +72,4 @@ const potSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-export default mongoose.model('Pot', potSchema);
+export default mongoose.model('pots', potSchema);
