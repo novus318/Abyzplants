@@ -216,6 +216,15 @@ export default function Header() {
                   >
                     Plants
                   </Link>
+                  <Link
+                    href="/pots"
+                    className={classNames(
+                      'text-[#a14e3a] hover:text-[#79bd3f]',
+                      'px-3 py-2 text-xl font-medium netflix'
+                    )}
+                  >
+                    Pots
+                  </Link>
                   {auth.user ? (
                     <>
                       <Menu as="div" className="relative px-5">
@@ -313,6 +322,15 @@ export default function Header() {
                     Plants
                   </a>
                 </Dropdown>
+                <Link
+                      href="/pots"
+                      className={classNames(
+                        'text-[#a14e3a] hover:text-[#79bd3f]',
+                        'block px-3 py-2 text-lg font-medium netflix'
+                      )}
+                    >
+                      Pots
+                    </Link>
                 {auth.user ? (
                   <>
                     <Link

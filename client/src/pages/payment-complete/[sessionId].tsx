@@ -47,6 +47,7 @@ const PaymentCompletePage = () => {
         quantity: item.quantity,
         size: item.sizes.name,
         pots: item.pots,
+        color: item.color,
         image:item.image,
         status:'Processing'
       })),

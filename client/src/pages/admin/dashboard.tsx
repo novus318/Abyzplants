@@ -38,6 +38,7 @@ interface Product {
   }
   code: string;
   status: string;
+  color: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -165,8 +166,8 @@ const Dashboard: React.FC = () => {
 
     return new Date(dateTime).toLocaleString(undefined, options);
   };
-  const handleStatusChange = (orderId: string, productId: string, newStatus: string,size:any) => {
-    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size })
+  const handleStatusChange = (orderId: string, productId: string, newStatus: string,size:any, color:any) => {
+    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size,color })
       .then((response) => {
         if (response.data.success) {
           const updatedOrders = orders.map((order) =>
@@ -334,7 +335,7 @@ const Dashboard: React.FC = () => {
                             </>)} AED
                       </td>
                       <td className="p-3 text-center">{product.quantity}</td>
-                      <td className="p-3 text-center">{product.size || 'N/A'} {product.pots?.potPrice && `/ ${product.pots.potName}`}</td>
+                      <td className="p-3 text-center">{product.size || 'N/A'} {product.pots?.potPrice && `/ ${product.pots.potName}`} {product.color && `/ ${product.color}`}</td>
                       <td className="p-3 text-center">
                         {product.status === 'Order Cancelled' ? (
                           selectedOrder.paymentMethod === 'Cash on Delivery' ? (
@@ -343,7 +344,7 @@ const Dashboard: React.FC = () => {
                             <Select
                               defaultValue={product.status}
                               style={{ width: 150 }}
-                              onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                              onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
                             >
                               <Option value="Refunded">Refunded</Option>
                             </Select>
@@ -352,7 +353,7 @@ const Dashboard: React.FC = () => {
                           <Select
                             defaultValue={product.status}
                             style={{ width: 150 }}
-                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
                           >
                             <Option value="Refunded">Refunded</Option>
                           </Select>
@@ -360,7 +361,7 @@ const Dashboard: React.FC = () => {
                           <Select
                             defaultValue={product.status}
                             style={{ width: 150 }}
-                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size)}
+                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
                           >
                             <Option value="Processing">Processing</Option>
                             <Option value="Ready to Ship">Ready to Ship</Option>

@@ -217,13 +217,13 @@ const Similar: React.FC = () => {
     try {
       const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
       setProduct(data.product);
-      getSimilarProduct(data?.product._id, data?.product.category._id);
       setSelectedSizes(data.product.sizes[0])
       setSelectedPots(data?.product.sizes[0]?.pots[0])
       if (data.product.photo) {
         setSelectedImage(data.product.photo.image1);
       }
       setLoading(false);
+      getSimilarProduct(data?.product._id, data?.product.category._id);
     } catch (error) {
       window.location.reload();
     }

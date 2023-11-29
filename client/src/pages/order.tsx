@@ -18,6 +18,7 @@ interface Product {
   offer: number;
   quantity: number;
   size: string;
+  color: string;
   pots:
   {
     potName: string;
@@ -43,6 +44,7 @@ const Order = () => {
   const [returnModalVisible, setReturnModalVisible] = useState(false);
   const [returnId, setReturnId] = useState('');
   const [returnProductId, setReturnProductId] = useState('');
+  const [returnColor, setReturnColor] = useState('');
   const [returnProductSize, setReturnProductSize] = useState('');
   const [formData, setFormData] = useState({
     name: '',
@@ -64,7 +66,7 @@ const Order = () => {
     setLoading(true);
     try {
       const newStatus = 'Return';
-      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { newStatus, formData,returnProductSize });
+      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { newStatus, formData,returnProductSize,returnColor });
 
       if (response.status === 200) {
 
@@ -74,8 +76,9 @@ const Order = () => {
       setLoading(false);
     }
   }
-  const showReturnModal = (id: any,productId: any,size:any) => {
+  const showReturnModal = (id: any,productId: any,size:any,color:any) => {
     setReturnId(id)
+    setReturnColor(color)
     setReturnProductId(productId)
     setReturnProductSize(size)
     setReturnModalVisible(true);
@@ -83,6 +86,7 @@ const Order = () => {
 
   const handleReturnCancel = () => {
     setReturnId('')
+    setReturnColor('')
     setReturnProductId('')
     setReturnProductSize('')
     setReturnModalVisible(false);
@@ -168,12 +172,12 @@ const Order = () => {
 
     return new Date(dateString).toLocaleString(undefined, options);
   };
-  const handleCancelOrder = async (orderId: any,productId: any,size:any) => {
+  const handleCancelOrder = async (orderId: any,productId: any,size:any,color:any) => {
     if (window.confirm('Are you sure you want to Cancel Order')) {
       setLoading(true);
       try {
         const newStatus = 'Order Cancelled';
-        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size});
+        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size,color});
 
         if (response.status === 200) {
 
@@ -270,7 +274,7 @@ const Order = () => {
                               {product.pots?.potPrice ?(<p className="text-gray-500 text-sm mb-2">Price: {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED</p>)
                               :(<p className="text-gray-500 text-sm mb-2">Price: {product.price.toFixed(2)} AED</p>)}</>)}
                               <p className="text-gray-500 text-sm mb-2">Quantity: {product.quantity}</p>
-                              <p className="text-gray-500 text-sm mb-2">Size: {product.size} {product.pots && `/ ${product.pots.potName}`}</p>
+                              <p className="text-gray-500 text-sm mb-2">Size: {product.size} {product.pots && `/ ${product.pots.potName}`} {product.color && `/ ${product.color}`}</p>
                             </div>
                             <div className="md:ml-auto md:text-right mt-4 md:mt-0">
                               <p className='text-lg font-semibold text-[#5f9231] mb-2'>
@@ -285,7 +289,7 @@ const Order = () => {
                               <div className="text-center">
                                 {!(product.status === 'Refunded' || product.status === 'Order Cancelled' || product.status === 'Order Delivered' || product.status === 'Return' || product.status === 'Order Shipped') ? (
                                   <button
-                                    onClick={() => handleCancelOrder(order._id,product._id,product.size)}
+                                    onClick={() => handleCancelOrder(order._id,product._id,product.size,product.color)}
                                     className="text-red-500 rounded-md hover:text-red-700 cursor-pointer mr-2 bg-gray-100 px-4 py-1">
                                     Cancel Order
                                   </button>
@@ -293,7 +297,7 @@ const Order = () => {
 
                                 {product.status === 'Order Delivered' ? (
                                   <button
-                                    onClick={() => showReturnModal(order._id,product._id,product.size)}
+                                    onClick={() => showReturnModal(order._id,product._id,product.size,product.color)}
                                     className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer mr-2 bg-gray-100 px-4 py-1">
                                     Return
                                   </button>

@@ -16,13 +16,14 @@ interface CartItem {
   },
   quantity: number;
   image:string;
+  color: string;
 }
 
 interface CartContextType {
   cart: CartItem[];
   addToCart: (item: CartItem) => void;
-  removeItem: (itemId: string, itemSize: string) => void;
-  changeQuantity: (itemId: string, itemSize: string, newQuantity: number) => void;
+  removeItem: (itemId: string, itemSize: string ,itemColor:string) => void;
+  changeQuantity: (itemId: string, itemSize: string, newQuantity: number ,itemColor:string) => void;
   setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
 }
 
@@ -52,7 +53,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [cart]);
 
   const addToCart = (item: CartItem) => {
-    const itemIndex = cart.findIndex((cartItem) => cartItem._id === item._id && cartItem.sizes.name === item.sizes.name);
+    const itemIndex = cart.findIndex((cartItem) => cartItem._id === item._id && cartItem.sizes.name === item.sizes.name && cartItem.color === item.color);
 
     if (itemIndex !== -1) {
       const updatedCart = [...cart];
@@ -62,18 +63,18 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setCart([...cart, item]);
     }
   };
-  const removeItem = (itemId: string, itemSize: string) => {
+  const removeItem = (itemId: string, itemSize: string,itemColor:string) => {
     const updatedCart = cart.filter(
-      (cartItem) => !(cartItem._id === itemId && cartItem.sizes.name === itemSize)
+      (cartItem) => !(cartItem._id === itemId && cartItem.sizes.name === itemSize && cartItem.color === itemColor)
     );
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
   };
 
-  const changeQuantity = (itemId: string, itemSize: string, newQuantity: number) => {
+  const changeQuantity = (itemId: string, itemSize: string, newQuantity: number, itemColor:string) => {
     
       const updatedCart = cart.map((cartItem) => {
-        if (cartItem._id === itemId && cartItem.sizes.name === itemSize) {
+        if (cartItem._id === itemId && cartItem.sizes.name === itemSize && cartItem.color === itemColor) {
           return { ...cartItem, quantity: newQuantity };
         }
         return cartItem;

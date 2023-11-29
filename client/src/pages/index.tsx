@@ -11,6 +11,7 @@ import Spinner from '@/components/Spinner'
 import CategoriesScroll from '@/components/CategoriesScroll'
 import BannerSlider from '@/components/Banner1'
 import Layout from '@/components/Layout'
+import BestPots from '@/components/BestPots'
 
 type Category = {
   _id?: number;
@@ -50,6 +51,7 @@ export default function Home() {
    {categories?.map((c) =>(
     <CategoriesScroll categoryName={c.name} categoryId={c._id} key={c._id}/>
    ))}
+   <BestPots/>
    <BestSellers/>
    <section className="bg-[#F9F9F9] text-[#333] py-12">
   <div className="max-w-4xl mx-auto text-center">

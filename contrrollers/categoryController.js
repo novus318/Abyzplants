@@ -30,7 +30,7 @@ export const createCategoryController=async(req,res)=>{
             category
         })
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             error,
@@ -57,7 +57,7 @@ export const updateCategoryController=async(req,res)=>{
             category
         })
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             message:'Error while updating',
@@ -82,7 +82,7 @@ export const categoryController=async(req,res)=>{
             category:productsWithImageUrls
         })
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             message:'Error while getting Categories',
@@ -99,7 +99,7 @@ export const singleCategoryController=async(req,res)=>{
             category
         })
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             message:'Error while getting single category',
@@ -115,7 +115,7 @@ export const singleCategoryPhotoController=async(req,res)=>{
             return res.status(200).send(category.photo.data)
         }
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             message:'error while getting photo',
@@ -137,7 +137,7 @@ export const deleteCategoryController=async(req,res)=>{
             message:'Category deleted successfully'
         })
     } catch (error) {
-        console.log(error)
+        
         res.status(500).send({
             success:false,
             message:'error while deleting category',

@@ -63,7 +63,7 @@ const Cart: React.FC = () => {
       phone,
     };
     axios
-      .put(`${apiUrl}/api/auth/profile/${auth.user._id}`, updatedProfile)
+      .put(`${apiUrl}/api/auth/profile/${auth.user?._id}`, updatedProfile)
       .then((response) => {
         if (response.data.success) {
           setAuth({
@@ -83,15 +83,15 @@ const Cart: React.FC = () => {
   };
  
 
-  const handleQuantityChange = (itemId: string, itemSize: string, quantity: number) => {
-    changeQuantity(itemId, itemSize, quantity);
+  const handleQuantityChange = (itemId: string, itemSize: string, quantity: number,color:string) => {
+    changeQuantity(itemId, itemSize, quantity,color);
   };
 
   const handlePaymentMethodChange = (method: string) => {
     setSelectedPaymentMethod(method);
   };
-  const handleRemoveItem = (itemId: string, itemSize: string) => {
-    removeItem(itemId, itemSize);
+  const handleRemoveItem = (itemId: string, itemSize: string,itemColor:string) => {
+    removeItem(itemId, itemSize,itemColor);
     toast.success('Product removed Successfully');
   };
 
@@ -135,6 +135,7 @@ const Cart: React.FC = () => {
         quantity: item.quantity,
         size: item.sizes.name,
         pots: item.pots,
+        color: item.color,
         image:item.image,
         status:'Processing'
       })),
@@ -185,6 +186,7 @@ const Cart: React.FC = () => {
               quantity: item.quantity,
               size: item.sizes.name,
               pots: item.pots,
+              color: item.color,
               image:item.image,
               status:'Processing'
             })),
@@ -252,7 +254,7 @@ const Cart: React.FC = () => {
                             </Link>
                             <div className="ml-4 flex-1">
                               <h2 className="text-lg font-semibold text-gray-800">{item.name}</h2>
-                              <p className="text-gray-500 mt-1 text-sm">Size: {item.sizes.name} {item.pots && `/ ${item.pots.potName}`}</p>
+                              <p className="text-gray-500 mt-1 text-sm">Size: {item.sizes.name} {item.pots && `/ ${item.pots.potName}`} {item.color && `/ ${item.color}`}</p>
                               {item?.offerPercentage > 0 ? (
                                 <>
                                 {item.pots?.potPrice ?
@@ -276,7 +278,7 @@ const Cart: React.FC = () => {
                               {item.quantity > 1 ? (
                                 <button
                                   className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
-                                  onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity - 1)}
+                                  onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity - 1, item.color)}
                                 >
                                   <FaMinus size={16} />
                                 </button>
@@ -286,13 +288,13 @@ const Cart: React.FC = () => {
                               </span>
                               <button
                                 className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
-                                onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity + 1)}
+                                onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity + 1, item.color)}
                               >
                                 <FaPlus size={16} />
                               </button>
                               <button
                                 className="text-[#a14e3a] ml-2 sm:ml-4"
-                                onClick={() => handleRemoveItem(item._id, item.sizes.name)}
+                                onClick={() => handleRemoveItem(item._id, item.sizes.name,item.color)}
                               >
                                 <FaTimes size={22} />
                               </button>

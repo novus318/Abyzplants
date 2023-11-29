@@ -257,6 +257,7 @@ export const getOrdersByUserIdController = async (req, res) => {
       const newStatus = req.body.newStatus; 
       const accountDetails = req.body.formData
       const size = req.body.returnProductSize;
+      const color = req.body.returnColor;
 
       const query = { _id: orderId };
       const update = {
@@ -265,7 +266,7 @@ export const getOrdersByUserIdController = async (req, res) => {
         }
       };
       const options = {
-        arrayFilters: [{ 'product._id': productId, 'product.size': size }],
+        arrayFilters: [{ 'product._id': productId, 'product.size': size , 'product.color': color }],
         new: true
       };
       
@@ -327,6 +328,7 @@ export const getOrdersByUserIdController = async (req, res) => {
       const productId = req.params.productId;
       const newStatus = req.body.newStatus;
       const size = req.body.size;
+      const color = req.body.color;
 
       const query = { _id: orderId };
       const update = {
@@ -335,7 +337,7 @@ export const getOrdersByUserIdController = async (req, res) => {
         }
       };
       const options = {
-        arrayFilters: [{ 'product._id': productId, 'product.size': size }],
+        arrayFilters: [{ 'product._id': productId, 'product.size': size , 'product.color': color }],
         new: true
       };
       

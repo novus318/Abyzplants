@@ -17,20 +17,28 @@ const { Option } = Select;
 interface ProductSize {
   name: string;
   price: number;
-  pots:
-  {
-    potName: string;
-    potPrice: number;
-  }[]
 }
 interface Product {
   _id: string;
   code: string;
   name: string;
-  photo: {
+  sizeOption: string;
+  images: {
+    [key: string]: string;
     image1: string;
     image2: string;
     image3: string;
+    image4: string;
+    image5: string;
+    image6: string;
+    image7: string;
+    imageName1: string;
+    imageName2: string;
+    imageName3: string;
+    imageName4: string;
+    imageName5: string;
+    imageName6: string;
+    imageName7: string;
   }
   description: string;
   quantity: number;
@@ -40,7 +48,10 @@ interface Product {
     name: string;
   };
   sizes: ProductSize[];
-  plantCare: String[];
+  specifications: String[];
+  colors: {
+    name: string;
+  }[];
 }
 
 interface CartItem {
@@ -49,12 +60,12 @@ interface CartItem {
   name: string;
   image: string;
   sizes: ProductSize[]
-  pots: ProductSize['pots']
   quantity: number;
   offerPercentage: number;
+  color: string;
 }
 
-const Details: React.FC = () => {
+const Similar: React.FC = () => {
   const locations = [
     { name: 'Dubai', days: '2-3 working days' },
     { name: 'Abu Dhabi', days: '2-4 working days' },
@@ -74,12 +85,28 @@ const Details: React.FC = () => {
   const [SimilarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState<string>('');
   const [selectedSizes, setSelectedSizes] = useState<Product['sizes']>([]);
-  const [selectedPots, setSelectedPots] = useState<ProductSize['pots']>([]);
+
 
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(locations[0]);
   const [currentURL, setCurrentURL] = useState('');
+  const [selectedColor, setSelectedColor] = useState<string>('');
+
+  const handleColorSelection = (color: string) => {
+    for (let index = 1; index <= 7; index++) {
+      const imageNameKey = `imageName${index}`;
+      const imageKey = `image${index}`;
+
+      // Check if the selected color matches the imageName
+      if (product?.images[imageNameKey] === color) {
+        // If a match is found, set the selected image
+        setSelectedImage(product?.images[imageKey]);
+        break; // Exit the loop since we found a match
+      }
+    }
+    setSelectedColor(color);
+  };
 
   useEffect(() => {
     setCurrentURL(window.location.href);
@@ -129,10 +156,10 @@ const Details: React.FC = () => {
             code: product.code,
             name: product.name,
             sizes: selectedSizes,
-            pots: selectedPots,
             offerPercentage: product.offerPercentage,
             quantity: quantity,
             image: selectedImage,
+            color:selectedColor,
           };
           addToCart(item as any);
           router.push('/cart')
@@ -164,9 +191,9 @@ const Details: React.FC = () => {
             name: product.name,
             offerPercentage: product.offerPercentage,
             sizes: selectedSizes,
-            pots: selectedPots,
             quantity: quantity,
             image: selectedImage,
+            color:selectedColor,
           };
           addToCart(item as any);
           toast.success('Item added to cart')
@@ -193,7 +220,6 @@ const Details: React.FC = () => {
     const selectedSize = product?.sizes.find((s: any) => s.name === size.name);
     if (selectedSize) {
       setSelectedSizes(selectedSize as any);
-      setSelectedPots((selectedSize as any).pots[0]);
     }
   };
 
@@ -202,30 +228,25 @@ const Details: React.FC = () => {
   };
 
 
-  const getSimilarProduct = async (pid: string, cid: string) => {
-    try {
-      const { data } = await axios.get(
-        `${apiUrl}/api/product/related-product/${pid}/${cid}`
-      );
-      setSimilarProducts(data.products);
-    } catch (error) {
-
-    }
-  };
-
   const getSingleProduct = async () => {
     try {
-      const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
+      const { data } = await axios.get(`${apiUrl}/api/pot/get-pot/${pid}`);
       setProduct(data.product);
       setSelectedSizes(data.product.sizes[0])
-      setSelectedPots(data?.product.sizes[0]?.pots[0])
-      if (data.product.photo) {
-        setSelectedImage(data.product.photo.image1);
+      if (data.product.images) {
+        setSelectedImage(data.product.images.image1);
+      }
+      const matchingColor = data.product.colors.find(
+        (color: any) => color.name === data.product.images.imageName1
+      );
+
+      if (matchingColor) {
+        console.log(matchingColor.name)
+        setSelectedColor(matchingColor.name)
       }
       setLoading(false);
-      getSimilarProduct(data?.product._id, data?.product.category._id);
     } catch (error) {
-      window.location.reload();
+
     }
   };
   const handleShare = async () => {
@@ -265,24 +286,49 @@ const Details: React.FC = () => {
                   <div className="mt-6 flex justify-center gap-4">
                     {product && (
                       <>
-                        <img
-                          src={product.photo?.image1}
+                        {product?.images?.image1 && (<img
+                          src={product.images?.image1}
                           alt='ThumbnailImage1'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(product.photo?.image1)}
-                        />
-                        <img
-                          src={product.photo?.image2}
+                          onClick={() => handleThumbnailClick(product.images?.image1)}
+                        />)}
+                        {product?.images?.image2 && (<img
+                          src={product.images?.image2}
                           alt='ThumbnailImage2'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(product.photo?.image2)}
-                        />
-                        <img
-                          src={product.photo?.image3}
+                          onClick={() => handleThumbnailClick(product.images?.image2)}
+                        />)}
+                        {product?.images?.image3 && (<img
+                          src={product.images?.image3}
                           alt='ThumbnailImage3'
                           className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
-                          onClick={() => handleThumbnailClick(product.photo?.image3)}
-                        /></>
+                          onClick={() => handleThumbnailClick(product.images?.image3)}
+                        />)}
+                        {product?.images?.image4 && (<img
+                          src={product.images?.image4}
+                          alt='ThumbnailImage4'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(product.images?.image4)}
+                        />)}
+                        {product?.images?.image5 && (<img
+                          src={product.images?.image5}
+                          alt='ThumbnailImage5'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(product.images?.image5)}
+                        />)}
+                        {product?.images?.image6 && (<img
+                          src={product.images?.image6}
+                          alt='ThumbnailImage6'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(product.images?.image6)}
+                        />)}
+                        {product?.images?.image7 && (<img
+                          src={product.images?.image7}
+                          alt='ThumbnailImage7'
+                          className="w-24 h-28 object-cover rounded-lg hover:opacity-70 transition-opacity duration-300 cursor-pointer shadow-md"
+                          onClick={() => handleThumbnailClick(product.images?.image7)}
+                        />)}
+                      </>
                     )}
                   </div>
                 </div>
@@ -295,24 +341,13 @@ const Details: React.FC = () => {
                         {product.offerPercentage ? (
                           <>
                             <span className="text-[#a14e3a] font-semibold">
-                              {(selectedPots as any)?.potPrice ? (
-                                (
-                                  ((100 - product.offerPercentage) / 100) * (Number((selectedSizes as any)?.price) + Number((selectedPots as any).potPrice))
-                                ).toFixed(2)
-                              ) : (
-                                (((100 - product.offerPercentage) / 100) * (selectedSizes as any)?.price).toFixed(2)
-                              )} AED
+                              {(((100 - product.offerPercentage) / 100) * (selectedSizes as any)?.price).toFixed(2)}
+                              AED
                             </span>
 
                             <span className="text-gray-500 ml-2 line-through">
-                              {(selectedPots as any)?.potPrice ? (
-                                (
-                                  Number((selectedSizes as any)?.price) +
-                                  Number((selectedPots as any)?.potPrice)
-                                ).toFixed(2)
-                              ) : (
-                                Number((selectedSizes as any)?.price).toFixed(2)
-                              )} AED
+                              {Number((selectedSizes as any)?.price).toFixed(2)}
+                              AED
                             </span>
                             <span className="text-[#5f9231] ml-2">
                               {product.offerPercentage}% OFF
@@ -320,21 +355,16 @@ const Details: React.FC = () => {
                           </>
                         ) : (
                           <span className="text-[#a14e3a] font-semibold">
-                            {(selectedPots as any)?.potPrice ? (
-                              (
-                                Number((selectedSizes as any)?.price) +
-                                Number((selectedPots as any)?.potPrice)
-                              ).toFixed(2)
-                            ) : (
-                              Number((selectedSizes as any)?.price).toFixed(2)
-                            )} AED
+
+                            {Number((selectedSizes as any)?.price).toFixed(2)}
+                            AED
                           </span>
                         )}
 
                       </p>
 
                       <div className="mt-4">
-                        <p className="text-sm text-gray-600">choose size</p>
+                        <p className="text-sm text-gray-600">choose {product.sizeOption}</p>
                         {selectedSizeError && (
                           <p className="text-red-500">{selectedSizeError}</p>
                         )}
@@ -353,25 +383,50 @@ const Details: React.FC = () => {
                           ))}
                         </div>
                       </div>
-                      {(selectedSizes as any)?.pots.length >0 && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-600">choose pot</p>
-                          <div className="flex flex-wrap">
-                            {(selectedSizes as any)?.pots?.map((pot: any, index: any) => (
-                              <button
-                                key={index}
-                                className={`${selectedPots === pot
-                                  ? 'bg-[#5f9231] text-white'
-                                  : 'bg-gray-200 text-[#5f9231]'
-                                  } py-2 px-4 rounded-md m-2 hover:ring-[#8d4533] hover:ring-2 transition-colors duration-300`}
-                                onClick={() => setSelectedPots(pot)}
-                              >
-                                {pot.potName}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <div className="flex flex-wrap mt-4">
+                        {product?.colors.map((color: any, index: any) => (
+                          <button
+                            key={index}
+                            className={`${color.name === 'Steel' ? 'bg-steel' :
+                              color.name === 'Steel' ? 'bg-[#4682b4]' :
+                                color.name === 'Mix color' ? 'bg-[#bcbcbc]' :
+                                  color.name === 'Green' ? 'bg-[#4caf50]' :
+                                    color.name === 'Yellow' ? 'bg-[#ffeb3b]' :
+                                      color.name === 'Blue' ? 'bg-[#2195f3f6]' :
+                                        color.name === 'Orange' ? 'bg-[#ff9800]' :
+                                          color.name === 'Purple' ? 'bg-[#9c27b0]' :
+                                            color.name === 'Red' ? 'bg-[#f44336]' :
+                                              color.name === 'Grey' ? 'bg-[#757575]' :
+                                                color.name === 'Brown' ? 'bg-[#795548]' :
+                                                  color.name === 'Maroon' ? 'bg-[#800000]' :
+                                                    color.name === 'Olive' ? 'bg-[#808000]' :
+                                                      color.name === 'Silver' ? 'bg-[#c0c0c0]' :
+                                                        color.name === 'Pink' ? 'bg-[#e91e63]' :
+                                                          color.name === 'Cyan' ? 'bg-[#00bcd4]' :
+                                                            color.name === 'Rust' ? 'bg-[#b7410e]' :
+                                                              color.name === 'Gold' ? 'bg-[#ffd700]' :
+                                                                color.name === 'Charcoal' ? 'bg-[#36454f]' :
+                                                                  color.name === 'Magenta' ? 'bg-[#ff00ff]' :
+                                                                    color.name === 'Bronze' ? 'bg-[#cd7f32]' :
+                                                                      color.name === 'Cream' ? 'bg-[#fffdd0]' :
+                                                                        color.name === 'Violet' ? 'bg-[#8a2be2]' :
+                                                                          color.name === 'Navy blue' ? 'bg-[#001f3f]' :
+                                                                            color.name === 'Mustard' ? 'bg-[#ffdb58]' :
+                                                                              color.name === 'Black' ? 'bg-[#000000]' :
+                                                                                color.name === 'Teal' ? 'bg-[#008080]' :
+                                                                                  color.name === 'Tan' ? 'bg-[#d2b48c]' :
+                                                                                    color.name === 'Lavender' ? 'bg-[#e6e6fa]' :
+                                                                                      color.name === 'Mauve' ? 'bg-[#e0b0ff]' :
+                                                                                        color.name === 'Peach' ? 'bg-[#ffdab9]' :
+                                                                                          color.name === 'Coral' ? 'bg-[#ff7f50]' :
+                                                                                            color.name === 'Burgundy' ? 'bg-[#800020]' :
+                                                                                              color.name === 'Indigo' ? 'bg-[#4b0082]' : ''
+                              } p-4 rounded-full m-2 transition-colors duration-300 ${selectedColor === color.name ? 'ring-[#8d4533c8] ring-2' : ''}`}
+                            onClick={() => handleColorSelection(color.name)}
+                          />
+                        ))}
+                      </div>
+
 
                       <div className="mt-4">
                         <p className="text-sm text-gray-600">Quantity</p>
@@ -439,11 +494,11 @@ const Details: React.FC = () => {
                       <p className="text-lg">
                         <strong>{selectedLocation.name}:</strong> {selectedLocation.days}
                       </p>
-                      {product.plantCare?.length > 0 && (
+                      {product.specifications?.length > 0 && (
                         <div className="bg-[#f5f5f5] p-4 md:p-6 rounded-lg shadow-md my-2">
-                          <h2 className="text-sm md:text-base lg:text-lg font-semibold mb-4">Plant Care</h2>
+                          <h2 className="text-sm md:text-base lg:text-lg font-semibold mb-4">Specifications</h2>
                           <ul className="space-y-2">
-                            {product?.plantCare?.map((point, index) => (
+                            {product?.specifications?.map((point, index) => (
                               <li key={index} className="flex items-start">
                                 <span className="text-[#5f9231] mr-1 md:mr-2 my-auto">
                                   <FaArrowRight />
@@ -466,86 +521,11 @@ const Details: React.FC = () => {
               </div>
             </div>
           </div>
-          {SimilarProducts.length > 0 &&
-            <section className="bg-white py-8">
-              <div className="container m-auto px-4">
-                <h2 className="text-3xl font-semibold text-[#5f9231] mb-6">Similar Products</h2>
-                <Carousel
-                  responsive={responsive}
-                  containerClass="carousel-container"
-                  additionalTransfrom={0}
-                  sliderClass=""
-                  itemClass='p-1 sm:p-1 md:p-3 lg:p-4 xl:p-5'
-                >
-                  {SimilarProducts?.map((item) => (
-                    <Link href={`/similar/${item._id}`} key={item._id}>
-                     <div
-                      key={item._id}
-                      className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
-                    >
-                      {item.offerPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                          {item.offerPercentage}% OFF
-                        </div>
-                      )}
-                      <img
-                        src={item.photo?.image1}
-                        alt={item.name}
-                        className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.name.substring(0, 13)}..
-                        </h3>
-                        <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.description.substring(0, 43)}...
-                        </p>
-                        <div className="flex items-center mb-2">
-                          {item.offerPercentage > 0 ? (
-                            <>
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
-                                {item.sizes[0].pots[0] ?
-                                 (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
-                                  <s>{Number(item.sizes[0].price).toFixed(1)}</s>
-                                )}
-                              </span>
-                              {item.sizes[0]?.pots[0] ? (
-                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * (Number(item.sizes[0].price) +
-                                  Number(item.sizes[0].pots[0].potPrice))
-                                ).toFixed(1)} AED
-                              </span>                              
-                              ):
-                              (<span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0].price)
-                                ).toFixed(1)}{' '}
-                                AED
-                              </span>)}
-                            </>
-                          ) : (
-                            <>
-                            {item.sizes[0].pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                            {(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED
-                            </span>):(<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.sizes[0].price).toFixed(2)} AED
-                            </span>)}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    </Link>
-                  ))}
-                </Carousel>
-              </div>
-            </section>
-          }
+
           <Footer />
         </>)}
     </>
   );
 };
 
-export default Details
+export default Similar;

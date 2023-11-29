@@ -204,8 +204,7 @@ export const getRecommendedProductController= async(req,res)=>{
 export const getSingleProductController = async (req, res) => {
     try {
       const product = await productModel
-        .findById(req.params.pid)
-        .populate('category')
+        .findById(req.params.pid).populate('category')
   
       if (!product) {
         return res.status(404).send({
@@ -358,7 +357,7 @@ export const relatedProductontroller =async(req,res)=>{
         const products=await productModel.find({
             category:cid,
             _id:{$ne:pid}
-        }).limit(16).populate("category")
+        }).populate("category").limit(10)
         
         res.status(200).send({
             success:true,
