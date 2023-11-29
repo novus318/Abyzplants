@@ -108,7 +108,7 @@ const Pots: React.FC = () => {
             <Header />
             <ContactIcon />
             <div className="container mx-auto px-8 py-8">
-              <h2 className="text-3xl font-semibold text-[#5f9231] mb-2 mt-16 text-center">Best Selling Plants</h2>
+              <h2 className="text-3xl font-semibold text-[#5f9231] mb-2 mt-16 text-center">Best Selling Pots</h2>
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Sort by Price:</h3>
                 <div className="flex items-center space-x-4">
