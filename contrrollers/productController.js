@@ -1,5 +1,6 @@
 import slugify from 'slugify'
 import productModel from '../models/productModel.js' 
+import potModel from '../models/productPotModel.js'
 import categoryModel from "../models/categoryModel.js";
 import fs from 'fs'
 import path from 'path';
@@ -133,14 +134,16 @@ export const getTotalProductCount = async (req, res) => {
 export const getAllProductNamesController = async (req, res) => {
     try {
       const products = await productModel.find({}, 'name');
-  
-      const productNames = products.map((product) => product.name);
-  
+      const pots = await potModel.find({}, 'name');
+    
+      const productName = products.map((product) => product.name);
+      const potName = products.map((product) => product.name);
+      const allNames = [...productName, ...potName];
       res.status(200).json({
         success: true,
-        totalCount: productNames.length,
+        totalCount: allNames.length,
         message: 'All product names',
-        productNames,
+        productNames:allNames,
       });
     } catch (error) {
       console.error(error);
@@ -156,18 +159,26 @@ export const searchProductsController = async (req, res) => {
     try {
         const { keyword } = req.params;
 
-        const products = await productModel.find({
+        const product = await productModel.find({
             $or: [
                 { name: { $regex: new RegExp(keyword, 'i') } },
                 { description: { $regex: new RegExp(keyword, 'i') } },
             ],
         });
+        const pot = await potModel.find({
+            $or: [
+                { name: { $regex: new RegExp(keyword, 'i') } },
+                { description: { $regex: new RegExp(keyword, 'i') } },
+            ],
+        });
+        const products = [...product,...pot];
 
         res.status(200).send({
             success: true,
             totalCount: products.length,
             message: 'Products matching the search keyword',
-            products,
+            product,
+            pot
         });
     } catch (error) {
     

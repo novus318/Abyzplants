@@ -17,6 +17,7 @@ interface Order {
     offer: number;
     quantity: number;
     size: string;
+    color:string;
     pots:
     {
       potName: string;
@@ -149,7 +150,7 @@ const Bill: React.FC = () => {
                             </>)}
                         </td>
                         <td className="border text-center">{product.quantity}</td>
-                        <td className="border text-center">{product.size} {product.pots && `/ ${product.pots.potName}`}</td>
+                        <td className="border text-center">{product.size} {product.pots && `/ ${product.pots.potName}`} {product.color && `/ ${product.color}`}</td>
                         <td className="border text-center">
                           {product.pots?.potPrice ? (<>
                             {(((Number(product.price) + Number(product.pots.potPrice)) * (1 - product.offer / 100)) * product.quantity).toFixed(2)}</>) :
