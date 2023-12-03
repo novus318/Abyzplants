@@ -6,9 +6,13 @@
   background-color: transparent;
   width: 0%;
 }
-*{
+:root {
   margin: 0;
   padding: 0;
+}
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 .netflix{
   font-family: Netflix Sans,Helvetica Neue,Segoe UI,Roboto,Ubuntu,sans-serif;
