@@ -17,6 +17,7 @@ interface Product {
     name: string;
     price: number;
   }[];
+  quantity:any;
   images:{
     image1:string;
     image2:string;
@@ -142,9 +143,11 @@ const Pots: React.FC = () => {
                 ) : (
                   filteredProducts.map((item) => (
                     <Link href={`/potDetails/${item._id}`} key={item._id}>
-                       <div
+                     <div
                       key={item._id}
-                      className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
+                      className={`relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl ${
+                        item.quantity === 0 ? 'opacity-50' : ''
+                      }`}
                     >
                       {item.offerPercentage > 0 && (
                         <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
@@ -183,6 +186,11 @@ const Pots: React.FC = () => {
                           )}
                         </div>
                       </div>
+                      {item.quantity === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70 text-white text-lg font-semibold">
+                          Restocking Soon
+                        </div>
+                      )}
                     </div>
                     </Link>
                   ))

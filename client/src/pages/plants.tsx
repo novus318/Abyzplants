@@ -22,6 +22,7 @@ interface Product {
     name: string;
     _id: number;
   }
+  quantity:any;
   sizes: {
     name: string;
     price: number;
@@ -194,10 +195,12 @@ const Plants: React.FC = () => {
                 ) : (
                   filteredProducts.map((item) => (
                     <Link href={`/details/${item._id}`} key={item._id}>
-                      <div
-                        key={item._id}
-                        className="relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
-                      >
+                    <div
+                      key={item._id}
+                      className={`relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl ${
+                        item.quantity === 0 ? 'opacity-50' : ''
+                      }`}
+                    >
                         {item.offerPercentage > 0 && (
                           <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
                             {item.offerPercentage}% OFF
@@ -250,6 +253,11 @@ const Plants: React.FC = () => {
                             )}
                           </div>
                         </div>
+                        {item.quantity === 0 && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70 text-white text-lg font-semibold">
+                          Restocking Soon
+                        </div>
+                      )}
                       </div>
                     </Link>
                   ))
