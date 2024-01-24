@@ -93,7 +93,7 @@ const Bill: React.FC = () => {
                   Contact us: info@abyzplants.com
                 </p>
                 <p className="text-sm">
-                  Phone: +971 58 953 7998
+                  Phone: +971 523653085
                 </p>
               </div>
               <div>

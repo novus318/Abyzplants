@@ -558,7 +558,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={product.photo.image1}
+                                            src={product?.photo?.image1}
                                             alt="Image1"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -582,7 +582,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={product.photo.image2}
+                                            src={product?.photo?.image2}
                                             alt="Image2"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />
@@ -606,7 +606,7 @@ const EditProduct = () => {
                                         className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                     />) : (
                                         <img
-                                            src={product.photo.image3}
+                                            src={product?.photo?.image3}
                                             alt="Image3"
                                             className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
                                         />

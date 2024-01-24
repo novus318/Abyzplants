@@ -80,7 +80,7 @@ export default function Home() {
       Contact us to explore our repotting options and receive personalized guidance from our experts.
     </p>
     <a
-      href="https://wa.me/+971589537998"
+      href="https://wa.me/+971523653085"
       target="_blank"
       rel="noopener noreferrer"
       className="bg-[#5f9231] hover:bg-[#4c7c26] text-white py-3 px-6 rounded-md text-lg font-semibold inline-block"

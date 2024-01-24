@@ -156,10 +156,10 @@ const AllProducts = () => {
                             </>
                           ) : (
                             <>
-                            {item.sizes[0].pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                            {item.sizes[0]?.pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                             {(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED
                             </span>):(<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.sizes[0].price).toFixed(2)} AED
+                              {Number(item.sizes[0]?.price).toFixed(2)} AED
                             </span>)}
                             </>
                           )}

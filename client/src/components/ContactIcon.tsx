@@ -3,7 +3,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 const ContactIcon = () => {
     const handleClick = () => {
-        window.open('https://wa.me/+971589537998', '_blank');
+        window.open('https://wa.me/+971523653085', '_blank');
       };
   return (
     <div className="fixed bottom-28 right-2 cursor-pointer z-50">

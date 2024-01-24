@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaFacebook, FaInstagram, FaLinkedin, FaWhatsapp } from 'react-icons/fa';
-import loopcod from '@/images/loopcod.webp';
+import winndeal from '@/images/winndeal.webp';
 
 const Footer = () => {
   return (
@@ -46,7 +46,7 @@ const Footer = () => {
             <a href="#" className="text-white hover:text-[#5f9231] transition-colors duration-300">
               <FaLinkedin size={30} />
             </a>
-            <a href="https://wa.me/+971589537998"
+            <a href="https://wa.me/+971523653085"
               target="_blank"
               className="text-white hover:text-[#5f9231] transition-colors duration-300">
               <FaWhatsapp size={30} />
@@ -57,12 +57,12 @@ const Footer = () => {
       <div className="mt-6 text-center text-[#f2fafd] text-xs md:text-sm">
         &copy; {new Date().getFullYear()} Developed and designed by{' '}
         <a
-          href="https://www.nizamudheen.tech/"
+          href="https://www.winndeal.com/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#e8ba79] hover:text-[#f2fafd] transition-colors duration-300"
         >
-          <img src={loopcod.src} alt="loopcod" className="inline h-4 ml-1" />
+          <img src={winndeal.src} alt="winndeal" className="inline h-4 ml-1" />
         </a>
       </div>
     </footer>
