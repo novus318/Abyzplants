@@ -133,7 +133,6 @@ const Pots: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <p className="mb-4 text-gray-600">Total Plants: {totalCount}</p>
 
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {filteredProducts.length === 0 ? (
