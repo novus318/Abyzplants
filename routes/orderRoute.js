@@ -119,11 +119,11 @@ router.post('/sendMail',async (req, res) => {
     const { user, products, totalPrice, paymentMethod } = req.body;
 
     try {
-        await sendOrderEmail(user, products, totalPrice, paymentMethod);
         res.json({
             success: true,
             message: 'Order email sent successfully.',
         });
+        await sendOrderEmail(user, products, totalPrice, paymentMethod);
     } catch (error) {
         console.error('Error sending order email:', error);
         res.status(500).json({
