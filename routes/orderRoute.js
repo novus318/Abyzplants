@@ -76,7 +76,7 @@ const sendOrderEmail = async (user, products, totalPrice, paymentMethod) => {
     `;
 
     // const recipients = ['mohamed.iqbal53@gmail.com', 'nizamudheen318@gmail.com'];
-    const recipients = ['nizamudheen.tech@gmail.com', 'nizamudheen318@gmail.com'];
+    const recipients = ['mohamed.iqbal53@gmail.com', 'nizamudheen318@gmail.com'];
     const sendEmail = async (recipient) => {
         const mailOptions = {
             from: 'support@tlonline.shop',
