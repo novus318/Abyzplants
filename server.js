@@ -42,7 +42,7 @@ app.use('/api/order',orderRoutes)
 //rest api
 app.get('/api',(req,res)=>{
     res.send({
-        message:'welcome to app'
+        message:'welcome to app itself working for you'
     })
 })
 
