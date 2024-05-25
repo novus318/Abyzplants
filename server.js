@@ -20,16 +20,12 @@ connectDB();
 const app = express()
 
 //middlewares
-const allowedOrigins = ['https://www.tlonline.shop', 'https://tlonline.shop', 'http://localhost:3000','http://localhost:8000','https://server.tlonline.shop'];
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true); // Allow the request
-    } else {
-      callback(new Error('Not allowed by CORS')); // Deny the request
-    }
-  }
-}));
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    optionsSuccessStatus: 204
+  }));
 app.use(express.json())
 app.use(morgan('dev'))
 
