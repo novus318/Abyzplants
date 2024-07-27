@@ -34,12 +34,12 @@ interface CategoriesScrollProps {
     const responsive = {
         desktop: {
           breakpoint: { max: 3000, min: 1024 },
-          items: 4,
+          items: 5,
           partialVisibilityGutter: 40,
         },
         tablet: {
           breakpoint: { max: 1024, min: 564 },
-          items: 3,
+          items: 4,
           partialVisibilityGutter: 30,
         },
         mobile: {
@@ -67,7 +67,7 @@ interface CategoriesScrollProps {
         {products?.length > 0 && (
         <section className="bg-white py-8">
           <div className="container m-auto px-4">
-              <h2 className="text-3xl font-semibold text-[#5f9231] mb-6 uppercase">{categoryName}</h2>
+              <h2 className="text-2xl font-bold text-[#5f9231] mb-2 uppercase">{categoryName}</h2>
               <Carousel
               responsive={responsive}
               containerClass="carousel-container"
@@ -79,7 +79,7 @@ interface CategoriesScrollProps {
                   <Link href={`/details/${item._id}`} key={item._id}>
                     <div
                       key={item._id}
-                      className={`relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl ${
+                      className={`relative bg-gray-50 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-xl ${
                         item.quantity === 0 ? 'opacity-50' : ''
                       }`}
                     >
@@ -91,19 +91,19 @@ interface CategoriesScrollProps {
                       <img
                         src={item.photo?.image1}
                         alt={item.name}
-                        className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
+                        className="w-full object-cover hover:scale-105"
                       />
                       <div className="p-4">
-                        <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.name.substring(0, 13)}..
+                        <h3 className="font-semibold uppercase text-xs md:text-sm truncate">
+                          {item.name}
                         </h3>
-                        <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.description.substring(0, 43)}...
+                        <p className="text-gray-700 text-xs  truncate">
+                          {item.description}
                         </p>
-                        <div className="flex items-center mb-2">
+                        <div className="flex items-center">
                           {item.offerPercentage > 0 ? (
                             <>
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
+                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm  mr-2">
                                 {item.sizes[0].pots[0] ?
                                  (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
                                   <s>{Number(item.sizes[0].price).toFixed(1)}</s>

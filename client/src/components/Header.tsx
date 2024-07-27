@@ -120,9 +120,9 @@ export default function Header() {
         {({ open }) => (
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="relative flex items-center justify-between h-20">
+              <div className="relative flex items-center justify-between h-12 md:h-14">
                 <img
-                  className="md:h-8 w-auto rounded-md hidden md:block"
+                  className="h-5 md:h-7 w-auto rounded-md hidden md:block"
                   src={UAEFlag.src}
                   alt="UAE Flag"
                 />
@@ -132,7 +132,7 @@ export default function Header() {
                     {open ? (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
+                        className="h-5 w-5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -147,7 +147,7 @@ export default function Header() {
                     ) : (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
+                        className="h-5 w-5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -165,7 +165,7 @@ export default function Header() {
                 <Link href="/">
                   <div className="flex-shrink-0">
                     <img
-                      className="h-8 md:h-10 w-auto"
+                      className="h-6 md:h-8 w-auto"
                       src={Logo.src}
                       alt="Your Company"
                     />
@@ -188,19 +188,19 @@ export default function Header() {
                 <div className="relative">
                   <button
                     onClick={toggleSearchBar}
-                    className="text-[#a14e3a] hover:text-[#79bd3f] px-3 py-2 text-xl font-medium netflix"
+                    className="text-[#a14e3a] hover:text-[#79bd3f]  font-medium netflix"
                   >
                     <FaSearch />
                   </button>
                 </div>
-                <div className="hidden md:flex md:space-x-4">
+                <div className="hidden md:flex md:space-x-4 items-center gap-3">
                   {navigation.map((item) => (
                     <a
                       key={item.name}
                       href={item.href}
                       className={classNames(
                         'text-[#a14e3a] hover:text-[#79bd3f]',
-                        'px-3 py-2 text-xl font-medium netflix'
+                        ' font-medium netflix'
                       )}
                       aria-current={item.current ? 'page' : undefined}
                     >
@@ -211,7 +211,7 @@ export default function Header() {
                     href="/plants"
                     className={classNames(
                       'text-[#a14e3a] hover:text-[#79bd3f]',
-                      'px-3 py-2 text-xl font-medium netflix'
+                      ' font-medium netflix'
                     )}
                   >
                     Plants
@@ -220,7 +220,7 @@ export default function Header() {
                     href="/pots"
                     className={classNames(
                       'text-[#a14e3a] hover:text-[#79bd3f]',
-                      'px-3 py-2 text-xl font-medium netflix'
+                      ' font-medium netflix'
                     )}
                   >
                     Pots
@@ -233,7 +233,7 @@ export default function Header() {
                             <span className="absolute -inset-1.5" />
                             <span className="sr-only">Open user menu</span>
                             <img
-                              className="h-10 w-10 rounded-full"
+                              className="h-7 w-7 rounded-full"
                               src={UserProfile.src}
                               alt="pro"
                             />
@@ -306,7 +306,7 @@ export default function Header() {
                     href={item.href}
                     className={classNames(
                       'text-[#a14e3a] hover-text-[#79bd3f]',
-                      'block px-3 py-2 text-lg font-medium netflix'
+                      'block font-medium netflix'
                     )}
                   >
                     {item.name}
@@ -316,7 +316,7 @@ export default function Header() {
                   <a
                     className={classNames(
                       'text-[#a14e3a] hover:text-[#79bd3f]',
-                      'block px-3 py-2 text-lg font-medium netflix'
+                      'block font-medium netflix'
                     )}
                   >
                     Plants
@@ -326,7 +326,7 @@ export default function Header() {
                       href="/pots"
                       className={classNames(
                         'text-[#a14e3a] hover:text-[#79bd3f]',
-                        'block px-3 py-2 text-lg font-medium netflix'
+                        'block font-medium netflix'
                       )}
                     >
                       Pots
@@ -337,7 +337,7 @@ export default function Header() {
                       href="/profile"
                       className={classNames(
                         'text-[#a14e3a] hover-text-[#79bd3f]',
-                        'block px-3 py-2 text-lg font-medium netflix'
+                        'block font-medium netflix'
                       )}
                     >
                       Your Profile
@@ -346,7 +346,7 @@ export default function Header() {
                       href="/order"
                       className={classNames(
                         'text-[#a14e3a] hover:text-[#79bd3f]',
-                        'block px-3 py-2 text-lg font-medium netflix'
+                        'block font-medium netflix'
                       )}
                     >
                       Orders
@@ -354,7 +354,7 @@ export default function Header() {
                     <a
                       onClick={handleLogout}
                       className={classNames(
-                        'text-[#a14e3a] hover:text-[#79bd3f]',
+                        'text-[#a14e3a] hover:text-[#79bd3f] bg-slate-50 rounded-md',
                         'block px-3 py-2 text-lg font-medium netflix'
                       )}
                     >
@@ -378,12 +378,12 @@ export default function Header() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="fixed top-0 right-0 h-16 bg-white w-full p-4 mt-16 z-50"
+            className="fixed top-0 right-0 h-16 bg-white w-full p-2 mt-11 z-50"
           >
             <input
               type="search"
               placeholder="Search..."
-              className="w-full p-2 border rounded-md focus:outline-none"
+              className="w-full p-1 border rounded-md focus:outline-none"
               value={searchInput}
               onChange={handleSearchChange}
               onKeyPress={handleKeyPress} 

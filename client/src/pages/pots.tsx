@@ -109,15 +109,15 @@ const Pots: React.FC = () => {
             <Header />
             <ContactIcon />
             <div className="container mx-auto px-8 py-8">
-              <h2 className="text-3xl font-semibold text-[#5f9231] mb-2 mt-16 text-center">Best Selling Pots</h2>
-              <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-[#5f9231] mb-2 mt-16 text-center">Best Selling Pots</h2>
+              <div className="mb-2">
                 <h3 className="text-lg font-semibold mb-2">Sort by Price:</h3>
                 <div className="flex items-center space-x-4">
                   <button
                     className={`${sortOrder === 'lowToHigh'
                       ? 'bg-[#5f9231] text-white'
                       : 'border border-gray-300'
-                      } rounded-md p-2`}
+                      } rounded-md p-1`}
                     onClick={() => handleSortOrderChange(sortOrder === 'lowToHigh' ? '' : 'lowToHigh')}
                   >
                     Low to High
@@ -126,7 +126,7 @@ const Pots: React.FC = () => {
                     className={`${sortOrder === 'highToLow'
                       ? 'bg-[#5f9231] text-white'
                       : 'border border-gray-300'
-                      } rounded-md p-2`}
+                      } rounded-md p-1`}
                     onClick={() => handleSortOrderChange(sortOrder === 'highToLow' ? '' : 'highToLow')}
                   >
                     High to Low
@@ -134,7 +134,7 @@ const Pots: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
                 {filteredProducts.length === 0 ? (
                   <div className="h-[550px] flex items-center justify-center">
                     <p>No plants available</p>
@@ -142,55 +142,48 @@ const Pots: React.FC = () => {
                 ) : (
                   filteredProducts.map((item) => (
                     <Link href={`/potDetails/${item._id}`} key={item._id}>
-                     <div
-                      key={item._id}
-                      className={`relative bg-gray-100 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl ${
-                        item.quantity === 0 ? 'opacity-50' : ''
-                      }`}
-                    >
-                      {item.offerPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                          {item.offerPercentage}% OFF
-                        </div>
-                      )}
-                      <img
-                        src={item.images?.image1}
-                        alt={item.name}
-                        className="w-full object-cover h-48 md:h-56 lg:h-64 xl:h-72 hover:scale-105"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-semibold mb-2 uppercase text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.name.substring(0, 13)}..
-                        </h3>
-                        <p className="text-gray-700 mb-2 text-xs md:text-sm lg:text-base xl:text-lg">
-                          {item.description.substring(0, 43)}...
-                        </p>
-                        <div className="flex items-center mb-2">
-                          {item.offerPercentage > 0 ? (
-                            <>
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
-                                  <s>{Number(item.sizes[0]?.price).toFixed(1)}</s>
-                              </span>
-                              <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0]?.price)
-                                ).toFixed(1)}{' '}
-                                AED
-                              </span>
-                            </>
-                          ) : (
-                           <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.sizes[0].price).toFixed(2)} AED
-                            </span>
+                        <div
+                          key={item._id}
+                          className="relative bg-gray-50 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-xl"
+                        >
+                          {item.offerPercentage > 0 && (
+                            <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
+                              {item.offerPercentage}% OFF
+                            </div>
                           )}
+                          <img
+                            src={item.images?.image1}
+                            alt={item.name}
+                            className="w-full object-cover hover:scale-105"
+                          />
+                          <div className="p-3">
+                            <h3 className="font-semibold  uppercase text-xs md:text-sm truncate">
+                              {item.name}
+                            </h3>
+                            <p className="text-gray-700  text-xs md:text-sm truncate">
+                              {item.description}
+                            </p>
+                            <div className="flex items-center ">
+                              {item.offerPercentage > 0 ? (
+                                <>
+                                  <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
+                                      <s>{Number(item.sizes[0]?.price).toFixed(1)}</s>
+                                  </span>
+                                  <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                                    {(
+                                      ((100 - item.offerPercentage) / 100) * Number(item.sizes[0]?.price)
+                                    ).toFixed(1)}{' '}
+                                    AED
+                                  </span>
+                                </>
+                              ) : (
+                               <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                                  {Number(item.sizes[0].price).toFixed(2)} AED
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      {item.quantity === 0 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70 text-white text-lg font-semibold">
-                          Restocking Soon
-                        </div>
-                      )}
-                    </div>
                     </Link>
                   ))
                 )}
@@ -198,7 +191,7 @@ const Pots: React.FC = () => {
               {filteredProducts.length !== totalCount && (
                 <div className="text-center mt-4">
                   <button
-                    className="bg-[#5f9231] text-white py-2 px-4 rounded-md"
+                    className="bg-[#5f9231] text-white py-1 px-4 rounded-md"
                     onClick={fetchNextPage}
                   >
                     Load More

@@ -4,18 +4,18 @@ import winndeal from '@/images/winndeal.webp';
 
 const Footer = () => {
   return (
-    <footer className="bg-[#292929] text-white py-6">
-      <div className="container mx-auto flex flex-col-reverse md:flex-row justify-between items-center px-4">
-        <div className="md:w-1/3 mb-6 md:mb-0 text-center">
-          <h3 className="text-2xl font-semibold mb-2">Abyzplants.com</h3>
-          <p className="text-gray-300 text-sm">
+    <footer className="bg-[#292929] text-white py-4">
+      <div className="container mx-auto flex flex-col-reverse md:flex-row justify-between px-4">
+        <div className="md:w-1/3 mb-2 md:mb-0 text-center">
+          <h3 className="text-lg font-semibold mb-2">Abyzplants.com</h3>
+          <p className="text-gray-300 text-xs">
             Abyz Plants the definitive online destination for exceptional indoor and outdoor plants
             and a delightful selection of home accessories. Whether it is for offices,malls,hotels or any setting
             count on us for the freshest & healthiest plants. Explore our (Gift a Plant) option and revel in our swift and reliable delivery service.
           </p>
         </div>
         <div className="md:w-1/3 mb-4 md:mb-0 text-center">
-          <h3 className="text-2xl font-semibold mb-2">Quick Links</h3>
+          <h3 className="text-lg font-semibold mb-2">Quick Links</h3>
           <ul className="flex flex-wrap justify-center">
             <li className="mb-2 pr-4">
               <a href="#" className="text-gray-300 hover:text-[#5f9231] transition-colors duration-300">
@@ -34,8 +34,8 @@ const Footer = () => {
             </li>
           </ul>
         </div>
-        <div className="md:w-1/3 text-center mb-4">
-          <h3 className="text-2xl font-semibold mb-2">Connect With Us</h3>
+        <div className="md:w-1/3 text-center mb-2">
+          <h3 className="text-lg font-semibold mb-2">Connect With Us</h3>
           <div className="flex space-x-4 justify-center">
             <a href="https://www.facebook.com/profile.php?id=61553170792288" target="_blank" className="text-white hover:text-[#5f9231] transition-colors duration-300">
               <FaFacebook size={30} />

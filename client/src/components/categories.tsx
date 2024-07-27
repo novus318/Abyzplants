@@ -30,7 +30,7 @@ const Categories = () => {
    <>
    {loading ? (<Spinner/>):( <section className="bg-white py-8 m-auto">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-semibold text-[#5f9231] mb-6">Explore Our Categories</h2>
+        <h2 className="text-3xl font-semibold text-[#5f9231] mb-6">Explore Our Categories in plants</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {categories?.map((category) => (
             <Link href={`/category/${category._id}`} key={category._id}>
@@ -44,8 +44,8 @@ const Categories = () => {
                 className="w-full h-40 object-cover"
               />
               <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{category?.name}</h3>
-                <button className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#8d4533] transition-colors duration-300">
+                <h3 className="text-lg font-semibold mb-2 truncate">{category?.name}</h3>
+                <button className="bg-[#5f9231] text-white py-1 px-3 rounded hover:bg-[#8d4533] transition-colors duration-300">
                   Explore
                 </button>
               </div>
