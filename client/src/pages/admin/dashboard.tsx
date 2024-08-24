@@ -282,10 +282,18 @@ const Dashboard: React.FC = () => {
         <Modal
           title="Order Details"
           visible={modalVisible}
-          onCancel={() => setModalVisible(false)}
+          onCancel={
+            () => {
+              setModalVisible(false);
+              window.location.reload();
+            }
+          }
           width={1000}
           footer={[
-            <Button key="back" onClick={() => setModalVisible(false)}>
+            <Button key="back" onClick={() => {
+              setModalVisible(false);
+              window.location.reload();
+            }}>
               Close
             </Button>,
           ]}
