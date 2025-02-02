@@ -6,20 +6,24 @@ import UserProfile from '@/images/user.webp';
 import Link from 'next/link';
 import { useAuth } from '@/store/authContext';
 import { useRouter } from 'next/router';
-import { Dropdown, Menu as AntdMenu, Badge } from 'antd';
 import axios from 'axios';
 import { useCart } from '@/store/cartContext';
 import { FaSearch, FaShoppingBag } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { string } from 'yup';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
-const { SubMenu } = AntdMenu;
 const navigation = [
   { name: 'Home', href: '/', current: false },
   { name: 'Contact Us', href: '/contact', current: false },
 ];
 
-function classNames(...classes:any) {
+function classNames(...classes: any) {
   return classes.filter(Boolean).join(' ');
 }
 
@@ -36,9 +40,9 @@ export default function Header() {
   const [searchInput, setSearchInput] = useState('');
   const [names, setNames] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [searchVisible, setSearchVisible] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const [searchVisible, setSearchVisible] = useState(false);
 
   const toggleSearchBar = () => {
     setSearchVisible((prevState) => !prevState);
@@ -47,43 +51,33 @@ export default function Header() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
     setSearchInput(inputValue);
-  
+
     if (inputValue.trim() === '') {
       setSuggestions([]);
     } else {
-      if(inputValue.length >= 3){
+      if (inputValue.length >= 3) {
         const filteredSuggestions = names.filter((name) =>
-        name.toLowerCase().includes(inputValue.toLowerCase())
-      );
-      const limitedSuggestions = filteredSuggestions.slice(0, 5);
-      setSuggestions(limitedSuggestions as any);
+          name.toLowerCase().includes(inputValue.toLowerCase())
+        );
+        const limitedSuggestions = filteredSuggestions.slice(0, 5);
+        setSuggestions(limitedSuggestions as any);
       }
     }
   };
-  const handleSearchSubmit = (word:any) => {
+
+  const handleSearchSubmit = (word: any) => {
     const trimmedSearchInput = word.trim();
     if (trimmedSearchInput !== '') {
       const decodedInput = decodeURIComponent(trimmedSearchInput);
       router.push(`/search/${decodedInput}`).then(() => window.location.reload());
     }
   };
-  
 
   const handleKeyPress = (e: any) => {
     if (e.key === 'Enter' || e.key === 'Search') {
       handleSearchSubmit(searchInput);
     }
   };
-  
-  const getCategoryMenu = () => (
-    <AntdMenu>
-      {categories.map((category) => (
-        <AntdMenu.Item key={category._id}>
-          <Link href={`/category/${category._id}`}>{category.name}</Link>
-        </AntdMenu.Item>
-      ))}
-    </AntdMenu>
-  );
 
   const handleLogout = () => {
     setAuth({
@@ -94,13 +88,16 @@ export default function Header() {
     localStorage.removeItem('user');
     router.push('/');
   };
+
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${apiUrl}/api/category/get-category`);
       setCategories(response.data.category);
     } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
+
   useEffect(() => {
     const fetchNames = async () => {
       try {
@@ -116,23 +113,19 @@ export default function Header() {
 
   return (
     <>
-      <Disclosure as="nav" className="fixed top-0 w-full bg-white z-10">
+      <Disclosure as="nav" className="fixed top-0 w-full bg-white z-10 shadow-sm">
         {({ open }) => (
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              <div className="relative flex items-center justify-between h-12 md:h-14">
-                <img
-                  className="h-5 md:h-7 w-auto rounded-md hidden md:block"
-                  src={UAEFlag.src}
-                  alt="UAE Flag"
-                />
-                <div className="md:hidden">
+              <div className="relative flex items-center justify-between h-16">
+                {/* Mobile Menu Button */}
+                <div className="flex items-center md:hidden">
                   <Disclosure.Button className="inline-flex items-center justify-center p-2 text-[#79bd3f] hover:text-[#a14e3a]">
                     <span className="sr-only">Open main menu</span>
                     {open ? (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-6 w-6"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -147,7 +140,7 @@ export default function Header() {
                     ) : (
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
+                        className="h-6 w-6"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -162,207 +155,156 @@ export default function Header() {
                     )}
                   </Disclosure.Button>
                 </div>
+
+                {/* Logo */}
                 <Link href="/">
                   <div className="flex-shrink-0">
-                    <img
-                      className="h-6 md:h-8 w-auto"
-                      src={Logo.src}
-                      alt="Your Company"
-                    />
+                    <img className="h-8 w-auto" src={Logo.src} alt="Company Logo" />
                   </div>
                 </Link>
+
+                {/* UAE Flag (Mobile) */}
                 <img
-                  className="h-5 md:h-8 w-auto rounded-md md:hidden"
+                  className="h-6 w-auto rounded-md md:hidden"
                   src={UAEFlag.src}
                   alt="UAE Flag"
                 />
-                {auth?.user && (
-                  <Link href="/cart" className="py-2 md:hidden">
-                    <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
-                      <div className="text-[#a14e3a] text-xl">
-                        <FaShoppingBag />
-                      </div>
-                    </Badge>
-                  </Link>
-                )}
-                <div className="relative">
-                  <button
-                    onClick={toggleSearchBar}
-                    className="text-[#a14e3a] hover:text-[#79bd3f]  font-medium netflix"
-                  >
-                    <FaSearch />
-                  </button>
-                </div>
-                <div className="hidden md:flex md:space-x-4 items-center gap-3">
+
+                {/* Search Icon (Mobile) */}
+                <button
+                  onClick={toggleSearchBar}
+                  className="text-[#a14e3a] hover:text-[#79bd3f] md:hidden"
+                >
+                  <FaSearch className="h-5 w-5" />
+                </button>
+
+                {/* Desktop Navigation */}
+                <div className="hidden md:flex md:items-center md:space-x-6">
                   {navigation.map((item) => (
-                    <a
+                    <Link
                       key={item.name}
                       href={item.href}
-                      className={classNames(
-                        'text-[#a14e3a] hover:text-[#79bd3f]',
-                        ' font-medium netflix'
-                      )}
-                      aria-current={item.current ? 'page' : undefined}
+                      className="text-[#a14e3a] hover:text-[#79bd3f] font-medium"
                     >
                       {item.name}
-                    </a>
+                    </Link>
                   ))}
-                  <Link
-                    href="/plants"
-                    className={classNames(
-                      'text-[#a14e3a] hover:text-[#79bd3f]',
-                      ' font-medium netflix'
-                    )}
-                  >
-                    Plants
-                  </Link>
-                  <Link
-                    href="/pots"
-                    className={classNames(
-                      'text-[#a14e3a] hover:text-[#79bd3f]',
-                      ' font-medium netflix'
-                    )}
-                  >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="text-[#a14e3a] hover:text-[#79bd3f] font-medium">
+                      Plants
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      {categories.map((category) => (
+                        <DropdownMenuItem key={category._id}>
+                          <Link href={`/category/${category._id}`}>{category.name}</Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Link href="/pots" className="text-[#a14e3a] hover:text-[#79bd3f] font-medium">
                     Pots
                   </Link>
+                </div>
+
+                {/* User Menu and Cart */}
+                <div className="hidden md:flex md:items-center md:space-x-4">
                   {auth.user ? (
                     <>
-                      <Menu as="div" className="relative px-5">
-                        <div>
-                          <Menu.Button className="relative flex rounded-full">
-                            <span className="absolute -inset-1.5" />
-                            <span className="sr-only">Open user menu</span>
-                            <img
-                              className="h-7 w-7 rounded-full"
-                              src={UserProfile.src}
-                              alt="pro"
-                            />
-                          </Menu.Button>
-                        </div>
-                        <Transition
-                          as={Fragment}
-                          enter="transition ease-out duration-100"
-                          enterFrom="transform opacity-0 scale-95"
-                          enterTo="transform opacity-100 scale-100"
-                          leave="transition ease-in duration-75"
-                          leaveFrom="transform opacity-100 scale-100"
-                          leaveTo="transform opacity-0 scale-95"
-                        >
-                          <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                            <Menu.Item>
-                              {({ active }) => (
-                                <Link
-                                  href="/profile"
-                                  className={classNames(active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700')}
-                                >
-                                  Your Profile
-                                </Link>
-                              )}
-                            </Menu.Item>
-                            <Menu.Item>
-                              {({ active }) => (
-                                <Link
-                                  href="/order"
-                                  className={classNames(active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700')}
-                                >
-                                  Orders
-                                </Link>
-                              )}
-                            </Menu.Item>
-                            <Menu.Item>
-                              {({ active }) => (
-                                <a
-                                  onClick={handleLogout}
-                                  className={classNames(active ? 'bg-gray-100 cursor-pointer' : '', 'block px-4 py-2 text-sm text-gray-700')}
-                                >
-                                  Sign out
-                                </a>
-                              )}
-                            </Menu.Item>
-                          </Menu.Items>
-                        </Transition>
-                      </Menu>
-                      <Link href="/cart" className="px-3 py-2">
-                        <Badge count={cart?.length} size="small" color="#79bd3f" showZero>
-                          <div className="text-[#a14e3a] text-2xl">
-                            <FaShoppingBag />
-                          </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="flex items-center">
+                          <img
+                            className="h-8 w-8 rounded-full"
+                            src={UserProfile.src}
+                            alt="User Profile"
+                          />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            <Link href="/profile">Your Profile</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Link href="/order">Orders</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleLogout}>
+                            Sign out
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <Link href="/cart">
+                        <Badge className="bg-[#79bd3f] text-white">
+                          {cart?.length}
                         </Badge>
+                        <FaShoppingBag className="text-[#a14e3a] h-6 w-6" />
                       </Link>
                     </>
                   ) : (
-                    <Link href="/login" className="px-4 py-2 netflix font-medium rounded-3xl bg-[#a14e3a] text-white hover:bg-[#79bd3f] transition-colors duration-300 ease-in-out">
+                    <Link
+                      href="/login"
+                      className="px-4 py-2 rounded-full bg-[#a14e3a] text-white hover:bg-[#79bd3f] transition-colors duration-300"
+                    >
                       Login
                     </Link>
                   )}
                 </div>
               </div>
             </div>
+
+            {/* Mobile Menu Panel */}
             <Disclosure.Panel className="md:hidden">
               <div className="px-2 pt-2 pb-3 space-y-1">
                 {navigation.map((item) => (
-                  <a
+                  <Link
                     key={item.name}
                     href={item.href}
-                    className={classNames(
-                      'text-[#a14e3a] hover-text-[#79bd3f]',
-                      'block font-medium netflix'
-                    )}
+                    className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
                   >
                     {item.name}
-                  </a>
+                  </Link>
                 ))}
-                <Dropdown overlay={getCategoryMenu()} placement="bottomLeft">
-                  <a
-                    className={classNames(
-                      'text-[#a14e3a] hover:text-[#79bd3f]',
-                      'block font-medium netflix'
-                    )}
-                  >
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="block w-full px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium text-left">
                     Plants
-                  </a>
-                </Dropdown>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {categories.map((category) => (
+                      <DropdownMenuItem key={category._id}>
+                        <Link href={`/category/${category._id}`}>{category.name}</Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Link
-                      href="/pots"
-                      className={classNames(
-                        'text-[#a14e3a] hover:text-[#79bd3f]',
-                        'block font-medium netflix'
-                      )}
-                    >
-                      Pots
-                    </Link>
+                  href="/pots"
+                  className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
+                >
+                  Pots
+                </Link>
                 {auth.user ? (
                   <>
                     <Link
                       href="/profile"
-                      className={classNames(
-                        'text-[#a14e3a] hover-text-[#79bd3f]',
-                        'block font-medium netflix'
-                      )}
+                      className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
                     >
                       Your Profile
                     </Link>
                     <Link
                       href="/order"
-                      className={classNames(
-                        'text-[#a14e3a] hover:text-[#79bd3f]',
-                        'block font-medium netflix'
-                      )}
+                      className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
                     >
                       Orders
                     </Link>
-                    <a
+                    <button
                       onClick={handleLogout}
-                      className={classNames(
-                        'text-[#a14e3a] hover:text-[#79bd3f] bg-slate-50 rounded-md',
-                        'block px-3 py-2 text-lg font-medium netflix'
-                      )}
+                      className="block w-full px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium text-left"
                     >
                       Sign out
-                    </a>
+                    </button>
                   </>
                 ) : (
-                  <Link href="/login" className="block w-full mt-2 py-2 netflix font-medium rounded-3xl bg-[#a14e3a] text-white hover:bg-[#79bd3f] transition-colors duration-300 px-6 ease-in-out">
+                  <Link
+                    href="/login"
+                    className="block w-full mt-2 px-4 py-2 rounded-full bg-[#a14e3a] text-white hover:bg-[#79bd3f] text-center"
+                  >
                     Login
                   </Link>
                 )}
@@ -371,6 +313,8 @@ export default function Header() {
           </>
         )}
       </Disclosure>
+
+      {/* Search Bar */}
       <AnimatePresence>
         {searchVisible && (
           <motion.div
@@ -378,31 +322,33 @@ export default function Header() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-            className="fixed top-0 right-0 h-16 bg-white w-full p-2 mt-11 z-50"
+            className="fixed top-16 right-0 w-full bg-white p-4 shadow-md z-50"
           >
-            <input
-              type="search"
-              placeholder="Search..."
-              className="w-full p-1 border rounded-md focus:outline-none"
-              value={searchInput}
-              onChange={handleSearchChange}
-              onKeyPress={handleKeyPress} 
-            />
-            {suggestions.length > 0 && (
-              <div className="bg-white pt-2 rounded-md">
-                <ul>
-                  {suggestions.map((suggestion, index) => (
-                    <li
-                      key={index}
-                      className="py-1 px-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSearchSubmit(suggestion)}
-                    >
-                      {suggestion}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div className="relative">
+              <input
+                type="search"
+                placeholder="Search..."
+                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#79bd3f]"
+                value={searchInput}
+                onChange={handleSearchChange}
+                onKeyPress={handleKeyPress}
+              />
+              {suggestions.length > 0 && (
+                <div className="absolute w-full bg-white mt-1 rounded-md shadow-lg">
+                  <ul>
+                    {suggestions.map((suggestion, index) => (
+                      <li
+                        key={index}
+                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSearchSubmit(suggestion)}
+                      >
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

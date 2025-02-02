@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Button } from "./ui/button";
 
 const Banner = () => {
   const buttonVariants = {
@@ -16,36 +17,20 @@ const Banner = () => {
   };
 
   return (
-    <section className="bg-white mt-4 md:mt-14 items-center">
-      <div className="text-center pt-16 px-4">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl md:text-3xl lg:text-5xl font-bold text-[#5f9231] mb-1 md:mb-3 lg:mb-5 tracking-wide"
-        >
-          Spread{" "}
-          <span className="text-[#8d4533]">green</span> in your life.
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm md:text-base lg:text-xl text-[#a14e3a] mb-2"
-        >
-          Find the Perfect Plant Companion for Your Space.
-        </motion.p>
-        <Link href="/plants">
-          <motion.button
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
-            type="button"
-            className="btn bg-[#5f9231] text-white py-1 md:py-2 lg:py-3 px-3 md:px-5 lg:px-7 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl"
-          >
-            Discover Now
-          </motion.button>
-        </Link>
-      </div>
-    </section>
+    <section className="pt-24 pb-12 px-4 sm:pt-28 sm:pb-16 md:pt-32 md:pb-20">
+    <div className="container mx-auto text-center max-w-3xl px-4">
+      <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6 leading-tight">
+        <span className="text-primary">Spread</span> <span className="text-primary/80">green</span>{" "}
+        <span className="text-secondary-foreground/90">in your life.</span>
+      </h1>
+      <p className="text-lg sm:text-xl text-secondary-foreground mb-6 sm:mb-8">
+        Find the Perfect Plant Companion for Your Space.
+      </p>
+      <Button size='sm' className="bg-primary hover:bg-primary/70 text-lg px-6 sm:px-8 h-12 sm:h-auto">
+        Discover Now
+      </Button>
+    </div>
+  </section>  
   );
 };
 

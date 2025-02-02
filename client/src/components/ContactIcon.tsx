@@ -7,7 +7,7 @@ const ContactIcon = () => {
       };
   return (
     <div className="fixed bottom-28 right-2 cursor-pointer z-50">
-        <div onClick={handleClick} className="bg-[#5a9626] text-white p-3 rounded-full cursor-pointer">
+        <div onClick={handleClick} className="bg-primary text-secondary p-3 rounded-full cursor-pointer">
           <FaWhatsapp size={24} />
         </div>
     </div>

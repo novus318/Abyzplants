@@ -53,39 +53,44 @@ export default function Home() {
    ))}
    <BestPots/>
    <BestSellers/>
-   <section className="bg-[#F9F9F9] text-[#333] py-8">
-  <div className="max-w-4xl mx-auto text-center">
-    <h2 className="text-2xl font-bold text-[#a14e3a] mb-2 apple">Elevate Your Plants with Expert Repotting Services</h2>
-    <p className="text-xs text-[#555] mb-8">
-      At Abyzplants, we offer repotting services to help your plants thrive in their new homes.
-    </p>
-    <div className="flex flex-col md:flex-row justify-between items-center p-4">
+   <section className="py-12 bg-gradient-to-b from-primary/5 to-secondary">
+  <div className="max-w-4xl mx-auto text-center px-4">
+  <h2 className="text-3xl font-bold mb-4 font-sans">
+  Elevate Your <span className="text-primary">Plants</span> with Expert Repotting Services
+</h2>
+<p className="text-sm text-gray-600 mb-8 font-sans">
+  At <span className="font-semibold text-gray-800">Abyzplants</span>, we offer repotting services to help your plants thrive in their new homes.
+</p>
+    <div className="flex flex-col md:flex-row justify-between items-center  p-6">
       <div className="w-full md:w-1/2 text-left">
-        <h3 className="text-lg font-semibold mb-4 text-[#5f9231]">Services Include :</h3>
-        <ul className="text-sm list-disc pl-4 mb-6 font-normal">
+        <h3 className="text-xl font-semibold  mb-4">Services Include:</h3>
+        <ul className="text-sm list-disc pl-5 space-y-2">
           <li>Expert selection of the perfect pot for your plant</li>
-          <li>Careful repotting with utmost attention to your plants roots</li>
+          <li>Careful repotting with utmost attention to your plant's roots</li>
           <li>High-quality soil and nutrients to promote growth</li>
         </ul>
       </div>
-      <div className="w-1/2 md:w-1/3 text-center mb-4">
+      <div className="w-full md:w-1/3 mt-6 md:mt-0">
         <img
-          src={Repott.src} 
-          alt="Repotting Services" 
-          className="rounded-lg shadow-xl"
+          src={Repott.src}
+          alt="Repotting Services"
+          className="rounded-lg shadow-md transform hover:scale-105 transition-transform duration-300"
         />
       </div>
     </div>
-    <p className="text-sm text-[#a14e3a] mb-8">
+    <p className="text-sm text-gray-600 mt-8 mb-6">
       Contact us to explore our repotting options and receive personalized guidance from our experts.
     </p>
     <a
       href="https://wa.me/+971523653085"
       target="_blank"
       rel="noopener noreferrer"
-      className="bg-[#5f9231] hover:bg-[#4c7c26] text-white py-1 px-3 rounded text-base font-semibold inline-block"
+      className="bg-primary text-white py-2 px-6 rounded-full text-sm font-semibold hover:bg-primary/70 transition-colors duration-300 inline-flex items-center"
     >
-      Contact Us on WhatsApp
+      <span>Contact Us on WhatsApp</span>
+      <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+      </svg>
     </a>
   </div>
 </section>

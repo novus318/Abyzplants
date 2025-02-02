@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import Spinner from './Spinner';
+import { Badge } from './ui/badge';
 
 interface Product {
   _id: string;
@@ -12,143 +13,152 @@ interface Product {
   sizes: {
     name: string;
     price: number;
-    pots:
-    {
+    pots: {
       potName: string;
       potPrice: number;
-    }[]
+    }[];
   }[];
   offerPercentage: number;
+  quantity: number;
+  photo?: {
+    image1: string;
+  };
 }
+
 interface CategoriesScrollProps {
-    categoryName?: string;
-    categoryId?: number;
-  }
+  categoryName?: string;
+  categoryId?: number;
+}
 
+const CategoriesScroll: React.FC<CategoriesScrollProps> = ({ categoryName, categoryId }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  const CategoriesScroll: React.FC<CategoriesScrollProps> = ({categoryName,categoryId }) => {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const responsive = {
+    desktop: {
+      breakpoint: { max: 3000, min: 1280 },
+      items: 4,
+      partialVisibilityGutter: 40,
+    },
+    tablet: {
+      breakpoint: { max: 1280, min: 768 },
+      items: 3,
+      partialVisibilityGutter: 32,
+    },
+    mobile: {
+      breakpoint: { max: 768, min: 0 },
+      items: 2,
+      partialVisibilityGutter: 16,
+    },
+  };
 
-    const responsive = {
-        desktop: {
-          breakpoint: { max: 3000, min: 1024 },
-          items: 5,
-          partialVisibilityGutter: 40,
-        },
-        tablet: {
-          breakpoint: { max: 1024, min: 564 },
-          items: 4,
-          partialVisibilityGutter: 30,
-        },
-        mobile: {
-          breakpoint: { max: 564, min: 0 },
-          items: 2,
-          partialVisibilityGutter: 20,
-        },
-      };
-      useEffect(() => {
-        axios
-          .get<{ products: Product[] }>(`${apiUrl}/api/product/get-ProductbyCategory/${categoryId}`)
-          .then((response) => {
-            setProducts(response.data.products);
-            setLoading(false)
-          })
-          .catch((error) => {
-            window.location.reload();
-          });
-      }, [categoryId]);
+  useEffect(() => {
+    axios
+      .get<{ products: Product[] }>(`${apiUrl}/api/product/get-ProductbyCategory/${categoryId}`)
+      .then((response) => {
+        setProducts(response.data.products);
+        setLoading(false);
+      })
+      .catch((error) => {
+        window.location.reload();
+      });
+  }, [categoryId]);
+
   return (
     <>
       {loading ? (
         <Spinner />
-      ) : (<>
-        {products?.length > 0 && (
-        <section className="bg-white py-8">
-          <div className="container m-auto px-4">
-              <h2 className="text-2xl font-bold text-[#5f9231] mb-2 uppercase">{categoryName}</h2>
+      ) : (
+        products?.length > 0 && (
+          <section className="bg-white py-8 md:py-12">
+            <div className="container mx-auto px-4 md:px-6 lg:px-8">
+              <h2 className="text-lg md:text-2xl font-semibold text-primary mb-4 md:mb-6">
+                {categoryName}
+              </h2>
+              
               <Carousel
-              responsive={responsive}
-              containerClass="carousel-container"
-              additionalTransfrom={0}
-              sliderClass=""
-              itemClass="p-2 p-3 md:p-4 lg:p-5 xl:p-6"
-            >
-              {products?.map((item: any) => (
+                responsive={responsive}
+                containerClass="carousel-container"
+                itemClass="px-2"
+                arrows
+                rewindWithAnimation
+                customTransition="transform 300ms ease-in-out"
+              >
+                {products.map((item) => (
                   <Link href={`/details/${item._id}`} key={item._id}>
-                    <div
-                      key={item._id}
-                      className={`relative bg-gray-50 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-xl ${
-                        item.quantity === 0 ? 'opacity-50' : ''
-                      }`}
-                    >
-                      {item.offerPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                          {item.offerPercentage}% OFF
-                        </div>
-                      )}
-                      <img
-                        src={item.photo?.image1}
-                        alt={item.name}
-                        className="w-full object-cover hover:scale-105"
-                      />
-                      <div className="p-4">
-                        <h3 className="font-semibold uppercase text-xs md:text-sm truncate">
+                    <div className="group relative bg-secondary/20 rounded-lg transition-all duration-300 overflow-hidden h-full flex flex-col">
+                      {/* Image Container with 5:7 Aspect Ratio */}
+                      <div className="relative pt-[90%]">
+                        <img
+                          src={item.photo?.image1}
+                          alt={item.name}
+                          className="absolute top-0 left-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                        
+                        {/* Discount Badge */}
+                        {item.offerPercentage > 0 && (
+                          <Badge variant='destructive' className="absolute top-1 right-1">
+                            {item.offerPercentage}% OFF
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Product Info */}
+                      <div className="p-4 flex flex-col flex-grow">
+                        <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-1 truncate">
                           {item.name}
                         </h3>
-                        <p className="text-gray-700 text-xs  truncate">
+                        <p className="text-xs md:text-sm text-gray-600 mb-3 line-clamp-2">
                           {item.description}
                         </p>
-                        <div className="flex items-center">
+                        
+                        {/* Price Section */}
+                        <div className="mt-auto">
                           {item.offerPercentage > 0 ? (
-                            <>
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm  mr-2">
-                                {item.sizes[0].pots[0] ?
-                                 (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
-                                  <s>{Number(item.sizes[0].price).toFixed(1)}</s>
-                                )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400 text-xs line-through">
+                                {item.sizes[0].pots[0] 
+                                  ? `${(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED`
+                                  : `${Number(item.sizes[0].price).toFixed(1)} AED`}
                               </span>
-                              {item.sizes[0]?.pots[0] ? (
-                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
+                              <span className="text-primary text-sm md:text-base font-semibold">
                                 {(
-                                  ((100 - item.offerPercentage) / 100) * (Number(item.sizes[0].price) +
-                                  Number(item.sizes[0].pots[0].potPrice))
+                                  ((100 - item.offerPercentage) / 100) * 
+                                  (Number(item.sizes[0].price) + 
+                                  (item.sizes[0].pots[0]?.potPrice || 0))
                                 ).toFixed(1)} AED
-                              </span>                              
-                              ):
-                              (<span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0].price)
-                                ).toFixed(1)}{' '}
-                                AED
-                              </span>)}
-                            </>
+                              </span>
+                            </div>
                           ) : (
-                            <>
-                            {item.sizes[0].pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                            {(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED
-                            </span>):(<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.sizes[0].price).toFixed(2)} AED
-                            </span>)}
-                            </>
+                            <span className="text-primary text-sm md:text-base font-semibold">
+                              {item.sizes[0].pots[0] 
+                                ? `${(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED`
+                                : `${Number(item.sizes[0].price).toFixed(1)} AED`}
+                            </span>
                           )}
                         </div>
                       </div>
+
+                      {/* Restock Overlay */}
                       {item.quantity === 0 && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-70 text-white text-lg font-semibold">
-                          Restocking Soon
+                        <div className="absolute inset-0 bg-secondary/70 flex items-center justify-center">
+                          <span className="text-destructive font-medium text-sm md:text-base">
+                            Restocking Soon
+                          </span>
                         </div>
                       )}
                     </div>
                   </Link>
                 ))}
-            </Carousel>
-          </div>
-        </section>
-    )}</> )}
+              </Carousel>
+            </div>
+          </section>
+        )
+      )}
     </>
-  )
-}
+  );
+};
 
-export default CategoriesScroll
+export default CategoriesScroll;
