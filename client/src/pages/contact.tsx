@@ -77,8 +77,8 @@ const Page = () => {
       <ContactIcon/>
       <div className="bg-white py-24 px-4 sm:px-6 lg:px-8 text-[#35312f]">
         <div className="container mx-auto text-center">
-          <h1 className="text-4xl font-bold text-[#a14e3a] mb-8">Contact Us</h1>
-          <p className="text-lg text-[#a14e3a] mb-8">
+          <h1 className="text-4xl font-bold text-secondary-foreground mb-8">Contact Us</h1>
+          <p className="text-lg text-secondary-foreground mb-8">
             We value your feedback and inquiries. Feel free to get in touch with us through the form below.
           </p>
           <div className="max-w-md mx-auto">
@@ -97,7 +97,7 @@ const Page = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
+                  className="mt-2 px-4 py-2 block w-full border border-primary rounded-md shadow-sm focus:ring-sectext-secondary-foreground focus:border-secondary-foreground text-[#35312f] text-lg placeholder-sectext-secondary-foreground placeholder-opacity-70"
                   placeholder="Your Name"
                   required
                 />
@@ -109,7 +109,7 @@ const Page = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
+                  className="mt-2 px-4 py-2 block w-full border border-primary rounded-md shadow-sm focus:ring-sectext-secondary-foreground focus:border-secondary-foreground text-[#35312f] text-lg placeholder-sectext-secondary-foreground placeholder-opacity-70"
                   placeholder="Your Email Address"
                   required
                 />
@@ -120,7 +120,7 @@ const Page = () => {
                   name="message"
                   value={formData.message}
                   onChange={handleChange}
-                  className="mt-2 px-4 py-2 block w-full border border-[#5f9231] rounded-md shadow-sm focus:ring-[#a14e3a] focus:border-[#a14e3a] text-[#35312f] text-lg placeholder-[#a14e3a] placeholder-opacity-70"
+                  className="mt-2 px-4 py-2 block w-full border border-primary rounded-md shadow-sm focus:ring-sectext-secondary-foreground focus:border-secondary-foreground text-[#35312f] text-lg placeholder-sectext-secondary-foreground placeholder-opacity-70"
                   placeholder="Your Message"
                   required
                 ></textarea>
@@ -128,7 +128,7 @@ const Page = () => {
               <div>
                 <button
                   type="submit"
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-[#5f9231] hover:bg-[#a14e3a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#a14e3a] transition-colors duration-300 ease-in-out"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-secondary-foreground focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sectext-secondary-foreground transition-colors duration-300 ease-in-out"
                 >
                   Send Message
                 </button>

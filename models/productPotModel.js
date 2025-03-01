@@ -73,3 +73,4 @@ const potSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 export default mongoose.model('pots', potSchema);
+

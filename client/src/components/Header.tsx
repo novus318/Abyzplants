@@ -1,8 +1,7 @@
-import React, { Fragment, useEffect, useState } from 'react';
-import { Disclosure, Menu, Transition } from '@headlessui/react';
+import React, { useEffect, useState } from 'react';
+import { Disclosure } from '@headlessui/react';
 import Logo from '@/images/logo.webp';
 import UAEFlag from '@/images/image1.webp';
-import UserProfile from '@/images/user.webp';
 import Link from 'next/link';
 import { useAuth } from '@/store/authContext';
 import { useRouter } from 'next/router';
@@ -17,15 +16,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { debounce } from 'lodash';
+import { ScrollArea } from './ui/scroll-area';
 
 const navigation = [
   { name: 'Home', href: '/', current: false },
+  { name: 'All plants', href: '/plants', current: false },
+  { name: 'Pots', href: '/pots', current: false },
   { name: 'Contact Us', href: '/contact', current: false },
 ];
-
-function classNames(...classes: any) {
-  return classes.filter(Boolean).join(' ');
-}
 
 type Category = {
   name: string;
@@ -38,9 +40,9 @@ export default function Header() {
   const { cart } = useCart();
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchInput, setSearchInput] = useState('');
-  const [names, setNames] = useState<string[]>([]);
-  const [suggestions, setSuggestions] = useState([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [searchVisible, setSearchVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -54,18 +56,30 @@ export default function Header() {
 
     if (inputValue.trim() === '') {
       setSuggestions([]);
-    } else {
-      if (inputValue.length >= 3) {
-        const filteredSuggestions = names.filter((name) =>
-          name.toLowerCase().includes(inputValue.toLowerCase())
-        );
-        const limitedSuggestions = filteredSuggestions.slice(0, 5);
-        setSuggestions(limitedSuggestions as any);
-      }
+      return;
+    }
+
+    if (inputValue.length >= 3) {
+      debouncedFetchSuggestions(inputValue);
     }
   };
 
-  const handleSearchSubmit = (word: any) => {
+  const debouncedFetchSuggestions = debounce(async (keyword: string) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${apiUrl}/api/product/searchNames`, {
+        params: { keyword },
+      });
+      setSuggestions(response.data.suggestions);
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, 300);
+
+  const handleSearchSubmit = (word: string) => {
     const trimmedSearchInput = word.trim();
     if (trimmedSearchInput !== '') {
       const decodedInput = decodeURIComponent(trimmedSearchInput);
@@ -73,8 +87,8 @@ export default function Header() {
     }
   };
 
-  const handleKeyPress = (e: any) => {
-    if (e.key === 'Enter' || e.key === 'Search') {
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
       handleSearchSubmit(searchInput);
     }
   };
@@ -99,15 +113,6 @@ export default function Header() {
   };
 
   useEffect(() => {
-    const fetchNames = async () => {
-      try {
-        const response = await axios.get(`${apiUrl}/api/product/searchNames`);
-        setNames(response.data.productNames);
-      } catch (error) {
-        console.error('Error fetching names:', error);
-      }
-    };
-    fetchNames();
     fetchCategories();
   }, []);
 
@@ -118,9 +123,8 @@ export default function Header() {
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="relative flex items-center justify-between h-16">
-                {/* Mobile Menu Button */}
                 <div className="flex items-center md:hidden">
-                  <Disclosure.Button className="inline-flex items-center justify-center p-2 text-[#79bd3f] hover:text-[#a14e3a]">
+                  <Disclosure.Button className="inline-flex items-center justify-center p-2 text-primary hover:text-secondary-foreground">
                     <span className="sr-only">Open main menu</span>
                     {open ? (
                       <svg
@@ -159,64 +163,52 @@ export default function Header() {
                 {/* Logo */}
                 <Link href="/">
                   <div className="flex-shrink-0">
-                    <img className="h-8 w-auto" src={Logo.src} alt="Company Logo" />
+                    <img className="h-12 w-auto" src={Logo.src} alt="Company Logo" />
                   </div>
                 </Link>
-
-                {/* UAE Flag (Mobile) */}
                 <img
                   className="h-6 w-auto rounded-md md:hidden"
                   src={UAEFlag.src}
                   alt="UAE Flag"
                 />
-
-                {/* Search Icon (Mobile) */}
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={toggleSearchBar}
-                  className="text-[#a14e3a] hover:text-[#79bd3f] md:hidden"
+                  className="text-secondary-foreground hover:text-primary md:hidden"
                 >
                   <FaSearch className="h-5 w-5" />
-                </button>
-
-                {/* Desktop Navigation */}
+                </Button>
                 <div className="hidden md:flex md:items-center md:space-x-6">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className="text-[#a14e3a] hover:text-[#79bd3f] font-medium"
+                      className="text-secondary-foreground hover:text-primary font-medium"
                     >
                       {item.name}
                     </Link>
                   ))}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className="text-[#a14e3a] hover:text-[#79bd3f] font-medium">
-                      Plants
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {categories.map((category) => (
-                        <DropdownMenuItem key={category._id}>
-                          <Link href={`/category/${category._id}`}>{category.name}</Link>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Link href="/pots" className="text-[#a14e3a] hover:text-[#79bd3f] font-medium">
-                    Pots
-                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleSearchBar}
+                    className="hidden md:flex text-secondary-foreground hover:text-primary"
+                  >
+                    <FaSearch className="h-5 w-5" />
+                  </Button>
                 </div>
-
-                {/* User Menu and Cart */}
                 <div className="hidden md:flex md:items-center md:space-x-4">
                   {auth.user ? (
                     <>
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="flex items-center">
-                          <img
-                            className="h-8 w-8 rounded-full"
-                            src={UserProfile.src}
-                            alt="User Profile"
-                          />
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src="" alt="User Profile" />
+                              <AvatarFallback>{(auth.user.name || 'PR').substring(0, 2)}</AvatarFallback>
+                            </Avatar>
+                          </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem>
@@ -230,82 +222,59 @@ export default function Header() {
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Link href="/cart">
-                        <Badge className="bg-[#79bd3f] text-white">
-                          {cart?.length}
-                        </Badge>
-                        <FaShoppingBag className="text-[#a14e3a] h-6 w-6" />
-                      </Link>
+                      <Button variant="ghost" size="icon" className="relative">
+                        <Link href="/cart">
+                          <FaShoppingBag className="text-secondary-foreground h-6 w-6" />
+                          <Badge className="absolute -top-1 -right-1 bg-primary text-white p-0 px-0.5">
+                            {cart?.length}
+                          </Badge>
+                        </Link>
+                      </Button>
                     </>
                   ) : (
-                    <Link
-                      href="/login"
-                      className="px-4 py-2 rounded-full bg-[#a14e3a] text-white hover:bg-[#79bd3f] transition-colors duration-300"
-                    >
-                      Login
+                    <Link href="/login">
+                      <Button variant="default" className="bg-primary hover:bg-primary-dark">
+                        Login
+                      </Button>
                     </Link>
                   )}
                 </div>
               </div>
             </div>
-
-            {/* Mobile Menu Panel */}
             <Disclosure.Panel className="md:hidden">
               <div className="px-2 pt-2 pb-3 space-y-1">
                 {navigation.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
+                    className="block px-3 py-2 text-secondary-foreground hover:text-primary font-medium"
                   >
                     {item.name}
                   </Link>
                 ))}
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="block w-full px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium text-left">
-                    Plants
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    {categories.map((category) => (
-                      <DropdownMenuItem key={category._id}>
-                        <Link href={`/category/${category._id}`}>{category.name}</Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Link
-                  href="/pots"
-                  className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
-                >
-                  Pots
-                </Link>
                 {auth.user ? (
                   <>
                     <Link
                       href="/profile"
-                      className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
+                      className="block px-3 py-2 text-secondary-foreground hover:text-primary font-medium"
                     >
                       Your Profile
                     </Link>
                     <Link
                       href="/order"
-                      className="block px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium"
+                      className="block px-3 py-2 text-secondary-foreground hover:text-primary font-medium"
                     >
                       Orders
                     </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full px-3 py-2 text-[#a14e3a] hover:text-[#79bd3f] font-medium text-left"
-                    >
+                    <Button onClick={handleLogout} className="w-full text-left">
                       Sign out
-                    </button>
+                    </Button>
                   </>
                 ) : (
-                  <Link
-                    href="/login"
-                    className="block w-full mt-2 px-4 py-2 rounded-full bg-[#a14e3a] text-white hover:bg-[#79bd3f] text-center"
-                  >
-                    Login
+                  <Link href="/login">
+                    <Button variant="default" className="w-full mt-2 bg-primary hover:bg-primary-dark">
+                      Login
+                    </Button>
                   </Link>
                 )}
               </div>
@@ -314,7 +283,6 @@ export default function Header() {
         )}
       </Disclosure>
 
-      {/* Search Bar */}
       <AnimatePresence>
         {searchVisible && (
           <motion.div
@@ -325,28 +293,42 @@ export default function Header() {
             className="fixed top-16 right-0 w-full bg-white p-4 shadow-md z-50"
           >
             <div className="relative">
-              <input
+              {/* Search Input */}
+              <Input
                 type="search"
                 placeholder="Search..."
-                className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#79bd3f]"
                 value={searchInput}
                 onChange={handleSearchChange}
                 onKeyPress={handleKeyPress}
               />
-              {suggestions.length > 0 && (
-                <div className="absolute w-full bg-white mt-1 rounded-md shadow-lg">
-                  <ul>
-                    {suggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSearchSubmit(suggestion)}
-                      >
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
+
+              {/* Loading State */}
+              {loading && (
+                <p className="text-sm text-gray-500 mt-2">Loading...</p>
+              )}
+
+              {/* Suggestions Dropdown */}
+              {suggestions.length > 0 ? (
+                <div className="absolute w-full bg-white mt-1 rounded-md shadow-lg max-h-60 overflow-hidden">
+                  <ScrollArea className="max-h-[300px]">
+                    <ul>
+                      {suggestions.map((suggestion, index) => (
+                        <li
+                          key={index}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
+                          onClick={() => handleSearchSubmit(suggestion)}
+                        >
+                          {suggestion}
+                        </li>
+                      ))}
+                    </ul>
+                  </ScrollArea>
                 </div>
+              ) : (
+                // Fallback Message when no suggestions are found
+                !loading && (
+                  <p className="text-sm text-gray-500 mt-2">No suggestions found.</p>
+                )
               )}
             </div>
           </motion.div>

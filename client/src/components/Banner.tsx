@@ -26,7 +26,7 @@ const Banner = () => {
       <p className="text-lg sm:text-xl text-secondary-foreground mb-6 sm:mb-8">
         Find the Perfect Plant Companion for Your Space.
       </p>
-      <Button size='sm' className="bg-primary hover:bg-primary/70 text-lg px-6 sm:px-8 h-12 sm:h-auto">
+      <Button className="bg-primary hover:bg-primary/70 text-lg px-6 sm:px-8 h-12 sm:h-auto">
         Discover Now
       </Button>
     </div>

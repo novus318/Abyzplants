@@ -131,64 +131,172 @@ export const getTotalProductCount = async (req, res) => {
     }
 };
 
+export const getPlantsController = async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const pageSize = 12; // Adjust this based on your desired page size
+      const categoryIds = '6542624166381dcbef355ee9,6542658166381dcbef355f7b,6542664266381dcbef355f8f'; 
+  
+      // Convert the comma-separated string of category IDs into an array
+      const categoryIdArray = categoryIds ? categoryIds.split(',') : [];
+  
+      // Build the query
+      let query = {};
+      if (categoryIdArray.length > 0) {
+        query = { category: { $in: categoryIdArray } }; // Filter by category IDs
+      }
+  
+      // Fetch products
+      const products = await productModel
+        .find(query) // Apply the query
+        .sort({ createdAt: -1 }) // Sort by creation date (newest first)
+        .skip((page - 1) * pageSize) // Pagination: skip previous pages
+        .limit(pageSize); // Pagination: limit to the current page size
+  
+      // Fetch total count of products matching the query (for pagination)
+      const totalCount = await productModel.countDocuments(query);
+  
+      res.status(200).send({
+        success: true,
+        totalCount, // Total number of products matching the query
+        currentPage: page, // Current page number
+        pageSize, // Number of products per page
+        message: 'Products fetched successfully',
+        products,
+      });
+    } catch (error) {
+      res.status(500).send({
+        success: false,
+        message: 'Error in getting products',
+        error: error.message,
+      });
+    }
+  };
+
+export const getTotalPlantsCount = async (req, res) => {
+    try {
+        const categoryIds = '6542624166381dcbef355ee9,6542658166381dcbef355f7b,6542664266381dcbef355f8f'; 
+  
+        // Convert the comma-separated string of category IDs into an array
+        const categoryIdArray = categoryIds ? categoryIds.split(',') : [];
+
+        let query = {};
+      if (categoryIdArray.length > 0) {
+        query = { category: { $in: categoryIdArray } }; // Filter by category IDs
+      }
+        const totalCount = await productModel.find(query).countDocuments({});
+        
+        res.status(200).send({
+            success: true,
+            totalCount: totalCount,
+            message: 'Total product count fetched successfully',
+        });
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: 'Error in getting total product count',
+            error: error.message,
+        });
+    }
+};
+
 export const getAllProductNamesController = async (req, res) => {
     try {
-      const products = await productModel.find({}, 'name');
-      const pots = await potModel.find({}, 'name');
-    
-      const productName = products.map((product) => product.name);
-      const potName = products.map((product) => product.name);
-      const allNames = [...productName, ...potName];
+      const { keyword } = req.query; // Extract the keyword from the query parameters
+  
+      // Fetch products and pots with necessary fields
+      const products = await productModel.find({}, 'name description plantCare');
+      const pots = await potModel.find({}, 'name description specifications');
+  
+      // Function to create a suggestion string
+      const createSuggestion = (item) => {
+        const { name, description, plantCare, specifications } = item;
+        let suggestion = `${name}: ${description}`;
+  
+        if (plantCare) {
+          suggestion += ` | Plant Care: ${plantCare.join(', ')}`;
+        }
+  
+        if (specifications) {
+          suggestion += ` | Specifications: ${specifications.join(', ')}`;
+        }
+  
+        return suggestion.length > 100 ? suggestion.substring(0, 100) + '...' : suggestion;
+      };
+  
+      // Create suggestions for products and pots
+      const productSuggestions = products.map(createSuggestion);
+      const potSuggestions = pots.map(createSuggestion);
+  
+      // Combine all suggestions
+      const allSuggestions = [...productSuggestions, ...potSuggestions];
+  
+      // Filter suggestions based on the keyword
+      const filteredSuggestions = keyword
+        ? allSuggestions.filter((suggestion) =>
+            suggestion.toLowerCase().includes(keyword.toLowerCase())
+          )
+        : allSuggestions;
+  
       res.status(200).json({
         success: true,
-        totalCount: allNames.length,
-        message: 'All product names',
-        productNames:allNames,
+        totalCount: filteredSuggestions.length,
+        message: 'Filtered product suggestions',
+        suggestions: filteredSuggestions,
       });
     } catch (error) {
       console.error(error);
       res.status(500).json({
         success: false,
-        message: 'Error in getting product names',
+        message: 'Error in getting product suggestions',
         error: error.message,
       });
     }
   };
  
-export const searchProductsController = async (req, res) => {
+  export const searchProductsController = async (req, res) => {
     try {
-        const { keyword } = req.params;
-
-        const product = await productModel.find({
-            $or: [
-                { name: { $regex: new RegExp(keyword, 'i') } },
-                { description: { $regex: new RegExp(keyword, 'i') } },
-            ],
-        });
-        const pot = await potModel.find({
-            $or: [
-                { name: { $regex: new RegExp(keyword, 'i') } },
-                { description: { $regex: new RegExp(keyword, 'i') } },
-            ],
-        });
-        const products = [...product,...pot];
-
-        res.status(200).send({
-            success: true,
-            totalCount: products.length,
-            message: 'Products matching the search keyword',
-            product,
-            pot
-        });
+      const { keyword } = req.params;
+  
+      // Extract the name from the suggestion (assuming the suggestion format is "name: description...")
+      const nameFromSuggestion = keyword.split(':')[0].trim();
+  
+      // Search in products collection
+      const products = await productModel.find({
+        $or: [
+          { name: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+          { description: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+          { plantCare: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+        ],
+      });
+  
+      // Search in pots collection
+      const pots = await potModel.find({
+        $or: [
+          { name: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+          { description: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+          { specifications: { $regex: new RegExp(nameFromSuggestion, 'i') } },
+        ],
+      });
+  
+      // Combine results
+      const results = [...products, ...pots];
+  
+      res.status(200).send({
+        success: true,
+        totalCount: results.length,
+        message: 'Products matching the search keyword',
+            products,
+            pots
+      });
     } catch (error) {
-    
-        res.status(500).send({
-            success: false,
-            message: 'Error in searching for products',
-            error: error.message,
-        });
+      res.status(500).send({
+        success: false,
+        message: 'Error in searching for products',
+        error: error.message,
+      });
     }
-}
+  };
 
 
 export const getRecommendedProductController= async(req,res)=>{

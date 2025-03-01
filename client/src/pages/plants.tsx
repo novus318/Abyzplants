@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useRef } from 'react';
 import Footer from '@/components/Footer';
 import Header from '@/components/Header';
 import Link from 'next/link';
@@ -7,7 +7,8 @@ import Spinner from '@/components/Spinner';
 import { Menu, Transition } from '@headlessui/react';
 import ContactIcon from '@/components/ContactIcon';
 import Layout from '@/components/Layout';
-
+import { Badge } from '@/components/ui/badge';
+import CardSpinner from '@/components/CardSpinner';
 
 interface Product {
   _id: string;
@@ -16,24 +17,24 @@ interface Product {
     image1: string;
     image2: string;
     image3: string;
-  }
+  };
   description: string;
   category: {
     name: string;
     _id: number;
-  }
-  quantity:any;
+  };
+  quantity: any;
   sizes: {
     name: string;
     price: number;
-    pots:
-    {
+    pots: {
       potName: string;
       potPrice: number;
-    }[]
+    }[];
   }[];
   offerPercentage: number;
 }
+
 type Category = {
   name: string;
   _id?: number;
@@ -48,29 +49,51 @@ const Plants: React.FC = () => {
   const [sortOrder, setSortOrder] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [loadingNextPage, setLoadingNextPage] = useState(false);
+  const loader = useRef(null);
 
   useEffect(() => {
+    // Fetch total product count
     axios
-    .get<{ totalCount: number }>(`${apiUrl}/api/product/get-productCount`)
-    .then((response) => {
-      setTotalCount(response.data.totalCount);
-    })
-    .catch((error) => {
-    });
+      .get<{ totalCount: number }>(`${apiUrl}/api/product/get-plantsCount`)
+      .then((response) => {
+        setTotalCount(response.data.totalCount);
+      })
+      .catch((error) => {
+        console.error('Error fetching product count:', error);
+      });
+
+    // Fetch initial products
     axios
-      .get<{ products: Product[] }>(`${apiUrl}/api/product/get-product`)
+      .get<{ products: Product[] }>(`${apiUrl}/api/product/get-plants`)
       .then((response) => {
         setProducts(response.data.products);
         setLoading(false);
       })
       .catch((error) => {
+        console.error('Error fetching products:', error);
         window.location.reload();
       });
+
+    // Fetch categories
+    axios
+      .get<{ category: Category[] }>(`${apiUrl}/api/category/get-PlantsCategory`)
+      .then((response) => {
+        setCategories(response.data.category);
+      })
+      .catch((error) => {
+        console.error('Error fetching categories:', error);
+      });
   }, [apiUrl]);
+
+  // Fetch next page of products
   const fetchNextPage = async () => {
+    if (loadingNextPage || products.length >= totalCount) return;
+
+    setLoadingNextPage(true);
     try {
       const nextPage = currentPage + 1;
-      const response = await axios.get(`${apiUrl}/api/product/get-product?page=${nextPage}`);
+      const response = await axios.get(`${apiUrl}/api/product/get-plants?page=${nextPage}`);
       const newProducts = response.data.products;
 
       if (newProducts.length > 0) {
@@ -78,23 +101,35 @@ const Plants: React.FC = () => {
         setCurrentPage(nextPage);
       }
     } catch (error) {
+      console.error('Error fetching next page of products:', error);
     }
+    setLoadingNextPage(false);
   };
+
+  // Infinite scroll observer
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(`${apiUrl}/api/category/get-category`);
-        setCategories(response.data.category);
-        setLoading(false);
-      } catch (error) {
-        setLoading(false);
-        window.location.reload()
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && !loadingNextPage && products.length < totalCount) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (loader.current) {
+      observer.observe(loader.current);
+    }
+
+    return () => {
+      if (loader.current) {
+        observer.unobserve(loader.current);
       }
     };
+  }, [loader, loadingNextPage, products, totalCount]);
 
-    fetchCategories();
-  }, []);
-
+  // Sort products
   useEffect(() => {
     if (sortOrder) {
       const sorted = products.slice().sort((a, b) => {
@@ -104,7 +139,6 @@ const Plants: React.FC = () => {
           return b.sizes[0].price - a.sizes[0].price;
         }
       });
-
       setFilteredProducts(sorted);
     } else {
       setFilteredProducts(products);
@@ -115,14 +149,29 @@ const Plants: React.FC = () => {
     setSortOrder(order);
   };
 
+  // Save scroll position before navigating to product details
+  const handleProductClick = (productId: string) => {
+    localStorage.setItem('scrollPosition', window.scrollY.toString());
+    window.location.href = `/details/${productId}`;
+  };
+
+  // Restore scroll position on component mount
+  useEffect(() => {
+    const savedScrollPosition = localStorage.getItem('scrollPosition');
+    if (savedScrollPosition) {
+      window.scrollTo(0, parseInt(savedScrollPosition));
+      localStorage.removeItem('scrollPosition');
+    }
+  }, []);
+
   return (
-    <Layout title='Abyzplants - All Plants'
-      description=
-      'Abyz Plants, the definitive online destination for exceptional indoor and outdoor plants in the UAE, with quick delivery options. Our online plant store guarantees the quality of every plant, making it effortless to purchase for your home, office. With the widest variety of options available,and a delightful selection of home accessories. Whether it is for offices, malls, hotels, or any setting, count on us for the freshest, healthiest plants. Explore our (Gift a Plant) option and revel in our swift and reliable delivery service.'
-      keywords=
-      'Abyzplants,Abyzplants UAE,abyzplants uae,Abyzplants dubai,abyzplants dubai,abyzplants,Buy indoor plants online,Buy outdoor plants online,where to buy indoor plants,where to buy outdoor plants,buy indoor plants in Dubai,buy indoor plants in Abu Dhabi,plant stores near me, what are the best indoor plants to buy,indoor plants for my home, flowering indoor plants for home,flowering indoor plants for my office,where can I buy indoor plants for my home,nearest online plant store in Dubai,indoor plant stores near me,online indoor plants,which are the best indoor plants to buy in winter,which are the best indoor plants to buy in summer,outdoor plants in Dubai,where to buy outdoor plants in Dubai,where to buy outdoor plants online,buy outdoor plants online,buy seeds online,buy soil & fertilizers online,buy indoor fertilizers online,buy potting soil online,buy soil for my home,buy plant insecticides,buy plant pesticides,where to buy plant food,where to buy indoor plant pots,where to buy plant pots, where to buy airplants,where to buy large indoor plants, how to water my plants,where to by plant care accessories,indoor plants online,outdoor plants online,flowering plants online,plants gifts online,plant pots online,buy plant pots in Dubai,buy tall indoor plants online,buy tall tree online,buy fertilizers online'
-      author='Muhammed Nizamudheen M'
-      canonicalUrl='https://abyzplants.com/plants' >
+    <Layout
+      title="Abyzplants - All Plants"
+      description="Abyz Plants, the definitive online destination for exceptional indoor and outdoor plants in the UAE, with quick delivery options. Our online plant store guarantees the quality of every plant, making it effortless to purchase for your home, office. With the widest variety of options available, and a delightful selection of home accessories. Whether it is for offices, malls, hotels, or any setting, count on us for the freshest, healthiest plants. Explore our (Gift a Plant) option and revel in our swift and reliable delivery service."
+      keywords="Abyzplants, Abyzplants UAE, abyzplants uae, Abyzplants dubai, abyzplants dubai, abyzplants, Buy indoor plants online, Buy outdoor plants online, where to buy indoor plants, where to buy outdoor plants, buy indoor plants in Dubai, buy indoor plants in Abu Dhabi, plant stores near me, what are the best indoor plants to buy, indoor plants for my home, flowering indoor plants for home, flowering indoor plants for my office, where can I buy indoor plants for my home, nearest online plant store in Dubai, indoor plant stores near me, online indoor plants, which are the best indoor plants to buy in winter, which are the best indoor plants to buy in summer, outdoor plants in Dubai, where to buy outdoor plants in Dubai, where to buy outdoor plants online, buy outdoor plants online, buy seeds online, buy soil & fertilizers online, buy indoor fertilizers online, buy potting soil online, buy soil for my home, buy plant insecticides, buy plant pesticides, where to buy plant food, where to buy indoor plant pots, where to buy plant pots, where to buy airplants, where to buy large indoor plants, how to water my plants, where to by plant care accessories, indoor plants online, outdoor plants online, flowering plants online, plants gifts online, plant pots online, buy plant pots in Dubai, buy tall indoor plants online, buy tall tree online, buy fertilizers online"
+      author="Muhammed Nizamudheen M"
+      canonicalUrl="https://abyzplants.com/plants"
+    >
       <>
         {loading ? (
           <Spinner />
@@ -131,43 +180,15 @@ const Plants: React.FC = () => {
             <Header />
             <ContactIcon />
             <div className="container mx-auto px-8 py-8">
-              <h2 className="text-3xl font-semibold text-[#5f9231] mb-2 mt-16 text-center">Best Selling Plants</h2>
-              <Menu as="div" className="px-5">
-                <div>
-                  <Menu.Button className='absolute right-0 rounded-md p-1 border border-gray-300 mt-9 mr-2' >
-                    categories
-                  </Menu.Button>
-                </div>
-                <Transition
-                  as={Fragment}
-                  enter="transition ease-out duration-100"
-                  enterFrom="transform opacity-0 scale-95"
-                  enterTo="transform opacity-100 scale-100"
-                  leave="transition ease-in duration-75"
-                  leaveFrom="transform opacity-100 scale-100"
-                  leaveTo="transform opacity-0 scale-95"
-                >
-                  <Menu.Items className="absolute right-0 z-10 mt-20 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    {categories?.map((category) => (
-                      <Menu.Item key={category._id}>
-                        <a
-                          href={`/category/${category._id}`}
-                          className='block px-4 py-1 text-sm text-gray-700 hover:text-[#79bd3f]'
-                        >
-                          {category.name}
-                        </a>
-
-                      </Menu.Item>
-                    ))}
-                  </Menu.Items>
-                </Transition>
-              </Menu>
+              <h2 className="text-3xl font-semibold text-secondary-foreground mb-2 mt-16 text-center">
+                Best Selling Plants
+              </h2>
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-2">Sort by Price:</h3>
                 <div className="flex items-center space-x-4">
                   <button
                     className={`${sortOrder === 'lowToHigh'
-                      ? 'bg-[#5f9231] text-white'
+                      ? 'bg-secondary-foreground text-white'
                       : 'border border-gray-300'
                       } rounded-md p-1`}
                     onClick={() => handleSortOrderChange(sortOrder === 'lowToHigh' ? '' : 'lowToHigh')}
@@ -176,7 +197,7 @@ const Plants: React.FC = () => {
                   </button>
                   <button
                     className={`${sortOrder === 'highToLow'
-                      ? 'bg-[#5f9231] text-white'
+                      ? 'bg-secondary-foreground text-white'
                       : 'border border-gray-300'
                       } rounded-md p-1`}
                     onClick={() => handleSortOrderChange(sortOrder === 'highToLow' ? '' : 'highToLow')}
@@ -193,79 +214,79 @@ const Plants: React.FC = () => {
                   </div>
                 ) : (
                   filteredProducts.map((item) => (
-                    <Link href={`/details/${item._id}`} key={item._id}>
-                     <div
-                      key={item._id}
-                      className="relative bg-gray-50 rounded-lg overflow-hidden shadow-md transform transition-transform duration-300 hover:shadow-2xl"
-                    >
-                      {item.offerPercentage > 0 && (
-                        <div className="absolute top-2 right-2 bg-[#5f9231] text-white rounded-full p-1 text-sm font-semibold">
-                          {item.offerPercentage}% OFF
-                        </div>
-                      )}
-                      <img
-                        src={item.photo?.image1}
-                        alt={item.name}
-                        className="w-full object-cover hover:scale-105"
-                      />
-                      <div className="p-3">
-                        <h3 className="font-semibold  uppercase text-xs md:text-sm truncate">
-                          {item.name}
-                        </h3>
-                        <p className="text-gray-700  text-xs md:text-sm truncate">
-                          {item.description}
-                        </p>
-                        <div className="flex items-center">
-                          {item.offerPercentage > 0 ? (
-                            <>
-                              <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
-                                {item.sizes[0].pots[0] ?
-                                 (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
-                                  <s>{Number(item.sizes[0].price).toFixed(1)}</s>
-                                )}
-                              </span>
-                              {item.sizes[0]?.pots[0] ? (
-                                <span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * (Number(item.sizes[0].price) +
-                                  Number(item.sizes[0].pots[0].potPrice))
-                                ).toFixed(1)} AED
-                              </span>                              
-                              ):
-                              (<span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                                {(
-                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0].price)
-                                ).toFixed(1)}{' '}
-                                AED
-                              </span>)}
-                            </>
-                          ) : (
-                            <>
-                            {item.sizes[0].pots[0] ? (<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                            {(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED
-                            </span>):(<span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
-                              {Number(item.sizes[0].price).toFixed(2)} AED
-                            </span>)}
-                            </>
+                    <div onClick={() => handleProductClick(item._id)} key={item._id}>
+                      <div className="group relative bg-secondary/20 rounded-lg transition-all duration-300 overflow-hidden h-full flex flex-col">
+                        {/* Image Container with 5:7 Aspect Ratio */}
+                        <div className="relative pt-[90%]">
+                          <img
+                            src={item.photo?.image1}
+                            alt={item.name}
+                            className="absolute top-0 left-0 w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+                            loading="lazy"
+                          />
+                          {/* Discount Badge */}
+                          {item.offerPercentage > 0 && (
+                            <Badge variant="destructive" className="absolute top-1 right-1">
+                              {item.offerPercentage}% OFF
+                            </Badge>
                           )}
                         </div>
+
+                        {/* Product Info */}
+                        <div className="p-4 flex flex-col flex-grow">
+                          <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-1 truncate">
+                            {item.name}
+                          </h3>
+                          <p className="text-xs md:text-sm text-gray-600 mb-3 line-clamp-1">
+                            {item.description}
+                          </p>
+                          {/* Price Section */}
+                          <div className="mt-auto">
+                            {item.offerPercentage > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400 text-xs line-through">
+                                  {item.sizes[0].pots[0]
+                                    ? `${(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED`
+                                    : `${Number(item.sizes[0].price).toFixed(1)} AED`}
+                                </span>
+                                <span className="text-primary text-sm md:text-base font-semibold">
+                                  {(
+                                    ((100 - item.offerPercentage) / 100) *
+                                    (Number(item.sizes[0].price) +
+                                      (item.sizes[0].pots[0]?.potPrice || 0))
+                                  ).toFixed(1)} AED
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-primary text-sm md:text-base font-semibold">
+                                {item.sizes[0].pots[0]
+                                  ? `${(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)} AED`
+                                  : `${Number(item.sizes[0].price).toFixed(1)} AED`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Restock Overlay */}
+                        {item.quantity === 0 && (
+                          <div className="absolute inset-0 bg-secondary bg-opacity-90 flex items-center justify-center">
+                            <span className="text-destructive font-medium text-sm md:text-base">
+                              Restocking Soon
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    </Link>
                   ))
                 )}
               </div>
+
+              {/* Infinite Scroll Loader */}
               {filteredProducts.length !== totalCount && (
-                <div className="text-center mt-4">
-                  <button
-                    className="bg-[#5f9231] text-white py-1 px-3 rounded-md"
-                    onClick={fetchNextPage}
-                  >
-                    Load More
-                  </button>
+                <div ref={loader} className="text-center mt-4">
+                  {loadingNextPage && <CardSpinner />}
                 </div>
               )}
-
             </div>
             <Footer />
           </div>

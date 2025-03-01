@@ -1,6 +1,6 @@
 import express from "express";
 import ExpressFormidable from "express-formidable";
-import { createProductController, deleteProductController, getAllProductNamesController, getCategoryController, getProductByCategoryController, getProductController, getRecommendedProductController, getSingleProductController, getTotalProductCount, relatedProductontroller, searchProductsController, updateProductController } from "../contrrollers/productController.js";
+import { createProductController, deleteProductController, getAllProductNamesController, getCategoryController, getPlantsController, getProductByCategoryController, getProductController, getRecommendedProductController, getSingleProductController, getTotalPlantsCount, getTotalProductCount, relatedProductontroller, searchProductsController, updateProductController } from "../contrrollers/productController.js";
 
 const router = express.Router()
 
@@ -13,6 +13,8 @@ router.put(
 );
 //get products
 router.get("/get-product", getProductController);
+router.get("/get-plants", getPlantsController);
+router.get("/get-plantsCount", getTotalPlantsCount);
 router.get("/get-productCount", getTotalProductCount);
 router.get("/searchNames", getAllProductNamesController);
 router.get("/searchProducts/:keyword", searchProductsController);

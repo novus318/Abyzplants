@@ -24,7 +24,7 @@ const Cart: React.FC = () => {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cod');
 
   useEffect(() => {
     const checkUserExistence = async () => {
@@ -234,7 +234,7 @@ const Cart: React.FC = () => {
         <>
           <Header />
           <div className="bg-gray-100 min-h-screen pt-24 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl text-[#5f9231] mb-4 text-center font-medium py-8">Shopping Cart</h1>
+            <h1 className="text-3xl text-primary mb-4 text-center font-medium py-8">Shopping Cart</h1>
             <div className="max-w-screen-xl mx-auto grid grid-cols-12 gap-4">
               {cart.length === 0 ? (
                 <div className="col-span-12 text-center text-gray-600">Your cart is empty.</div>
@@ -277,7 +277,7 @@ const Cart: React.FC = () => {
                             <div className="flex items-center">
                               {item.quantity > 1 ? (
                                 <button
-                                  className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
+                                  className="cursor-pointer text-primary ring-secondary-foreground ring-1 rounded-full p-1.5"
                                   onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity - 1, item.color)}
                                 >
                                   <FaMinus size={16} />
@@ -287,13 +287,13 @@ const Cart: React.FC = () => {
                                 {item.quantity}
                               </span>
                               <button
-                                className="cursor-pointer text-[#5f9231] ring-[#a14f3a27] ring-1 rounded-full p-1 sm:p-2"
+                                className="cursor-pointer text-primary ring-secondary-foreground ring-1 rounded-full p-1.5"
                                 onClick={() => handleQuantityChange(item._id, item.sizes.name, item.quantity + 1, item.color)}
                               >
-                                <FaPlus size={16} />
+                                <FaPlus size={12} />
                               </button>
                               <button
-                                className="text-[#a14e3a] ml-2 sm:ml-4"
+                                className="text-secondary-foreground ml-2 sm:ml-4"
                                 onClick={() => handleRemoveItem(item._id, item.sizes.name,item.color)}
                               >
                                 <FaTimes size={22} />
@@ -307,18 +307,18 @@ const Cart: React.FC = () => {
                   </div>
                   <div className="col-span-12 md:col-span-4">
                     <div className="bg-white rounded-lg shadow p-4 mb-2">
-                      <h2 className="text-xl font-semibold text-[#5f9231]">Order Summary</h2>
+                      <h2 className="text-xl font-semibold text-primary">Order Summary</h2>
                       <div className="flex justify-between mt-4">
                         <span>Subtotal:</span>
-                        <span className="text-[#5f9231]">
+                        <span className="text-primary">
                           {calculateSubtotal().toFixed(2)} AED</span>
                       </div>
                       <div className="flex justify-between mt-2">
                         <span>Shipping:</span>
                         {calculateShippingFee(calculateSubtotal()) === 0 ? (
-                          <span className="text-[#5f9231]">Free</span>
+                          <span className="text-primary">Free</span>
                         ) : (
-                          <span className="text-[#5f9231]">
+                          <span className="text-primary">
                             {calculateShippingFee(calculateSubtotal()).toFixed(2)} AED
                           </span>
                         )}
@@ -338,7 +338,7 @@ const Cart: React.FC = () => {
                             placeholder="Phone Number (+971 5XX XXX XXXX)"
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
-                            className='w-full px-4 py-2 rounded-lg border border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
+                            className='w-full px-4 py-2 rounded-lg border border-secondary-foreground focus:outline-none text-primary text-base'
                           />
                         </div>
                         <div className="mt-2">
@@ -346,7 +346,7 @@ const Cart: React.FC = () => {
                             placeholder="Address"
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
-                            className='w-full px-4 py-2 rounded-lg border border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
+                            className='w-full px-4 py-2 rounded-lg border border-secondary-foreground focus:outline-none text-primary text-base'
                           />
                         </div>
                         <div className="mt-2 flex items-center">
@@ -356,7 +356,7 @@ const Cart: React.FC = () => {
                               placeholder="City"
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
-                              className='w-full px-4 py-2 rounded-lg border  border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
+                              className='w-full px-4 py-2 rounded-lg border  border-secondary-foreground focus:outline-none text-primary text-base'
 
                             />
                           </div>
@@ -366,7 +366,7 @@ const Cart: React.FC = () => {
                               placeholder="ZIP Code"
                               value={zip}
                               onChange={(e) => setZip(e.target.value)}
-                              className='w-full px-4 py-2 rounded-lg border  border-[#5f9231] focus:outline-none text-[#5f9231] text-base'
+                              className='w-full px-4 py-2 rounded-lg border  border-secondary-foreground focus:outline-none text-primary text-base'
                             />
                           </div>
                         </div>
@@ -374,18 +374,20 @@ const Cart: React.FC = () => {
                       <div className="mt-4">
                         <h3 className="text-lg font-semibold">Select Payment Method</h3>
                         <div className="mt-2">
+                          <p className='text-xs text-destructive mb-2'>*Online payment is under maintainance</p>
                           <div className="flex space-x-4">
                             <button
                               className={`flex-1 px-4 py-2 text-center rounded-lg border ${selectedPaymentMethod === 'online'
-                                  ? 'bg-[#5f9231] text-white'
+                                  ? 'bg-primary text-white'
                                   : 'border-gray-300'
                                 }`}
                               onClick={() => handlePaymentMethodChange('online')}
+                              disabled
                             >
                               Online Payment
                             </button>
                             <button
-                              className={`flex-1 px-4 py-2 text-center rounded-lg border ${selectedPaymentMethod === 'cod' ? 'bg-[#5f9231] text-white' : 'border-gray-300'
+                              className={`flex-1 px-4 py-2 text-center rounded-lg border ${selectedPaymentMethod === 'cod' ? 'bg-primary text-white' : 'border-gray-300'
                                 }`}
                               onClick={() => handlePaymentMethodChange('cod')}
                             >
@@ -397,12 +399,12 @@ const Cart: React.FC = () => {
                       <div className="border-t border-gray-200 my-3"></div>
                       <div className="flex justify-between">
                         <span className="text-lg font-semibold">Total:</span>
-                        <span className="text-lg text-[#5f9231]">{calculateTotal().toFixed(2)} AED</span>
+                        <span className="text-lg text-primary">{calculateTotal().toFixed(2)} AED</span>
                       </div>
                       <div className="mt-4">
                         <button
                           onClick={handleCheckout}
-                          className="w-full bg-[#5f9231] text-white py-2 rounded-md hover:bg-[#a14e3a] focus:outline-none focus:ring focus:ring-offset-2 focus:ring-[#a14e3a]">
+                          className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary-foreground focus:outline-none focus:ring focus:ring-offset-2 focus:ring-sebg-secondary-foreground">
                           Proceed to Checkout
                         </button>
                       </div>

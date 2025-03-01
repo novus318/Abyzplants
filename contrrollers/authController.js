@@ -65,6 +65,7 @@ export const signupController = async (req, res) => {
       });
     }
   };
+  
   export const loginController = async (req, res) => {
     try {
       const {email,password} = req.body
@@ -113,6 +114,7 @@ export const signupController = async (req, res) => {
       });
     }
   };
+
   export const updateProfileController = async (req, res) => {
     try {
       const {  name,
