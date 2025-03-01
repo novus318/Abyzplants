@@ -66,7 +66,7 @@ export default function Home() {
         <h3 className="text-xl font-semibold  mb-4">Services Include:</h3>
         <ul className="text-sm list-disc pl-5 space-y-2">
           <li>Expert selection of the perfect pot for your plant</li>
-          <li>Careful repotting with utmost attention to your plant's roots</li>
+          <li>Careful repotting with utmost attention to your plant&apose;s roots</li>
           <li>High-quality soil and nutrients to promote growth</li>
         </ul>
       </div>
