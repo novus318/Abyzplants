@@ -134,9 +134,9 @@ const AllProducts = () => {
                           {item.offerPercentage > 0 ? (
                             <>
                               <span className="text-[#a14e3a] font-semibold text-sm md:text-sm lg:text-base xl:text-lg mr-2">
-                                {item.sizes[0].pots[0] ?
-                                 (<s>{(Number(item.sizes[0].price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
-                                  <s>{Number(item.sizes[0].price).toFixed(1)}</s>
+                                {item?.sizes[0]?.pots[0] ?
+                                 (<s>{(Number(item.sizes[0]?.price) + Number(item.sizes[0].pots[0].potPrice)).toFixed(1)}</s>):(
+                                  <s>{Number(item.sizes[0]?.price).toFixed(1)}</s>
                                 )}
                               </span>
                               {item.sizes[0]?.pots[0] ? (
@@ -149,7 +149,7 @@ const AllProducts = () => {
                               ):
                               (<span className="text-[#5f9231] font-semibold text-sm md:text-sm lg:text-base xl:text-lg">
                                 {(
-                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0].price)
+                                  ((100 - item.offerPercentage) / 100) * Number(item.sizes[0]?.price)
                                 ).toFixed(1)}{' '}
                                 AED
                               </span>)}

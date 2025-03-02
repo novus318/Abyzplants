@@ -7,6 +7,8 @@ import { FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
 import { Button, Modal } from 'antd';
 import { withAuth } from '@/components/withAuth';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 
 interface Product {
     _id: string;
@@ -16,10 +18,10 @@ interface Product {
     plantCare: string[];
     quantity: number;
     photo: {
-        image1: string;
-        image2: string;
-        image3: string;
-    }
+        image1: any;
+        image2: any;
+        image3: any;
+    };
     offerPercentage: number;
     category: {
         _id: string;
@@ -34,7 +36,11 @@ interface Product {
         }[];
     }[];
 }
-
+interface Images {
+    image1: File | null;
+    image2: File | null;
+    image3: File | null;
+  }
 
 const EditProduct = () => {
     const router = useRouter();
@@ -42,62 +48,92 @@ const EditProduct = () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const [loading, setLoading] = useState(true);
     const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-    const [plantCare, setPlantCare] = useState<string[]>([]);
     const [unit, setUnit] = useState('cm');
-    const [image1File, setImage1File] = useState<File | null>(null);
-    const [image2File, setImage2File] = useState<File | null>(null);
-    const [image3File, setImage3File] = useState<File | null>(null);
-    const [product, setProduct] = useState<Product>({
-        _id: '',
-        name: '',
-        code: '',
-        description: '',
-        plantCare: [],
-        photo: {
-            image1: '',
-            image2: '',
-            image3: '',
-        },
-        quantity: 0,
-        offerPercentage: 0,
-        category: {
-            _id: '',
-            name: '',
-        },
-        sizes: [
-            {
-                name: '',
-                price: '',
-                pots: [
-                    {
-                        potName: '',
-                        potPrice: '',
-                    },
-                ],
-            },
-        ],
-    });
-    const [selectedSizes, setSelectedSizes] = useState<Product['sizes']>([]);
 
+    const validationSchema = Yup.object().shape({
+        name: Yup.string().required('Product name is required'),
+        description: Yup.string().required('Description is required'),
+        plantCare: Yup.array()
+            .of(Yup.string())
+            .test('max', 'You can add up to 5 plant care points', (value) => !value || value.length <= 5),
+        quantity: Yup.number().required('Quantity is required').positive().integer(),
+        offerPercentage: Yup.number().required('Offer Percentage is required').min(0).max(100),
+    });
+
+    const formik = useFormik({
+        initialValues: {
+            name: '',
+            code: '',
+            description: '',
+            plantCare: [],
+            quantity: 0,
+            offerPercentage: 0,
+            sizes: [],
+            images: {
+                image1: null,
+                image2: null,
+                image3: null,
+            },
+        },
+        validationSchema,
+        onSubmit: async (values) => {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append('name', values.name);
+            formData.append('description', values.description);
+            formData.append('plantCare', JSON.stringify(values.plantCare));
+            formData.append('sizes', JSON.stringify(values.sizes));
+            formData.append('quantity', values.quantity.toString());
+            formData.append('offerPercentage', values.offerPercentage.toString());
+
+            if (values.images.image1) formData.append('image1', values.images.image1);
+            if (values.images.image2) formData.append('image2', values.images.image2);
+            if (values.images.image3) formData.append('image3', values.images.image3);
+
+            try {
+                const response = await axios.put(`${apiUrl}/api/product/update-product/${pid}`, formData);
+                if (response.status === 201) {
+                    toast.success('Product updated successfully!');
+                    router.push('/admin/allProducts');
+                } else {
+                    toast.error('Error updating product');
+                }
+            } catch (error) {
+                toast.error('Error updating product');
+            } finally {
+                setLoading(false);
+            }
+        },
+    });
 
     const getSingleProduct = async () => {
         try {
             const { data } = await axios.get(`${apiUrl}/api/product/get-product/${pid}`);
-            const Sizes = data.product.sizes.map((size: any) => ({
+            const sizes = data.product.sizes.map((size: any) => ({
                 name: size.name,
-                price: parseFloat(size.price),
+                price: size.price,
                 pots: size.pots.map((pot: any) => ({
                     potName: pot.potName,
                     potPrice: pot.potPrice,
                 })),
             }));
-            setProduct(data.product);
-            setSelectedSizes(Sizes);
-            setPlantCare(data.product.plantCare)
-            console.log(data.product.sizes)
+            formik.setValues({
+                name: data.product.name,
+                code: data.product.code,
+                description: data.product.description,
+                plantCare: data.product.plantCare,
+                quantity: data.product.quantity,
+                offerPercentage: data.product.offerPercentage,
+                sizes: sizes,
+                images: {
+                    image1: null,
+                    image2: null,
+                    image3: null,
+                },
+            });
             setLoading(false);
         } catch (error) {
-            window.location.reload();
+            toast.error('Error fetching product details');
         }
     };
 
@@ -105,151 +141,52 @@ const EditProduct = () => {
         if (pid) getSingleProduct();
     }, [pid]);
 
-    const handleFormSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            setLoading(true);
-            const sortedSizes = [...selectedSizes].sort((size1, size2) => {
-                const size1Digits = parseInt(size1.name.split('-')[0]);
-                const size2Digits = parseInt(size2.name.split('-')[0]);
-                return size1Digits - size2Digits;
-            });
-            const formData = new FormData();
-            formData.append('name', product.name);
-            formData.append('description', product.description);
-            formData.append('plantCare', JSON.stringify(plantCare));
-            formData.append('sizes', JSON.stringify(sortedSizes));
-            formData.append('quantity', product.quantity.toString());
-            formData.append('offerPercentage', product.offerPercentage.toString());
-            if (image1File) {
-                formData.append('image1', image1File);
-            }
-            if (image2File) {
-                formData.append('image2', image2File);
-            }
-            if (image3File) {
-                formData.append('image3', image3File);
-            }
-
-
-            const response = await axios.put(
-                `${apiUrl}/api/product/update-product/${pid}`,
-                formData
-            );
-
-            if (response.status === 201) {
-                toast.success(`Product is updated`);
-                setLoading(false);
-                router.push(`/admin/allProducts`);
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, imageKey: string) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 665600) {
+                toast.error('Image size should be less than 650 KB');
             } else {
-                setLoading(false);
-                toast.error('Error updating product');
+                formik.setFieldValue(`images.${imageKey}`, file);
             }
-        } catch (error) {
-            setLoading(false);
-            toast.error('Error updating product');
-        }
-    };
-    const handleAddPlantCare = () => {
-        if (plantCare.length < 5) {
-            setPlantCare([...plantCare, '']);
         }
     };
 
-    const handleRemovePlantCare = (index: number) => {
-        const updatedPlantCare = [...plantCare];
-        updatedPlantCare.splice(index, 1);
-        setPlantCare(updatedPlantCare);
+    const addSize = () => {
+        formik.setFieldValue('sizes', [...formik.values.sizes, { name: '', price: '', pots: [] }]);
     };
 
-    const handlePlantCareChange = (index: number, value: string) => {
-        const updatedPlantCare = [...plantCare];
-        updatedPlantCare[index] = value;
-        setPlantCare(updatedPlantCare);
+    const removeSize = (index: number) => {
+        const updatedSizes = formik.values.sizes.filter((_, i) => i !== index);
+        formik.setFieldValue('sizes', updatedSizes);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setProduct({
-            ...product,
-            [name]: value,
-        });
+    const addPot = (sizeIndex: number) => {
+        const updatedSizes:any = [...formik.values.sizes];
+        updatedSizes[sizeIndex].pots.push({ potName: '', potPrice: '' });
+        formik.setFieldValue('sizes', updatedSizes);
     };
 
-    const handleSizeCheckboxChange = (size: any) => {
-        const isSelected = selectedSizes.find((s) => s.name === size);
-        if (isSelected) {
-            // Remove size if already selected
-            const updatedSelectedSizes = selectedSizes.filter((s) => s.name !== size);
-            setSelectedSizes(updatedSelectedSizes);
-        } else {
-            // Add size if not already selected
-            const updatedSelectedSizes = [...selectedSizes, { name: size, price: '', pots: [] }];
-            setSelectedSizes(updatedSelectedSizes);
-        }
+    const removePot = (sizeIndex: number, potIndex: number) => {
+        const updatedSizes:any = [...formik.values.sizes];
+        updatedSizes[sizeIndex].pots = updatedSizes[sizeIndex].pots.filter((_:any, i:any) => i !== potIndex);
+        formik.setFieldValue('sizes', updatedSizes);
     };
-
-    const handlePriceInputChange = (size: any, value: any) => {
-        const updatedSelectedSizes = selectedSizes.map((s) => {
-            if (s.name === size) {
-                return { ...s, price: value };
-            }
-            return s;
-        });
-        setSelectedSizes(updatedSelectedSizes);
-    };
-
-    const handlePotCheckboxChange = (size: string, potType: string) => {
-        const updatedSelectedSizes = selectedSizes.map((s) => {
-            if (s.name === size) {
-                const isSelectedPot = s.pots?.find((p) => p.potName === potType);
-                if (isSelectedPot) {
-                    const updatedPots = s.pots?.filter((p) => p.potName !== potType) || [];
-                    return { ...s, pots: updatedPots };
-                } else {
-                    const updatedPots = [...(s.pots || []), { potName: potType, potPrice: '' }];
-                    return { ...s, pots: updatedPots };
-                }
-            }
-            return s;
-        });
-        setSelectedSizes(updatedSelectedSizes);
-    };
-
-
-    const handlePotPriceInputChange = (size: any, potType: any, value: any) => {
-        const updatedSelectedSizes = selectedSizes.map((s) => {
-            if (s.name === size) {
-                const updatedPots = s.pots.map((p) => {
-                    if (p.potName === potType) {
-                        return { ...p, potPrice: value };
-                    }
-                    return p;
-                });
-                return { ...s, pots: updatedPots };
-            }
-            return s;
-        });
-        setSelectedSizes(updatedSelectedSizes);
-    };
-
-
 
     const handleDelete = async () => {
         try {
-            setLoading(true)
+            setLoading(true);
             const response = await axios.delete(`${apiUrl}/api/product/delete-product/${pid}`);
             if (response.status === 200) {
-                setLoading(false)
-                toast.success(`Product deleted successfully`);
-                router.push(`/admin/allProducts`);
+                toast.success('Product deleted successfully!');
+                router.push('/admin/allProducts');
             } else {
-                setLoading(false)
                 toast.error('Error deleting product');
             }
         } catch (error) {
-            setLoading(false)
             toast.error('Error deleting product');
+        }finally{
+            setLoading(false);
         }
     };
     const openDeleteModal = () => {
@@ -262,6 +199,9 @@ const EditProduct = () => {
         setDeleteModalVisible(false);
     };
 
+
+    const images = formik.values.images as Images;
+    
     return (
         <>
             {loading ? (
@@ -272,40 +212,26 @@ const EditProduct = () => {
                         <FaArrowLeft size={20} />
                     </Link>
                     <h1 className="text-3xl font-semibold mb-1 mt-6">Edit Product</h1>
-                    <h3 className="text-2xl font-semibold mb-6 mt-2">code : {product.code}</h3>
-                    <form onSubmit={handleFormSubmit} className="space-y-4">
+                    <h3 className="text-2xl font-semibold mb-6 mt-2">Code: {formik.values?.code}</h3>
+                    <form onSubmit={formik.handleSubmit} className="space-y-4">
+                        {/* Product Name, Description, Plant Care, Quantity, Offer Percentage */}
                         <div className="mb-4">
-                            <label
-                                htmlFor="name"
-                                className="block text-gray-700 text-sm font-semibold mb-2"
-                            >
+                            <label htmlFor="name" className="block text-gray-700 text-sm font-semibold mb-2">
                                 Product Name
                             </label>
                             <input
                                 type="text"
                                 id="name"
                                 name="name"
-                                value={product.name}
-                                onChange={handleInputChange}
+                                value={formik.values.name}
+                                onChange={formik.handleChange}
                                 className="border border-gray-300 rounded-md p-2 w-full"
                                 required
                             />
+                            {formik.touched.name && formik.errors.name && (
+                                <div className="text-red-500 text-sm mt-1">{formik.errors.name}</div>
+                            )}
                         </div>
-
-                        <div className="mb-4">
-                            <label htmlFor="category" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Category
-                            </label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={product.category?.name}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                                disabled
-                            />
-                        </div>
-
                         <div className="mb-4">
                             <label htmlFor="description" className="block text-gray-700 text-sm font-semibold mb-2">
                                 Description
@@ -313,40 +239,48 @@ const EditProduct = () => {
                             <textarea
                                 id="description"
                                 name="description"
-                                value={product.description}
-                                onChange={handleInputChange}
+                                value={formik.values.description}
+                                onChange={formik.handleChange}
                                 className="border border-gray-300 rounded-md p-2 w-full h-32"
                                 required
                             />
+                            {formik.touched.description && formik.errors.description && (
+                                <div className="text-red-500 text-sm mt-1">{formik.errors.description}</div>
+                            )}
                         </div>
                         <div className="mb-4">
                             <label htmlFor="plantCare" className="block text-gray-700 text-sm font-semibold mb-2">
                                 Plant Care (Up to 5 points)
                             </label>
-                            <div>
-                                {plantCare?.map((point, index) => (
-                                    <div key={index} className="flex items-center mb-2">
-                                        <textarea
-                                            name={`plantCare[${index}]`}
-                                            value={point}
-                                            onChange={(e) => handlePlantCareChange(index, e.target.value)}
-                                            className="border border-gray-300 rounded-md p-2 w-full"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="bg-red-500 text-white font-semibold ml-2 p-2 rounded-md"
-                                            onClick={() => handleRemovePlantCare(index)}
-                                        >
-                                            Remove
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                            {plantCare?.length < 5 && (
+                            {formik.values.plantCare.map((point, index) => (
+                                <div key={index} className="flex items-center mb-2">
+                                    <textarea
+                                        name={`plantCare[${index}]`}
+                                        value={point}
+                                        onChange={(e) => {
+                                            const updatedPlantCare:any = [...formik.values.plantCare];
+                                            updatedPlantCare[index] = e.target.value;
+                                            formik.setFieldValue('plantCare', updatedPlantCare);
+                                        }}
+                                        className="border border-gray-300 rounded-md p-2 w-full"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="bg-red-500 text-white font-semibold ml-2 p-2 rounded-md"
+                                        onClick={() => {
+                                            const updatedPlantCare = formik.values.plantCare.filter((_, i) => i !== index);
+                                            formik.setFieldValue('plantCare', updatedPlantCare);
+                                        }}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ))}
+                            {formik.values.plantCare.length < 5 && (
                                 <button
                                     type="button"
                                     className="bg-[#5f9231] hover:bg-[#4b7427] text-white font-semibold p-2 rounded-md mt-2"
-                                    onClick={handleAddPlantCare}
+                                    onClick={() => formik.setFieldValue('plantCare', [...formik.values.plantCare, ''])}
                                 >
                                     Add Plant Care Point
                                 </button>
@@ -360,272 +294,157 @@ const EditProduct = () => {
                                 type="number"
                                 id="quantity"
                                 name="quantity"
-                                value={product.quantity}
-                                onChange={handleInputChange}
+                                value={formik.values.quantity}
+                                onChange={formik.handleChange}
                                 className="border border-gray-300 rounded-md p-2 w-full"
                                 required
                             />
+                            {formik.touched.quantity && formik.errors.quantity && (
+                                <div className="text-red-500 text-sm mt-1">{formik.errors.quantity}</div>
+                            )}
                         </div>
-
                         <div className="mb-4">
                             <label htmlFor="offerPercentage" className="block text-gray-700 text-sm font-semibold mb-2">
                                 Offer Percentage
                             </label>
-                            <select
+                            <input
+                                type="number"
+                                id="offerPercentage"
                                 name="offerPercentage"
-                                value={product.offerPercentage}
-                                onChange={handleInputChange}
+                                value={formik.values.offerPercentage}
+                                onChange={formik.handleChange}
                                 className="border border-gray-300 rounded-md p-2 w-full"
                                 required
-                            >
-                                {['0', '5', '9', '13', '20', '24', '29', '33', '37', '41', '45', '50', '52', '55', '59', '60', '63', '65', '67', '69', '70', '75', '79', '80', '85', '90'].map((percentage) => (
-                                    <option key={percentage} value={percentage}>{percentage}%</option>
-                                ))}
-                            </select>
+                            />
+                            {formik.touched.offerPercentage && formik.errors.offerPercentage && (
+                                <div className="text-red-500 text-sm mt-1">{formik.errors.offerPercentage}</div>
+                            )}
                         </div>
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-semibold mb-2">
-                                Select Unit
-                            </label>
-                            <select
-                                name="unit"
-                                value={unit}
-                                onChange={(e) => setUnit(e.target.value)}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                            >
-                                <option value="cm">cm</option>
-                                <option value="L">L</option>
-                                <option value="kg">kg</option>
-                                <option value="count">count</option>
-                            </select>
-                        </div>
+                        {/* Sizes and Pots */}
                         <div className="mb-4">
                             <label className="block text-gray-700 text-sm font-semibold mb-2">
                                 Sizes
                             </label>
-                            <div className="grid grid-cols-1 gap-2">
-                                {unit === 'cm' &&
-                                    ['5-10 cm', '10-20 cm', '20-30 cm', '30-40 cm', '40-50 cm', '50-60 cm', '60-70 cm', '70-80 cm', '80-90 cm', '90-100 cm', '100-120 cm', '120-140 cm', '140-160 cm', '160-180 cm', '180-200 cm', '200-220 cm', '220-240 cm', '240-260 cm', '260-280 cm', '280-300 cm'].map((size) => {
-                                        const isSelected = selectedSizes.find((s) => s.name === size);
-                                        return (
-                                            <div key={size} className="flex items-center">
-                                                <label className="flex items-center">
-                                                    <input
-                                                        type="checkbox"
-                                                        name={size}
-                                                        checked={!!isSelected}
-                                                        onChange={() => handleSizeCheckboxChange(size)}
-                                                        className="mr-2"
-                                                    />
-                                                    <span className="text-gray-700">{size}</span>
-                                                </label>
-                                                {isSelected && (
-                                                    <>
-                                                        <input
-                                                            type="number"
-                                                            placeholder="Price"
-                                                            value={isSelected.price}
-                                                            onChange={(e) => handlePriceInputChange(size, e.target.value)}
-                                                            className="ml-2 border border-gray-300 rounded-md p-1"
-                                                        />
-                                                        {['Default nursery Pot', 'White Ceramic Pot','Steel Pot','Hanging Pot','Clear glass','Self watering Pot'].map((potType) => {
-                                                            const isSelectedPot = isSelected.pots?.find((p) => p.potName === potType);
-                                                            return (
-                                                                <div key={potType} className="ml-2 flex items-center">
-                                                                    <label className="flex items-center">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name={`pots_${size}_${potType}`}
-                                                                            checked={!!isSelectedPot}
-                                                                            onChange={() => handlePotCheckboxChange(size, potType)}
-                                                                            className="mr-2"
-                                                                        />
-                                                                        <span className="text-gray-700">{potType}</span>
-                                                                    </label>
-
-                                                                    {isSelectedPot && (
-                                                                        <input
-                                                                            type="number"
-                                                                            name={`price_${size}_${potType}`}
-                                                                            placeholder={`${potType}`}
-                                                                            value={isSelectedPot.potPrice}
-                                                                            onChange={(e) => handlePotPriceInputChange(size, potType, e.target.value)}
-                                                                            className="ml-2 border border-gray-300 rounded-md p-1 w-24"
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </>
-                                                )}
+                            {formik.values.sizes.map((size:any, sizeIndex) => (
+                                <div key={sizeIndex} className="mb-6 p-4 border border-gray-300 rounded-lg bg-white">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <input
+                                            type="text"
+                                            placeholder="Size Name"
+                                            value={size.name}
+                                            onChange={(e) => {
+                                                const updatedSizes:any = [...formik.values.sizes];
+                                                updatedSizes[sizeIndex].name = e.target.value;
+                                                formik.setFieldValue('sizes', updatedSizes);
+                                            }}
+                                            className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        />
+                                        <input
+                                            type="number"
+                                            placeholder="Price"
+                                            value={size.price}
+                                            onChange={(e) => {
+                                                const updatedSizes:any = [...formik.values.sizes];
+                                                updatedSizes[sizeIndex].price = e.target.value;
+                                                formik.setFieldValue('sizes', updatedSizes);
+                                            }}
+                                            className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all"
+                                            onClick={() => removeSize(sizeIndex)}
+                                        >
+                                            Remove Size
+                                        </button>
+                                    </div>
+                                    <div className="ml-4">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Pots
+                                        </label>
+                                        {size.pots.map((pot:any, potIndex:any) => (
+                                            <div key={potIndex} className="flex items-center gap-3 mb-3">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Pot Name"
+                                                    value={pot.potName}
+                                                    onChange={(e) => {
+                                                        const updatedSizes:any = [...formik.values.sizes];
+                                                        updatedSizes[sizeIndex].pots[potIndex].potName = e.target.value;
+                                                        formik.setFieldValue('sizes', updatedSizes);
+                                                    }}
+                                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    placeholder="Pot Price"
+                                                    value={pot.potPrice}
+                                                    onChange={(e) => {
+                                                        const updatedSizes:any = [...formik.values.sizes];
+                                                        updatedSizes[sizeIndex].pots[potIndex].potPrice = e.target.value;
+                                                        formik.setFieldValue('sizes', updatedSizes);
+                                                    }}
+                                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all"
+                                                    onClick={() => removePot(sizeIndex, potIndex)}
+                                                >
+                                                    Remove Pot
+                                                </button>
                                             </div>
-                                        );
-                                    })}
-                            </div>
-
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
-
-                                {unit === 'L' && ['50 ml', '100 ml', '150 ml', '200 ml', '250 ml', '300 ml', '350 ml', '400 ml', '450 ml', '500 ml', '750 ml', '1 L', '1.5 L', '2 L', '3 L', '4 L', '5 L', '6 L', '7 L', '8 L', '9 L', '10 L', '15 L', '20 L', '25 L', '30 L', '35 L', '40 L', '45 L', '50 L'].map((size) => {
-                                    const isSelected = selectedSizes.find((s) => s.name === size);
-
-                                    return (
-                                        <div key={size} className="flex items-center">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name={size}
-                                                    checked={!!isSelected}
-                                                    onChange={() => handleSizeCheckboxChange(size)}
-                                                    className="mr-2"
-                                                />
-                                                <span className="text-gray-700">{size}</span>
-                                            </label>
-                                            {isSelected && (
-                                                <input
-                                                    type="number"
-                                                    placeholder="Price"
-                                                    value={isSelected.price}
-                                                    onChange={(e) => handlePriceInputChange(size, e.target.value)}
-                                                    className="ml-2 border border-gray-300 rounded-md p-1"
-                                                />
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                                {unit === 'kg' && ['10 g', '20 g', '30 g', '40 g', '50 g', '100 g', '150 g', '200 g', '250 g', '300 g', '350 g', '400 g', '450 g', '500 g', '1 kg', '2 kg', '3 kg', '4 kg', '5 kg', '6 kg', '7 kg', '8 kg', '9 kg', '10 kg', '15 kg', '20 kg', '25 kg', '30 kg', '35 kg', '40 kg', '45 kg', '50 kg'].map((size) => {
-                                    const isSelected = selectedSizes.find((s) => s.name === size);
-
-                                    return (
-                                        <div key={size} className="flex items-center">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name={size}
-                                                    checked={!!isSelected}
-                                                    onChange={() => handleSizeCheckboxChange(size)}
-                                                    className="mr-2"
-                                                />
-                                                <span className="text-gray-700">{size}</span>
-                                            </label>
-                                            {isSelected && (
-                                                <input
-                                                    type="number"
-                                                    placeholder="Price"
-                                                    value={isSelected.price}
-                                                    onChange={(e) => handlePriceInputChange(size, e.target.value)}
-                                                    className="ml-2 border border-gray-300 rounded-md p-1"
-                                                />
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                                {unit === 'count' && ['set 1', 'set 2', 'set 3', 'set 4', 'set 5', 'set 6', 'set 7', 'set 8', 'set 9', 'set 10', 'set 12', 'set 14', 'set 15', 'set 18', 'set 20', 'set 25', 'set 30', 'bulk'].map((size) => {
-                                    const isSelected = selectedSizes.find((s) => s.name === size);
-
-                                    return (
-                                        <div key={size} className="flex items-center">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name={size}
-                                                    checked={!!isSelected}
-                                                    onChange={() => handleSizeCheckboxChange(size)}
-                                                    className="mr-2"
-                                                />
-                                                <span className="text-gray-700">{size}</span>
-                                            </label>
-                                            {isSelected && (
-                                                <input
-                                                    type="number"
-                                                    placeholder="Price"
-                                                    value={isSelected.price}
-                                                    onChange={(e) => handlePriceInputChange(size, e.target.value)}
-                                                    className="ml-2 border border-gray-300 rounded-md p-1"
-                                                />
-                                            )}
-                                        </div>
-                                    )
-                                })}
-                            </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            className="bg-[#5f9231] text-white px-4 py-2 rounded-lg hover:bg-[#4b7427] transition-all"
+                                            onClick={() => addPot(sizeIndex)}
+                                        >
+                                            Add Pot
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                className="bg-[#5f9231] text-white px-4 py-2 rounded-lg hover:bg-[#4b7427] transition-all"
+                                onClick={addSize}
+                            >
+                                Add Size
+                            </button>
                         </div>
-
-                        <div className="mb-4">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8">
-                                <div className="mb-4">
-                                    {image1File ? (<img
-                                        src={URL.createObjectURL(image1File)}
-                                        alt="Image1"
-                                        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                    />) : (
-                                        <img
-                                            src={product?.photo?.image1}
-                                            alt="Image1"
-                                            className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                        />
-                                    )}
-                                    <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                                        Change Image
-                                        <input
-                                            type="file"
-                                            id="image1"
-                                            name="image1"
-                                            accept="image/*"
-                                            onChange={(e) => setImage1File(e.target.files?.[0] || null)}
-                                            hidden
-                                        />
-                                    </label>
-                                </div>
-                                <div className="mb-4">
-                                    {image2File ? (<img
-                                        src={URL.createObjectURL(image2File)}
-                                        alt="Image2"
-                                        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                    />) : (
-                                        <img
-                                            src={product?.photo?.image2}
-                                            alt="Image2"
-                                            className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                        />
-                                    )}
-                                    <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                                        Change Image
-                                        <input
-                                            type="file"
-                                            id="image2"
-                                            name="image2"
-                                            accept="image/*"
-                                            onChange={(e) => setImage2File(e.target.files?.[0] || null)}
-                                            hidden
-                                        />
-                                    </label>
-                                </div>
-                                <div className="mb-4">
-                                    {image3File ? (<img
-                                        src={URL.createObjectURL(image3File)}
-                                        alt="Image3"
-                                        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                    />) : (
-                                        <img
-                                            src={product?.photo?.image3}
-                                            alt="Image3"
-                                            className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                                        />
-                                    )}
-                                    <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                                        Change Image
-                                        <input
-                                            type="file"
-                                            id="image3"
-                                            name="image3"
-                                            accept="image/*"
-                                            onChange={(e) => setImage3File(e.target.files?.[0] || null)}
-                                            hidden
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                        {/* Image Upload */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {['image1', 'image2', 'image3'].map((imageKey, index) => (
+  <div key={imageKey} className="mb-4">
+    {images[imageKey as keyof Images] ? (
+      <img
+        src={URL.createObjectURL(images[imageKey as keyof Images]!)}
+        alt={`Product Image ${index + 1}`}
+        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
+      />
+    ) : (
+      <img
+        src={`${apiUrl}/api/product/product-photo/${pid}/${index + 1}`}
+        alt={`Product Image ${index + 1}`}
+        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
+      />
+    )}
+    <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
+      Change Image
+      <input
+        type="file"
+        id={imageKey}
+        name={imageKey}
+        accept="image/*"
+        onChange={(e) => handleImageUpload(e, imageKey)}
+        hidden
+      />
+    </label>
+  </div>
+))}
                         </div>
-
+                        {/* Submit and Delete Buttons */}
                         <div className="mb-4">
                             <button
                                 type="submit"
@@ -656,7 +475,7 @@ const EditProduct = () => {
                             </button>,
                         ]}
                     >
-                        Are you sure you want to delete {product.name} Product?
+                        Are you sure you want to delete {formik.values.name} Product?
                     </Modal>
                 </div>
             )}
