@@ -169,41 +169,41 @@ const Cart: React.FC = () => {
       toast.error('Try again placing your order.');
     }
   };
-  const handleOnlineOrder = async () => {
-    setLoading(true)
-    const stripe = await getStripe();
+  // const handleOnlineOrder = async () => {
+  //   setLoading(true)
+  //   const stripe = await getStripe();
 
-    if (stripe) {
-      try {
-        const response = await axios.post(`${apiUrl}/api/order/checkout-stripe`, {
-          orderDetails: {
-            products: cart.map((item) => ({
-              _id: item._id,
-              code: item.code,
-              name: item.name,
-              price: item.sizes.price,
-              offer: item.offerPercentage,
-              quantity: item.quantity,
-              size: item.sizes.name,
-              pots: item.pots,
-              color: item.color,
-              image:item.image,
-              status:'Processing'
-            })),
-            total: calculateTotal().toFixed(2),
-          },
-        });
+  //   if (stripe) {
+  //     try {
+  //       const response = await axios.post(`${apiUrl}/api/order/checkout-stripe`, {
+  //         orderDetails: {
+  //           products: cart.map((item) => ({
+  //             _id: item._id,
+  //             code: item.code,
+  //             name: item.name,
+  //             price: item.sizes.price,
+  //             offer: item.offerPercentage,
+  //             quantity: item.quantity,
+  //             size: item.sizes.name,
+  //             pots: item.pots,
+  //             color: item.color,
+  //             image:item.image,
+  //             status:'Processing'
+  //           })),
+  //           total: calculateTotal().toFixed(2),
+  //         },
+  //       });
 
-        stripe.redirectToCheckout({ sessionId: response.data.sessionId });
-      } catch (error) {
-        toast.error('Something went wrong, try again');
-        setLoading(false)
-      }
-    } else {
-      toast.error('Online is not available.');
-      setLoading(false)
-    }
-  };
+  //       stripe.redirectToCheckout({ sessionId: response.data.sessionId });
+  //     } catch (error) {
+  //       toast.error('Something went wrong, try again');
+  //       setLoading(false)
+  //     }
+  //   } else {
+  //     toast.error('Online is not available.');
+  //     setLoading(false)
+  //   }
+  // };
 
 
   const handleCheckout = () => {
@@ -220,7 +220,7 @@ const Cart: React.FC = () => {
       if (!address || !city || !zip) {
         toast.error('Please fill in all shipping details.');
       } else {
-        handleOnlineOrder();
+        // handleOnlineOrder();
       }
     }
   };
@@ -377,11 +377,10 @@ const Cart: React.FC = () => {
                           <p className='text-xs text-destructive mb-2'>*Online payment is under maintainance</p>
                           <div className="flex space-x-4">
                             <button
-                              className={`flex-1 px-4 py-2 text-center rounded-lg border ${selectedPaymentMethod === 'online'
+                              className={`flex-1 px-4 py-2 text-center rounded-lg border opacity-25 cursor-not-allowed ${selectedPaymentMethod === 'online'
                                   ? 'bg-primary text-white'
                                   : 'border-gray-300'
                                 }`}
-                              onClick={() => handlePaymentMethodChange('online')}
                               disabled
                             >
                               Online Payment
