@@ -3,6 +3,7 @@ import userModel from "../models/userModel.js";
 import stripe from 'stripe';
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer';
+import { startOfWeek, subDays, startOfMonth, startOfYear } from 'date-fns';
 dotenv.config("../.env")
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -32,93 +33,116 @@ export const createOrderController = async (req, res) => {
       });
     }
 
-    const products = orderDetails.products;
-    const totalPrice = orderDetails.total.toFixed(2)
+    // Prepare products with initial status
+    const products = orderDetails.products.map(product => ({
+      ...product,
+      status: 'Processing',
+      returnedQuantity: 0,
+      refundAmount: 0
+    }));
+
+    const totalPrice = orderDetails.total.toFixed(2);
+    
+    // Create new order
     const newOrder = await new orderModel({
       products,
       total: orderDetails.total,
+      refundedAmount: 0,
       paymentMethod: orderDetails.paymentMethod,
       user: userDetails._id,
+      orderStatus: 'Processing'
     }).save();
-    const productDetails = `
-  <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-    <thead>
-      <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
-        <th style="padding: 10px; text-align: center;">Item</th>
-        <th style="padding: 10px; text-align: center;">Qty</th>
-        <th style="padding: 10px; text-align: center;">Size</th>
-        <th style="padding: 10px; text-align: center;">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${orderDetails.products.map(product => `
-        <tr style="border-bottom: 1px solid #ddd;">
-        <td style="padding: 10px; text-align: center;">${product.name}</td>
-          <td style="padding: 10px; text-align: center;">${product.quantity}</td>
-          <td style="padding: 10px; text-align: center;">${product.size}</td>
-          <td style="padding: 10px; text-align: center;">${product.status}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-`;
 
-    const mailOptions = {
-      from: 'info@abyzplants.com',
-      to: user.email,
-      subject: 'Your Order Confirmation',
-      html: `
-       <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
-      <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
-      <img style="background-color: #ffffff;" src="https://abyzplants.com/api/logo/path1.png" alt="Abyzplants Logo" width="200">
-        <h1 style="color: #333; font-size: 24px;">Order Confirmation</h1>
-        <p>Dear ${user.name},</p>
-        <p>Thank you for placing your order with Abyzplants.</p>
-        <p><strong>Order Amount:</strong> ${totalPrice} AED</p>
-        <p><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
-        <p><strong>Order Date:</strong> ${new Date().toDateString()}</p>
-
-        <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Ordered Products</h2>
-        ${productDetails}
-
-        <p>We are happy to inform you that your order with Abyzplants has been successfully placed and is currently being processed. Your order is on the way.</p>
-        <p>Company Details:</p>
-        <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
-        <p>International City - Dubai - United Arab Emirates</p>
-        <ul>
-          <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
-          <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
-        </ul>
-      </div>
-    </div>
-      `,
-    };
-
-    const sendEmail = () => {
-      return new Promise((resolve, reject) => {
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(info);
-          }
-        });
-      });
-    };
-
-    const emailInfo = await sendEmail();
-
+    // Send response immediately
     res.json({
       success: true,
-      message: 'Your order has been placed successfully. Check your email',
-      newOrder,
-      emailInfo
+      message: 'Your order has been placed successfully. You will receive a confirmation email shortly.',
+      newOrder
     });
+
+    // Process email in background
+    process.nextTick(async () => {
+      try {
+        // Generate product details HTML for email
+        const productDetails = `
+          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+            <thead>
+              <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                <th style="padding: 10px; text-align: center;">Item</th>
+                <th style="padding: 10px; text-align: center;">Qty</th>
+                <th style="padding: 10px; text-align: center;">Size</th>
+                <th style="padding: 10px; text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${products.map(product => `
+                <tr style="border-bottom: 1px solid #ddd;">
+                  <td style="padding: 10px; text-align: center;">${product.name}</td>
+                  <td style="padding: 10px; text-align: center;">${product.quantity}</td>
+                  <td style="padding: 10px; text-align: center;">${product.size}</td>
+                  <td style="padding: 10px; text-align: center;">${product.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        const mailOptions = {
+          from: 'info@abyzplants.com',
+          to: user.email,
+          subject: 'Your Order Confirmation',
+          html: `
+            <div style="background-color: #f5f5f5; padding: 20px; font-family: Arial, sans-serif;">
+              <div style="background-color: #ffffff; padding: 20px; border-radius: 5px; box-shadow: 0px 2px 5px #ccc; max-width: 600px; margin: 0 auto;">
+                <img style="background-color: #ffffff;" src="https://abyzplants.com/logo.webp" alt="Abyzplants Logo" width="200">
+                <h1 style="color: #333; font-size: 24px;">Order Confirmation</h1>
+                <p>Dear ${user.name},</p>
+                <p>Thank you for placing your order with Abyzplants.</p>
+                <p><strong>Order Amount:</strong> ${totalPrice} AED</p>
+                <p><strong>Payment Method:</strong> ${orderDetails.paymentMethod}</p>
+                <p><strong>Order Date:</strong> ${new Date().toDateString()}</p>
+                <p><strong>Order Number:</strong> ${newOrder._id}</p>
+
+                <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Ordered Products</h2>
+                ${productDetails}
+
+                <h2 style="color: #333; font-size: 20px; margin-top: 20px;">Return Policy</h2>
+                <p>If you need to return any item:</p>
+                <ul>
+                  <li>You can request returns for individual products within 14 days of delivery</li>
+                  <li>Items must be in original condition</li>
+                  <li>Return shipping may be your responsibility unless the item was defective</li>
+                </ul>
+
+                <p>We are happy to inform you that your order with Abyzplants has been successfully placed and is currently being processed. Your order is on the way.</p>
+                
+                <p>Company Details:</p>
+                <p style="color: #333; font-size: 18px;"><strong>Abyzplants</strong></p>
+                <p>International City - Dubai - United Arab Emirates</p>
+                <ul>
+                  <li>Website: <a href="https://www.abyzplants.com" style="color: #007bff; text-decoration: none;">https://www.abyzplants.com</a></li>
+                  <li>Phone: <a href="tel:+971589537998" style="color: #007bff; text-decoration: none;">+971 58 953 7998</a></li>
+                </ul>
+              </div>
+            </div>
+          `,
+        };
+
+        // Send email in background
+        await transporter.sendMail(mailOptions);
+        console.log('Confirmation email sent to:', user.email);
+      } catch (emailError) {
+        console.error('Error sending confirmation email:', emailError);
+        // You might want to log this to a monitoring system
+      }
+    });
+
   } catch (error) {
+    console.error('Order creation error:', error);
     res.status(500).json({
       success: false,
       message: 'Order placement failed',
-      error,
+      error: error.message,
     });
   }
 };
@@ -126,12 +150,51 @@ export const createOrderController = async (req, res) => {
 
 export const getOrdersByUserIdController = async (req, res) => {
     const userId = req.params.pid;
+    const { filter } = req.query;
   
     try {
       const orders = await orderModel.find({ user: userId }).exec();
   
       if (orders) {
-        res.json({ success: true, orders });
+        let filteredOrders = orders;
+        
+        if (filter) {
+          const currentDate = new Date();
+          let startDate, endDate;
+
+          switch (filter) {
+            case 'thisWeek':
+              startDate = startOfWeek(currentDate);
+              endDate = currentDate;
+              break;
+            case 'lastWeek':
+              startDate = startOfWeek(subDays(currentDate, 7));
+              endDate = startOfWeek(currentDate);
+              break;
+            case 'thisMonth':
+              startDate = startOfMonth(currentDate);
+              endDate = currentDate;
+              break;
+            case 'thisYear':
+              startDate = startOfYear(currentDate);
+              endDate = currentDate;
+              break;
+          }
+
+          if (startDate && endDate) {
+            filteredOrders = orders.filter((order) => {
+              const orderDate = new Date(order.createdAt);
+              return orderDate >= startDate && orderDate <= endDate;
+            });
+          }
+        }
+
+        // Sort orders by date
+        filteredOrders.sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
+        res.json({ success: true, orders: filteredOrders });
       } else {
         res.json({ success: true, message: 'No orders found for the user' });
       }

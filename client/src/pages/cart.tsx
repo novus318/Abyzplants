@@ -136,8 +136,13 @@ const Cart: React.FC = () => {
         size: item.sizes.name,
         pots: item.pots,
         color: item.color,
-        image:item.image,
-        status:'Processing'
+        image: item.image,
+        status: 'Processing', // Initial status
+        returnedQuantity: 0,  // Initialize returned quantity
+        refundAmount: 0,      // Initialize refund amount
+        // Potentially add these if needed:
+        // returnReason: null,
+        // cancellationReason: null
       })),
       total: calculateTotal(),
       paymentMethod: 'Cash on Delivery',
@@ -155,18 +160,33 @@ const Cart: React.FC = () => {
       });
 
       if (response.data.success) {
+        // Clear cart after successful order
         localStorage.removeItem('cart');
-        setCart([])
-        router.push('/order');
-        toast.success(response.data.message,{ duration: 6000 });
+        setCart([]);
+        
+        // Redirect to order confirmation page
+        router.push(`/order`);
+        
+        // Show success message with order number
+        toast.success(
+          `Order placed successfully!`,
+          { duration: 6000 }
+        );
+        
         setLoading(false);
       } else {
         setLoading(false);
-        toast.error(response.data.message);
+        toast.error(response.data.message || 'Failed to place order');
       }
-    } catch (error) {
+    } catch (error:any) {
       setLoading(false);
-      toast.error('Try again placing your order.');
+      console.error('Order placement error:', error);
+      
+      // Show more detailed error message if available
+      toast(
+        error.response?.data?.message || 
+        'Failed to place order. Please try again.'
+      );
     }
   };
   // const handleOnlineOrder = async () => {

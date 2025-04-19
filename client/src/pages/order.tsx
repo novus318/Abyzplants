@@ -5,10 +5,15 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { subDays, startOfWeek, startOfMonth, startOfYear } from 'date-fns';
 import { Modal } from 'antd';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'react-hot-toast';
 
 interface Product {
   _id: string;
@@ -19,8 +24,7 @@ interface Product {
   quantity: number;
   size: string;
   color: string;
-  pots:
-  {
+  pots: {
     potName: string;
     potPrice: number;
   }
@@ -66,63 +70,70 @@ const Order = () => {
     setLoading(true);
     try {
       const newStatus = 'Return';
-      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { newStatus, formData,returnProductSize,returnColor });
+      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { 
+        newStatus, 
+        formData,
+        returnProductSize,
+        returnColor 
+      });
 
       if (response.status === 200) {
-
-
+        toast.success('Return request submitted successfully');
+        setReturnModalVisible(false);
+        fetchOrders();
       }
     } catch (error) {
+      toast.error('Failed to submit return request');
       setLoading(false);
     }
   }
-  const showReturnModal = (id: any,productId: any,size:any,color:any) => {
-    setReturnId(id)
-    setReturnColor(color)
-    setReturnProductId(productId)
-    setReturnProductSize(size)
+
+  const showReturnModal = (id: string, productId: string, size: string, color: string) => {
+    setReturnId(id);
+    setReturnColor(color);
+    setReturnProductId(productId);
+    setReturnProductSize(size);
     setReturnModalVisible(true);
   };
 
   const handleReturnCancel = () => {
-    setReturnId('')
-    setReturnColor('')
-    setReturnProductId('')
-    setReturnProductSize('')
+    setReturnId('');
+    setReturnColor('');
+    setReturnProductId('');
+    setReturnProductSize('');
     setReturnModalVisible(false);
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const userDataString = localStorage.getItem('user');
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        if (userData && userData.user) {
+          const userId = userData.user._id;
+          const response = await axios.get(`${apiUrl}/api/order/get-order/${userId}?filter=${selectedFilter}`);
+          if (response.data.success) {
+            setOrderData(response.data.orders);
+            setLoading(false);
+          }
+        }
+      }
+    } catch (error) {
+      toast.error('Failed to fetch orders');
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     const checkUserExistence = async () => {
       try {
         const userDataString = localStorage.getItem('user');
-
-        if (userDataString !== null) {
-          const userData = JSON.parse(userDataString);
-
-          if (userData && userData.user) {
-            const userId = userData.user._id;
-
-            try {
-              const response = await axios.get(`${apiUrl}/api/order/get-order/${userId}`);
-              if (response.data.success) {
-                const filteredOrders = filterOrdersByDate(response.data.orders, selectedFilter);
-                filteredOrders.sort((a, b) => {
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                })
-                setOrderData(filteredOrders);
-                console.log(filteredOrders)
-                setLoading(false);
-                setLoading(false);
-              }
-            } catch (error) {
-              // Handle error
-            }
-          }
-        } else {
+        if (!userDataString) {
           const currentRoute = router.asPath;
           router.push(`/login?redirect=${encodeURIComponent(currentRoute)}`);
+          return;
         }
+        await fetchOrders();
       } catch (error) {
         router.push('/login');
       }
@@ -135,30 +146,6 @@ const Order = () => {
     setSelectedFilter(filter);
   };
 
-  const filterOrdersByDate = (orders: Order[], filter: string) => {
-    const currentDate = new Date();
-    let startDate: Date, endDate: Date;
-
-    if (filter === 'thisWeek') {
-      startDate = startOfWeek(currentDate);
-      endDate = currentDate;
-    } else if (filter === 'lastWeek') {
-      startDate = startOfWeek(subDays(currentDate, 7));
-      endDate = startOfWeek(currentDate);
-    } else if (filter === 'thisMonth') {
-      startDate = startOfMonth(currentDate);
-      endDate = currentDate;
-    } else if (filter === 'thisYear') {
-      startDate = startOfYear(currentDate);
-      endDate = currentDate;
-    }
-
-    return orders.filter((order) => {
-      const orderDate = new Date(order.createdAt);
-      return orderDate >= startDate && orderDate <= endDate;
-    });
-  };
-
   const formatDateTo12HourTime = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
@@ -166,249 +153,286 @@ const Order = () => {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit',
       hour12: true,
     };
-
     return new Date(dateString).toLocaleString(undefined, options);
   };
-  const handleCancelOrder = async (orderId: any,productId: any,size:any,color:any) => {
-    if (window.confirm('Are you sure you want to Cancel Order')) {
+
+  const handleCancelOrder = async (orderId: string, productId: string, size: string, color: string) => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
       setLoading(true);
       try {
         const newStatus = 'Order Cancelled';
-        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size,color});
+        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { 
+          newStatus,
+          size,
+          color
+        });
 
         if (response.status === 200) {
-
-          window.location.reload();
+          toast.success('Order cancelled successfully');
+          fetchOrders();
         }
       } catch (error) {
+        toast.error('Failed to cancel order');
         setLoading(false);
       }
     }
   }
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Processing':
+      case 'Ready to Ship':
+      case 'Order Shipped':
+      case 'Order Delivered':
+        return 'bg-primary text-primary-foreground';
+      case 'Order Cancelled':
+        return 'bg-destructive text-destructive-foreground';
+      case 'Unable to Process':
+        return 'bg-orange-500 text-white';
+      case 'Return':
+      case 'Refunded':
+        return 'bg-blue-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
 
   return (
     <>
       {loading ? (
         <Spinner />
       ) : (
-        <div>
+        <div className="min-h-screen bg-background">
           <Header />
-          <div className="min-h-screen bg-white">
-            <div className="mx-auto py-8 px-4 mt-10">
-              <h1 className="text-3xl text-[#5f9231] mb-4 text-center font-medium py-8">Your Order Details</h1>
-              <div className="flex flex-wrap justify-center space-y-2 space-x-2 md:space-x-4 md:space-y-0">
-                <button
-                  onClick={() => handleFilterChange('thisWeek')}
-                  className={`filter-button ${selectedFilter === 'thisWeek' ? 'bg-[#5f9231] text-white' : 'bg-white text-[#5f9231] hover:bg-[#5f9231] hover:text-white'} py-2 px-4 md:py-2 md:px-4 rounded-lg transition duration-300`}
+          <main className="container mx-auto max-w-4xl py-8 px-1 mt-10">
+            <h1 className="text-3xl font-semibold text-primary mb-8 text-center">Your Orders</h1>
+            
+            <div className="flex flex-wrap justify-center gap-1 mb-8">
+              {['thisWeek', 'lastWeek', 'thisMonth', 'thisYear'].map((filter) => (
+                <Button
+                size='sm'
+                  key={filter}
+                  variant={selectedFilter === filter ? 'default' : 'outline'}
+                  onClick={() => handleFilterChange(filter)}
+                  className="capitalize"
                 >
-                  This Week
-                </button>
-                <button
-                  onClick={() => handleFilterChange('lastWeek')}
-                  className={`filter-button ${selectedFilter === 'lastWeek' ? 'bg-[#5f9231] text-white' : 'bg-white text-[#5f9231] hover:bg-[#5f9231] hover:text-white'} py-2 px-4 md:py-2 md:px-4 rounded-lg transition duration-300`}
-                >
-                  Last Week
-                </button>
-                <button
-                  onClick={() => handleFilterChange('thisMonth')}
-                  className={`filter-button ${selectedFilter === 'thisMonth' ? 'bg-[#5f9231] text-white' : 'bg-white text-[#5f9231] hover:bg-[#5f9231] hover:text-white'} py-2 px-4 md:py-2 md:px-4 rounded-lg transition duration-300`}
-                >
-                  This Month
-                </button>
-                <button
-                  onClick={() => handleFilterChange('thisYear')}
-                  className={`filter-button ${selectedFilter === 'thisYear' ? 'bg-[#5f9231] text-white' : 'bg-white text-[#5f9231] hover:bg-[#5f9231] hover:text-white'} py-2 px-4 md:py-2 md:px-4 rounded-lg transition duration-300`}
-                >
-                  This Year
-                </button>
-              </div>
-              {orderData?.length !== 0 ? (
-                <div className='px-4 md:px-8 lg:px-16'>
-                  {orderData?.map((order) => (
+                  {filter.replace(/([A-Z])/g, ' $1').trim()}
+                </Button>
+              ))}
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-300px)]">
+              {orderData?.length ? (
+                <div className="space-y-6">
+                  {orderData.map((order) => (
                     <div
                       key={order._id}
-                      className="bg-white rounded-lg shadow p-4 border-b border-gray-300 transition duration-300 mb-4"
+                      className="bg-card rounded-lg shadow-sm border p-3 space-y-2"
                     >
-                      <div className="flex flex-col md:flex-row justify-between mb-4">
-                        <div className="mb-4 md:mb-0">
-                          <p className="text-gray-500 text-sm">Order ID: {order._id.substring(16)}</p>
-                          <p className="text-gray-500 text-sm">{formatDateTo12HourTime(order.createdAt)}</p>
-                          <p className="text-gray-500 text-sm">Payment : {order.paymentMethod}</p>
+                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="space-y-1">
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground">Order ID: {order._id.substring(16)}</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground">{formatDateTo12HourTime(order.createdAt)}</p>
+                          <p className="text-xs md:text-sm font-medium text-muted-foreground">Payment: {order.paymentMethod}</p>
                         </div>
                         <div>
-                          <p className="text-[#5f9231] font-semibold text-xl md:text-2xl">
+                          <p className="text-sm md:text-base font-semibold text-primary">
                             Total: {order.total.toFixed(2)} AED
                           </p>
-
                         </div>
                       </div>
-                      <h3 className="text-lg font-semibold mb-2 mt-4">Ordered Products</h3>
-                      {order.products.map((product, i) => (
-                        <div
-                          key={i}
-                          className="mb-4 p-4 border border-gray-300 rounded-lg hover:shadow-md transition duration-300 flex flex-col md:flex-row items-center"
-                        >
-                          <Link href={`/details/${product._id}`}>
+
+                      <div className="space-y-4">
+                        <h3 className="font-medium">Ordered Products</h3>
+                        {order.products.map((product, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-4 border-b pb-2"
+                          >
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-16 h-20 object-cover rounded-lg mb-4 md:mr-4 md:w-24 md:h-32"
+                              className="w-20 h-20 object-cover rounded-md"
                             />
-                          </Link>
-                          <div className="flex flex-col md:flex-row w-full">
-                            <div className="md:flex-shrink">
-                              <p className="text-[#5f9231] font-semibold text-lg mb-2">{product.name}</p>
-                              {product.offer ? (
-                              <>
-                              {product.pots?.potPrice ? 
-                              (<p className="text-gray-500 text-sm mb-2">Discount Price:  {(((100 - product.offer) / 100) * (Number(product.price) + Number(product.pots?.potPrice))
-                              ).toFixed(2)}{' '} AED</p>):
-                              (<p className="text-gray-500 text-sm mb-2">Discount Price:  {(((100 - product.offer) / 100) * product.price
-                              ).toFixed(2)}{' '} AED</p>)}</>
-                              )
-                              :(<>
-                              {product.pots?.potPrice ?(<p className="text-gray-500 text-sm mb-2">Price: {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED</p>)
-                              :(<p className="text-gray-500 text-sm mb-2">Price: {product.price.toFixed(2)} AED</p>)}</>)}
-                              <p className="text-gray-500 text-sm mb-2">Quantity: {product.quantity}</p>
-                              <p className="text-gray-500 text-sm mb-2">Size: {product.size} {product.pots && `/ ${product.pots.potName}`} {product.color && `/ ${product.color}`}</p>
-                            </div>
-                            <div className="md:ml-auto md:text-right mt-4 md:mt-0">
-                              <p className='text-lg font-semibold text-[#5f9231] mb-2'>
-                                Status: <span className={`text-lg font-semibold ${product.status === 'Processing' ? 'text-[#5f9231]' :
-                                  product.status === 'Ready to Ship' ? 'text-[#5f9231]' :
-                                    product.status === 'Order Shipped' ? 'text-[#5f9231]' :
-                                      product.status === 'Order Delivered' ? 'text-[#5f9231]' :
-                                        product.status === 'Order Cancelled' ? 'text-[#dc3545]' :
-                                          product.status === 'Unable to Process' ? 'text-[#ff8c00]' :
-                                            product.status === 'Refunded' && 'text-[#5f9231]'}`}>{product.status}</span>
+                          
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm text-gray-900">
+                                {product.name}
+                              </h4>
+                              <div className="text-xs text-gray-500 space-y-0.5">
+                                <p>Size: {product.size} {product.pots && `• ${product.pots.potName}`}</p>
+                                {product.color && <p>Color: {product.color}</p>}
+                                <p>Qty: {product.quantity}</p>
+                              </div>
+                              <p className="text-xs text-gray-800 font-medium">
+                                Price:{" "}
+                                {product.offer ? (
+                                  product.pots?.potPrice ? (
+                                    <>
+                                      {(
+                                        ((100 - product.offer) / 100) *
+                                        (Number(product.price) + Number(product.pots?.potPrice))
+                                      ).toFixed(2)}{" "}
+                                      AED
+                                    </>
+                                  ) : (
+                                    <>
+                                      {(((100 - product.offer) / 100) * product.price).toFixed(2)} AED
+                                    </>
+                                  )
+                                ) : product.pots?.potPrice ? (
+                                  <>
+                                    {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED
+                                  </>
+                                ) : (
+                                  <>{product.price.toFixed(2)} AED</>
+                                )}
                               </p>
-                              <div className="text-center">
-                                {!(product.status === 'Refunded' || product.status === 'Order Cancelled' || product.status === 'Order Delivered' || product.status === 'Return' || product.status === 'Order Shipped') ? (
+                            </div>
+                            
+                            <div className="flex flex-col items-end gap-3">
+                              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                product.status === 'Order Delivered' ? 'bg-green-100 text-green-800' :
+                                product.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                                product.status.includes('Cancelled') || product.status.includes('Return') ? 'bg-red-100 text-red-800' :
+                                'bg-blue-100 text-blue-800'
+                              }`}>
+                                {product.status}
+                              </div>
+                              
+                              <div className="flex flex-wrap justify-end gap-2">
+                                {!(['Refunded', 'Order Cancelled', 'Order Delivered', 'Return', 'Order Shipped'].includes(product.status)) && (
                                   <button
-                                    onClick={() => handleCancelOrder(order._id,product._id,product.size,product.color)}
-                                    className="text-red-500 rounded-md hover:text-red-700 cursor-pointer mr-2 bg-gray-100 px-4 py-1">
+                                    onClick={() => handleCancelOrder(order._id, product._id, product.size, product.color)}
+                                    className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-1.5 rounded-md hover:bg-red-50 transition-colors"
+                                  >
                                     Cancel Order
                                   </button>
-                                ) : null}
-
-                                {product.status === 'Order Delivered' ? (
+                                )}
+                                
+                                {product.status === 'Order Delivered' && (
                                   <button
-                                    onClick={() => showReturnModal(order._id,product._id,product.size,product.color)}
-                                    className="text-[#5f9231] rounded-md hover:text-[#4a7327] cursor-pointer mr-2 bg-gray-100 px-4 py-1">
-                                    Return
+                                    onClick={() => showReturnModal(order._id, product._id, product.size, product.color)}
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+                                  >
+                                    Return Item
                                   </button>
-                                ) : null}
-                                {product.status === 'Return' ? (
-                                  <p className="text-[#5f9231] rounded-md mb-2">Your return request is being processed & Amount will be refunded</p>
-                                ) : null}
-                                {product.status === 'Refunded' ? (
-                                  <p className="text-[#5f9231] rounded-md mb-2">Your amount has been refunded</p>
-                                ) : null}
+                                )}
+                                
+                                {product.status === 'Return' && (
+                                  <p className="text-sm text-blue-600 italic">Return in progress</p>
+                                )}
+                                
+                                {product.status === 'Refunded' && (
+                                  <p className="text-sm text-green-600 italic">Refund completed</p>
+                                )}
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="col-span-12 text-center text-gray-600">
-                  No order details available.
+                <div className="text-center text-muted-foreground py-8">
+                  No orders found for the selected period.
                 </div>
               )}
-            </div>
-          </div>
+            </ScrollArea>
+          </main>
           <Footer />
         </div>
       )}
+
       <Modal
         title="Return Order"
-        visible={returnModalVisible}
+        open={returnModalVisible}
         onCancel={handleReturnCancel}
         footer={null}
         className="rounded-md"
       >
-        <div className="p-4">
-          <p className="text-red-500">A charge of 13 AED will be deducted for the return.</p>
-          <p className="text-gray-600 text-xs text-center">
-            *The refunded amount will be credited to your account after deducting the applicable fee.
-          </p>
-          <p className="text-[#5f9231] mb-2">Please fill out the following details to initiate the refund process.</p>
+        <div className="p-4 space-y-4">
+          <div className="bg-destructive/10 text-destructive p-3 rounded-md">
+            <p>A charge of 13 AED will be deducted for the return.</p>
+            <p className="text-xs mt-1">
+              *The refunded amount will be credited to your account after deducting the applicable fee.
+            </p>
+          </div>
+
           <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="flex flex-col space-y-2">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Phone Number</label>
               <PhoneInput
                 international
                 defaultCountry="AE"
                 value={formData.number}
                 onChange={(value) => handleInputChange({ target: { name: 'number', value } })}
-                placeholder="Phone Number"
-                maxLength={16}
+                className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                 required
-                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
               />
             </div>
-            <div className="flex flex-col space-y-2">
-              <input
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Holder Name</label>
+              <Input
                 type="text"
-                id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                placeholder="Account holder Name"
                 required
-                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
               />
             </div>
-            <div className="flex flex-col space-y-2">
-              <input
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Account Number</label>
+              <Input
                 type="text"
-                id="account"
                 name="account"
                 value={formData.account}
                 onChange={handleInputChange}
-                placeholder="Your Account Number"
                 required
-                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
               />
             </div>
 
-            <div className="flex flex-col space-y-2">
-              <input
+            <div className="space-y-2">
+              <label className="text-sm font-medium">IBAN</label>
+              <Input
                 type="text"
-                id="iban"
                 name="iban"
                 value={formData.iban}
                 onChange={handleInputChange}
-                placeholder="IBAN"
                 required
-                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
-              />
-            </div>
-            <div className="flex flex-col space-y-2">
-              <textarea
-                id="reason"
-                name="reason"
-                value={formData.reason}
-                onChange={handleInputChange}
-                placeholder="Reason"
-                required
-                className="border p-2 rounded-md focus:outline-none focus:border-[#5f9231] transition duration-300"
               />
             </div>
 
-            <div className="text-center">
-              <button
-                type="submit"
-                className="bg-[#5f9231] text-white py-2 px-4 rounded-md hover:bg-[#4a7327] transition duration-300"
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Reason for Return</label>
+              <Textarea
+                name="reason"
+                value={formData.reason}
+                onChange={handleInputChange}
+                required
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleReturnCancel}
               >
-                Submit
-              </button>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                className="bg-primary hover:bg-primary/90"
+              >
+                Submit Return Request
+              </Button>
             </div>
           </form>
         </div>
