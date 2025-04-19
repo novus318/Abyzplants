@@ -202,29 +202,105 @@ export const getOrdersByUserIdController = async (req, res) => {
       res.status(500).json({ success: false, message: 'Error getting orders', error });
     }
   };
+
   export const getAllOrdersController = async (req, res) => {
     try {
-      const orders = await orderModel.find({}).exec();
+      const page = parseInt(req.query.page) || 1;
+      const pageSize = parseInt(req.query.pageSize) || 10;
+      const searchQuery = req.query.search || '';
   
-      if (orders.length > 0) {
-        const ordersWithUserDetails = await Promise.all(
-          orders.map(async (order) => {
-            const user = await userModel.findById(order.user);
-            return {
-              ...order._doc,
-              user: user ? { _id: user._id, name: user.name, email: user.email, phone: user.phone, address: user.address, zip: user.zip, city: user.city } : null
-            };
-          })
-        );
+      // Build the search conditions
+      const searchConditions = {};
+      if (searchQuery) {
+        const regex = new RegExp(searchQuery, 'i');
+        
+        // Search in multiple fields
+        searchConditions.$or = [
+          { _id: mongoose.Types.ObjectId.isValid(searchQuery) ? searchQuery : null },
+          { 'products.code': regex },
+          { 'products.name': regex },
+          { 'products.size': regex },
+          { 'products.color': regex },
+          { 'products.pots.potName': regex },
+          { orderStatus: regex },
+          { paymentMethod: regex }
+        ].filter(condition => {
+          // Remove null conditions (like invalid ObjectId)
+          if (condition && Object.values(condition)[0] === null) return false;
+          return true;
+        });
   
-        res.json({ success: true, orders: ordersWithUserDetails });
-      } else {
-        res.json({ success: true, message: 'No orders found.' });
+        // Also search in user details by populating first
+        const users = await userModel.find({
+          $or: [
+            { name: regex },
+            { email: regex },
+            { phone: regex },
+            { 'address.street': regex },
+            { 'address.city': regex },
+            { 'address.zip': regex }
+          ]
+        }).select('_id').lean();
+  
+        if (users.length > 0) {
+          searchConditions.user = { $in: users.map(u => u._id) };
+        }
       }
+  
+      // Get total count for pagination info
+      const totalOrders = await orderModel.countDocuments(searchConditions);
+  
+      // Calculate pagination values
+      const totalPages = Math.ceil(totalOrders / pageSize);
+      const skip = (page - 1) * pageSize;
+  
+      // Get orders with pagination and search
+      const orders = await orderModel.find(searchConditions)
+        .skip(skip)
+        .limit(pageSize)
+        .sort({ createdAt: -1 })
+        .exec();
+  
+      // Populate user details
+      const ordersWithUserDetails = await Promise.all(
+        orders.map(async (order) => {
+          const user = await userModel.findById(order.user);
+          return {
+            ...order._doc,
+            user: user ? { 
+              _id: user._id, 
+              name: user.name, 
+              email: user.email, 
+              phone: user.phone, 
+              address: user.address, 
+              zip: user.zip, 
+              city: user.city 
+            } : null
+          };
+        })
+      );
+  
+      res.json({ 
+        success: true, 
+        orders: ordersWithUserDetails,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          pageSize,
+          totalOrders
+        }
+      });
+  
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Error getting orders', error });
+      console.error('Error getting orders:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Error getting orders', 
+        error: error.message 
+      });
     }
   };
+  
   export const getOrderByIdWithUserDetails = async (req, res) => {
     const orderId = req.params.pid;
   

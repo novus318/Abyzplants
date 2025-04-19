@@ -2,10 +2,39 @@ import React, { useEffect, useState } from 'react';
 import Axios from 'axios';
 import AdminSidebar from '@/components/AdminSidebar';
 import { withAuth } from '../../components/withAuth';
-import { Modal, Button, Table, Select } from 'antd';
+import { Button } from 'antd';
 import Link from 'next/link';
-
-const { Option } = Select;
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationLink,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination"
 
 interface Order {
   _id: string;
@@ -31,8 +60,7 @@ interface Product {
   offer: number;
   quantity: number;
   size: string;
-  pots:
-  {
+  pots: {
     potName: string;
     potPrice: number;
   }
@@ -47,110 +75,112 @@ const Dashboard: React.FC = () => {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState('thisWeek');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
-    Axios.get(`${apiUrl}/api/order/get-allOrders`)
-      .then((response) => {
+    const fetchOrders = async () => {
+      try {
+        const response = await Axios.get(`${apiUrl}/api/order/get-allOrders`, {
+          params: {
+            page: currentPage,
+            pageSize: itemsPerPage,
+            search: searchQuery
+          }
+        });
+        
         if (response.data.success) {
           const sortedOrders = response.data.orders.sort((a: Order, b: Order) => {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           });
           setOrders(sortedOrders);
           setFilteredOrders(sortedOrders);
+          setTotalPages(response.data.pagination?.totalPages || 1);
         }
         setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error('Error fetching orders:', error);
         setLoading(false);
-      });
-  }, []);
+      }
+    };
+
+    fetchOrders();
+  }, [currentPage, itemsPerPage, searchQuery]);
 
   useEffect(() => {
-    if (dateFilter === 'today') {
-      const today = new Date();
-      const filtered = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return (
-          orderDate.getDate() === today.getDate() &&
-          orderDate.getMonth() === today.getMonth() &&
-          orderDate.getFullYear() === today.getFullYear()
-        );
-      });
-      setFilteredOrders(filtered);
-    } else if (dateFilter === 'yesterday') {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const filtered = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return (
-          orderDate.getDate() === yesterday.getDate() &&
-          orderDate.getMonth() === yesterday.getMonth() &&
-          orderDate.getFullYear() === yesterday.getFullYear()
-        );
-      });
-      setFilteredOrders(filtered);
-    } else if (dateFilter === 'thisWeek') {
-      const today = new Date();
-      const firstDayOfWeek = new Date(today);
-      firstDayOfWeek.setDate(today.getDate() - today.getDay());
-      const filtered = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return orderDate >= firstDayOfWeek;
-      });
-      setFilteredOrders(filtered);
-    } else if (dateFilter === 'thisMonth') {
-      const today = new Date();
-      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-
-      const filtered = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return orderDate >= firstDayOfMonth;
-      });
-
-      setFilteredOrders(filtered);
-    } else if (dateFilter === 'last6Months') {
-      const today = new Date();
-      const firstDayOfLast6Months = new Date(
-        today.getFullYear(),
-        today.getMonth() - 6,
-        today.getDate()
-      );
-
-      const filtered = orders.filter((order) => {
-        const orderDate = new Date(order.createdAt);
-        return orderDate >= firstDayOfLast6Months;
-      });
-
-      setFilteredOrders(filtered);
-    }
+    filterOrdersByDate(dateFilter);
   }, [dateFilter, orders]);
 
-  useEffect(() => {
-    filterOrdersByOrderId(searchQuery);
-  }, [searchQuery, orders]);
+  const filterOrdersByDate = (filter: string) => {
+    const today = new Date();
+    let filtered = [...orders];
 
-  const filterOrdersByOrderId = (query: string) => {
-    if (!query) {
-      setFilteredOrders(orders);
-    } else {
-      const filtered = orders.filter((order) =>
-        order._id.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredOrders(filtered);
+    switch (filter) {
+      case 'today':
+        filtered = orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return (
+            orderDate.getDate() === today.getDate() &&
+            orderDate.getMonth() === today.getMonth() &&
+            orderDate.getFullYear() === today.getFullYear()
+          );
+        });
+        break;
+      case 'yesterday':
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        filtered = orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return (
+            orderDate.getDate() === yesterday.getDate() &&
+            orderDate.getMonth() === yesterday.getMonth() &&
+            orderDate.getFullYear() === yesterday.getFullYear()
+          );
+        });
+        break;
+      case 'thisWeek':
+        const firstDayOfWeek = new Date(today);
+        firstDayOfWeek.setDate(today.getDate() - today.getDay());
+        filtered = orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= firstDayOfWeek;
+        });
+        break;
+      case 'thisMonth':
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        filtered = orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= firstDayOfMonth;
+        });
+        break;
+      case 'last6Months':
+        const firstDayOfLast6Months = new Date(
+          today.getFullYear(),
+          today.getMonth() - 6,
+          today.getDate()
+        );
+        filtered = orders.filter((order) => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= firstDayOfLast6Months;
+        });
+        break;
+      default:
+        break;
     }
+
+    setFilteredOrders(filtered);
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleViewClick = (order: Order) => {
     setSelectedOrder(order);
-    setModalVisible(true);
-  };
-
-  const handleDateFilterChange = (value: string) => {
-    setDateFilter(value);
+    setIsDialogOpen(true);
   };
 
   const formatDateTime = (dateTime: string) => {
@@ -161,238 +191,325 @@ const Dashboard: React.FC = () => {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: true, // Use 12-hour format
+      hour12: true,
     };
 
     return new Date(dateTime).toLocaleString(undefined, options);
   };
-  const handleStatusChange = (orderId: string, productId: string, newStatus: string,size:any, color:any) => {
-    Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { newStatus,size,color })
-      .then((response) => {
-        if (response.data.success) {
-          const updatedOrders = orders.map((order) =>
-            order._id === orderId ? { ...order, status: newStatus } : order
-          );
-          setOrders(updatedOrders);
-          setFilteredOrders(updatedOrders);
-          window.location.reload()
-        } else {
-          // Handle the error.
-        }
-      })
-      .catch((error) => {
-        console.error('Error updating order status:', error);
+
+  const handleStatusChange = async (orderId: string, productId: string, newStatus: string, size: any, color: any) => {
+    try {
+      const response = await Axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { 
+        newStatus, 
+        size, 
+        color 
       });
+      
+      if (response.data.success) {
+        const updatedOrders = orders.map((order) =>
+          order._id === orderId ? { ...order, status: newStatus } : order
+        );
+        setOrders(updatedOrders);
+        setFilteredOrders(updatedOrders);
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    }
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const renderPaginationItems = () => {
+    const items = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink 
+              isActive={i === currentPage}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      if (startPage > 1) {
+        items.push(
+          <PaginationItem key="ellipsis-start">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink 
+              isActive={i === currentPage}
+              onClick={() => handlePageChange(i)}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+
+      if (endPage < totalPages) {
+        items.push(
+          <PaginationItem key="ellipsis-end">
+            <PaginationEllipsis />
+          </PaginationItem>
+        );
+      }
+    }
+
+    return items;
+  };
 
   return (
     <div className="flex">
       <AdminSidebar />
       <main className="flex-1 p-4 ml-64">
         <h1 className="text-3xl font-semibold mb-4">Orders</h1>
-        <input
-          type="text"
-          placeholder="Search by Order ID"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-auto py-1 px-4 mx-3 border border-gray-300 rounded-md"
-        />
-        <Select
-          style={{ width: 200, marginBottom: '1rem' }}
-          placeholder="Select Date Filter"
-          onChange={handleDateFilterChange}
-        >
-          <Option value="today">Today</Option>
-          <Option value="yesterday">Yesterday</Option>
-          <Option value="thisWeek">This Week</Option>
-          <Option value="thisMonth">This Month</Option>
-          <Option value="last6Months">Last 6 months</Option>
-        </Select>
+        
+        <div className="flex gap-4 mb-6">
+          <Input
+            placeholder="Search by Order ID, Customer, Email, etc."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full max-w-md"
+          />
+          
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select Date Filter" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="thisWeek">This Week</SelectItem>
+              <SelectItem value="thisMonth">This Month</SelectItem>
+              <SelectItem value="last6Months">Last 6 months</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {loading ? (
-          <p>Loading...</p>
+          <div className="flex justify-center items-center h-64">
+            <p>Loading...</p>
+          </div>
         ) : (
-          <table className="min-w-full border-collapse border border-gray-300">
-            <thead>
-              <tr>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Order ID
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Date & Time
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Phone Number
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 text-center py-3 bg-gray-100 text-xs leading-4 font-medium text-gray-600 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {filteredOrders.map((order) => (
-                <tr
-                  key={order._id}
-                  className='ring-gray-500 ring-1'
-                >
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 font-medium text-gray-900">
-                    {order._id.substring(16)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {formatDateTime(order.createdAt)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user?.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user?.email}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.user?.phone}
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500">
-                    {order.total.toFixed(2)} AED
-                  </td>
-                  <td className="px-6 py-4 whitespace-no-wrap text-sm text-center leading-5 text-gray-500 grid gap-4">
-                    <button onClick={() => handleViewClick(order)} className="text-indigo-600 hover:text-indigo-900">
-                      View
-                    </button>
-                    <Link href={`/admin/bill/${order._id}`} target="_blank">
-                      <button className="text-green-600 hover:text-green-900">
-                        Print
-                      </button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-center">Order ID</TableHead>
+                    <TableHead className="text-center">Date & Time</TableHead>
+                    <TableHead className="text-center">Customer</TableHead>
+                    <TableHead className="text-center">Email</TableHead>
+                    <TableHead className="text-center">Phone Number</TableHead>
+                    <TableHead className="text-center">Total</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <TableRow key={order._id}>
+                        <TableCell className="text-center">
+                          {order._id.substring(16)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {formatDateTime(order.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {order.user?.name}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {order.user?.email}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {order.user?.phone}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {order.total.toFixed(2)} AED
+                        </TableCell>
+                        <TableCell className="text-center space-x-2">
+                          <Button 
+                            onClick={() => handleViewClick(order)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            View
+                          </Button>
+                          <Link href={`/admin/bill/${order._id}`} target="_blank">
+                            <Button className="text-green-600 hover:text-green-900">
+                              Print
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center">
+                        No orders found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {totalPages > 1 && (
+              <Pagination className="mt-6">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                  
+                  {renderPaginationItems()}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </>
         )}
 
-        <Modal
-          title="Order Details"
-          visible={modalVisible}
-          onCancel={
-            () => {
-              setModalVisible(false);
-              window.location.reload();
-            }
-          }
-          width={1000}
-          footer={[
-            <Button key="back" onClick={() => {
-              setModalVisible(false);
-              window.location.reload();
-            }}>
-              Close
-            </Button>,
-          ]}
-          className="max-w-3xl mx-auto"
-        >
-          {selectedOrder && (
-            <div>
-              <h2 className="text-2xl font-semibold">Product Details</h2>
-              <table className="w-full border-collapse border border-gray-300 mt-4">
-                <thead>
-                  <tr>
-                    <th className="p-3 text-center">Name</th>
-                    <th className="p-3 text-center">Code</th>
-                    <th className="p-3 text-center">Price</th>
-                    <th className="p-3 text-center">Qty</th>
-                    <th className="p-3 text-center">Size</th>
-                    <th className="p-3 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedOrder.products.map((product) => (
-                    <tr
-                      key={product._id}
-                      className={
-                        product.status === 'Order Cancelled'
-                          ? 'bg-red-100'
-                          : product.status === 'Return'
-                            ? 'bg-yellow-100'
-                            : product.status === 'Order Delivered' || product.status === 'Refunded'
-                              ? 'bg-green-100'
-                              : 'bg-gray-100'
-                      }
-                    >
-                      <td className="p-3 text-center">{product.name}</td>
-                      <td className="p-3 text-center">{product.code}</td>
-                      <td className="p-3 text-center">
-                        {product.pots?.potPrice ? 
-                        (<>
-                        {product.offer
-                          ? ((Number(product.price) + Number(product.pots.potPrice)) * (1 - product.offer / 100)).toFixed(2)
-                          : (Number(product.price) + Number(product.pots.potPrice)).toFixed(2)}
-                          </>):
-                          (<>
-                          {product.offer
-                            ? (product.price * (1 - product.offer / 100)).toFixed(2)
-                            : product.price.toFixed(2)}
-                            </>)} AED
-                      </td>
-                      <td className="p-3 text-center">{product.quantity}</td>
-                      <td className="p-3 text-center">{product.size || 'N/A'} {product.pots?.potPrice && `/ ${product.pots.potName}`} {product.color && `/ ${product.color}`}</td>
-                      <td className="p-3 text-center">
-                        {product.status === 'Order Cancelled' ? (
-                          selectedOrder.paymentMethod === 'Cash on Delivery' ? (
-                            'Cancelled'
-                          ) : (
-                            <Select
-                              defaultValue={product.status}
-                              style={{ width: 150 }}
-                              onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
-                            >
-                              <Option value="Refunded">Refunded</Option>
-                            </Select>
-                          )
-                        ) : product.status === 'Return' ? (
-                          <Select
-                            defaultValue={product.status}
-                            style={{ width: 150 }}
-                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order Details</DialogTitle>
+            </DialogHeader>
+            
+            {selectedOrder && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-xl font-semibold">Product Details</h2>
+                  <div className="rounded-md border mt-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-center">Name</TableHead>
+                          <TableHead className="text-center">Code</TableHead>
+                          <TableHead className="text-center">Price</TableHead>
+                          <TableHead className="text-center">Qty</TableHead>
+                          <TableHead className="text-center">Size</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedOrder.products.map((product) => (
+                          <TableRow
+                            key={product._id}
+                            className={
+                              product.status === 'Order Cancelled' ? 'bg-red-100' :
+                              product.status === 'Return' ? 'bg-yellow-100' :
+                              product.status === 'Order Delivered' || product.status === 'Refunded' ? 'bg-green-100' :
+                              'bg-gray-100'
+                            }
                           >
-                            <Option value="Refunded">Refunded</Option>
-                          </Select>
-                        ) : (
-                          <Select
-                            defaultValue={product.status}
-                            style={{ width: 150 }}
-                            onChange={(newStatus) => handleStatusChange(selectedOrder._id, product._id, newStatus,product.size,product.color)}
-                          >
-                            <Option value="Processing">Processing</Option>
-                            <Option value="Ready to Ship">Ready to Ship</Option>
-                            <Option value="Order Shipped">Order Shipped</Option>
-                            <Option value="Order Delivered">Order Delivered</Option>
-                            <Option value="Order Cancelled">Order Cancelled</Option>
-                            <Option value="Unable to Process">Unable to Process</Option>
-                            <Option value="Refunded">Refunded</Option>
-                          </Select>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <h3 className="text-xl font-semibold mt-6">Payment : {selectedOrder.paymentMethod}</h3>
-              <h2 className="text-2xl font-semibold mt-6">User Address</h2>
-              <p className="mb-2">Address: {selectedOrder.user?.address}</p>
-              <p className="mb-2">City: {selectedOrder.user?.city}</p>
-              <p>Zip Code: {selectedOrder.user?.zip}</p>
-            </div>
-          )}
-        </Modal>
+                            <TableCell className="text-center">{product.name}</TableCell>
+                            <TableCell className="text-center">{product.code}</TableCell>
+                            <TableCell className="text-center">
+                              {product.pots?.potPrice ? 
+                                (product.offer
+                                  ? ((Number(product.price) + Number(product.pots.potPrice)) * (1 - product.offer / 100)).toFixed(2)
+                                  : (Number(product.price) + Number(product.pots.potPrice)).toFixed(2)) :
+                                (product.offer
+                                  ? (product.price * (1 - product.offer / 100)).toFixed(2)
+                                  : product.price.toFixed(2))} AED
+                            </TableCell>
+                            <TableCell className="text-center">{product.quantity}</TableCell>
+                            <TableCell className="text-center">
+                              {product.size || 'N/A'} 
+                              {product.pots?.potPrice && ` / ${product.pots.potName}`} 
+                              {product.color && ` / ${product.color}`}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Select
+                                value={product.status}
+                                onValueChange={(newStatus) => 
+                                  handleStatusChange(
+                                    selectedOrder._id, 
+                                    product._id, 
+                                    newStatus,
+                                    product.size,
+                                    product.color
+                                  )
+                                }
+                              >
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {product.status === 'Order Cancelled' ? (
+                                    selectedOrder.paymentMethod === 'Cash on Delivery' ? (
+                                      <SelectItem value="Order Cancelled">Cancelled</SelectItem>
+                                    ) : (
+                                      <SelectItem value="Refunded">Refunded</SelectItem>
+                                    )
+                                  ) : product.status === 'Return' ? (
+                                    <SelectItem value="Refunded">Refunded</SelectItem>
+                                  ) : (
+                                    <>
+                                      <SelectItem value="Processing">Processing</SelectItem>
+                                      <SelectItem value="Ready to Ship">Ready to Ship</SelectItem>
+                                      <SelectItem value="Order Shipped">Order Shipped</SelectItem>
+                                      <SelectItem value="Order Delivered">Order Delivered</SelectItem>
+                                      <SelectItem value="Order Cancelled">Order Cancelled</SelectItem>
+                                      <SelectItem value="Unable to Process">Unable to Process</SelectItem>
+                                      <SelectItem value="Refunded">Refunded</SelectItem>
+                                    </>
+                                  )}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold">Payment: {selectedOrder.paymentMethod}</h3>
+                </div>
+
+                <div>
+                  <h2 className="text-xl font-semibold">User Address</h2>
+                  <div className="mt-2 space-y-1">
+                    <p>Address: {selectedOrder.user?.address}</p>
+                    <p>City: {selectedOrder.user?.city}</p>
+                    <p>Zip Code: {selectedOrder.user?.zip}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

@@ -306,7 +306,8 @@ const Order = () => {
                                 {!(['Refunded', 'Order Cancelled', 'Order Delivered', 'Return', 'Order Shipped'].includes(product.status)) && (
                                   <button
                                     onClick={() => handleCancelOrder(order._id, product._id, product.size, product.color)}
-                                    className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-1.5 rounded-md hover:bg-red-50 transition-colors"
+                                    className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={loading}
                                   >
                                     Cancel Order
                                   </button>
@@ -315,7 +316,8 @@ const Order = () => {
                                 {product.status === 'Order Delivered' && (
                                   <button
                                     onClick={() => showReturnModal(order._id, product._id, product.size, product.color)}
-                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors"
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={loading}
                                   >
                                     Return Item
                                   </button>
