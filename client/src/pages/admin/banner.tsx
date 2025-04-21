@@ -7,6 +7,11 @@ import Spinner from '@/components/Spinner';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { withAuth } from '@/components/withAuth';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface BannerData {
   image1: File | null,
@@ -96,120 +101,74 @@ const Banner = () => {
       {loading ? (
         <Spinner />
       ) : (
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-50/50">
           <AdminSidebar />
-          <main className="flex-1 p-4 md:ml-64">
-            <h1 className="text-3xl font-semibold mb-6">Create & Update Banner</h1>
-            <form onSubmit={formik.handleSubmit} className="space-y-4">
-              <div className="mb-4">
-                <label htmlFor="image1" className="block text-gray-700 text-sm font-semibold mb-2">
-                  Banner 1
-                </label>
-                {formik.values.image1 ? (
-                 <>
-                 {formik.values.image1 && (
-                  <img
-                    src={URL.createObjectURL(formik.values.image1)}
-                    alt="Image 1"
-                    className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                  />)}
-                  </>
-                ):(
-                  <img
-                  src={banners.image1}
-                  alt="Image 1"
-                  className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                />
-                ) }
-                <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                  {formik.values.image1 ? 'Change Image' : 'Upload Image'}
-                  <input
-                    type="file"
-                    id="image1"
-                    name="image1"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'image1')}
-                    onBlur={formik.handleBlur}
-                    hidden
-                  />
-                </label>
+          <ScrollArea className="flex-1 h-screen">
+            <main className="p-6 md:ml-64">
+              <div className="max-w-7xl mx-auto space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-3xl font-semibold text-gray-900">Create & Update Banner</h1>
+                    <p className="mt-1 text-sm text-gray-500">Manage your website banners</p>
+                  </div>
+                </div>
+
+                <form onSubmit={formik.handleSubmit} className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Banner Images</CardTitle>
+                      <CardDescription>Upload and manage your website banners</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {['image1', 'image2', 'image3'].map((imageKey) => (
+                        <div key={imageKey} className="space-y-4">
+                          <Label htmlFor={imageKey} className="text-base font-medium">
+                            Banner {imageKey.slice(-1)}
+                          </Label>
+                          <div className="space-y-4">
+                            {(formik.values[imageKey as keyof BannerData] ? (
+                              <img
+                                src={URL.createObjectURL(formik.values[imageKey as keyof BannerData] as File)}
+                                alt={`Banner ${imageKey.slice(-1)}`}
+                                className="w-full h-48 object-cover rounded-lg"
+                              />
+                            ) : (
+                              <img
+                                src={banners[imageKey as keyof typeof banners]}
+                                alt={`Banner ${imageKey.slice(-1)}`}
+                                className="w-full h-48 object-cover rounded-lg"
+                              />
+                            ))}
+                            <div className="flex items-center gap-4">
+                              <Label
+                                htmlFor={`file-${imageKey}`}
+                                className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                              >
+                                {formik.values[imageKey as keyof BannerData] ? 'Change Image' : 'Upload Image'}
+                                <Input
+                                  type="file"
+                                  id={`file-${imageKey}`}
+                                  accept="image/*"
+                                  onChange={(e) => handleImageUpload(e, imageKey as keyof BannerData)}
+                                  className="hidden"
+                                />
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-end">
+                    <Button type="submit" size="lg">
+                      Update Banners
+                    </Button>
+                  </div>
+                </form>
               </div>
-              <div className="mb-4">
-                <label htmlFor="image2" className="block text-gray-700 text-sm font-semibold mb-2">
-                  Banner 2
-                </label>
-                {formik.values.image2 ? (
-                 <>
-                 {formik.values.image2 && (
-                  <img
-                    src={URL.createObjectURL(formik.values.image2)}
-                    alt="Image 1"
-                    className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                  />)}
-                  </>
-                ):(
-                  <img
-                  src={banners.image2}
-                  alt="Image 1"
-                  className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                />
-                ) }
-                <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                  {formik.values.image2 ? 'Change Image' : 'Upload Image'}
-                  <input
-                    type="file"
-                    id="image2"
-                    name="image2"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'image2')}
-                    onBlur={formik.handleBlur}
-                    hidden
-                  />
-                </label>
-              </div>
-              <div className="mb-4">
-                <label htmlFor="image3" className="block text-gray-700 text-sm font-semibold mb-2">
-                  Banner 3
-                </label>
-                {formik.values.image3 ? (
-                 <>
-                 {formik.values.image3 && (
-                  <img
-                    src={URL.createObjectURL(formik.values.image3)}
-                    alt="Image 1"
-                    className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                  />)}
-                  </>
-                ):(
-                  <img
-                  src={banners.image3}
-                  alt="Image 1"
-                  className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-                />
-                ) }
-                <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-                  {formik.values.image3 ? 'Change Image' : 'Upload Image'}
-                  <input
-                    type="file"
-                    id="image3"
-                    name="image3"
-                    accept="image/*"
-                    onChange={(e) => handleImageUpload(e, 'image3')}
-                    onBlur={formik.handleBlur}
-                    hidden
-                  />
-                </label>
-              </div>
-              <div className="mb-4">
-                <button
-                  type="submit"
-                  className="bg-[#5f9231] hover:bg-[#4b7427] text-white font-semibold py-2 px-4 rounded-md"
-                >
-                  Create & Update Banner
-                </button>
-              </div>
-            </form>
-          </main>
+            </main>
+          </ScrollArea>
         </div>
       )}
     </>

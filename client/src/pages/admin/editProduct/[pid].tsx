@@ -5,10 +5,16 @@ import toast from 'react-hot-toast';
 import Spinner from '@/components/Spinner';
 import { FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
-import { Button, Modal } from 'antd';
 import { withAuth } from '@/components/withAuth';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface Product {
     _id: string;
@@ -47,7 +53,6 @@ const EditProduct = () => {
     const { pid } = router.query;
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const [loading, setLoading] = useState(true);
-    const [deleteModalVisible, setDeleteModalVisible] = useState(false);
     const [unit, setUnit] = useState('cm');
 
     const validationSchema = Yup.object().shape({
@@ -189,16 +194,6 @@ const EditProduct = () => {
             setLoading(false);
         }
     };
-    const openDeleteModal = () => {
-
-        setDeleteModalVisible(true);
-    };
-
-    const closeDeleteModal = () => {
-
-        setDeleteModalVisible(false);
-    };
-
 
     const images = formik.values.images as Images;
     
@@ -207,276 +202,287 @@ const EditProduct = () => {
             {loading ? (
                 <Spinner />
             ) : (
-                <div className="p-6">
-                    <Link href='/admin/allProducts'>
-                        <FaArrowLeft size={20} />
-                    </Link>
-                    <h1 className="text-3xl font-semibold mb-1 mt-6">Edit Product</h1>
-                    <h3 className="text-2xl font-semibold mb-6 mt-2">Code: {formik.values?.code}</h3>
-                    <form onSubmit={formik.handleSubmit} className="space-y-4">
-                        {/* Product Name, Description, Plant Care, Quantity, Offer Percentage */}
-                        <div className="mb-4">
-                            <label htmlFor="name" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Product Name
-                            </label>
-                            <input
-                                type="text"
-                                id="name"
-                                name="name"
-                                value={formik.values.name}
-                                onChange={formik.handleChange}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                                required
-                            />
-                            {formik.touched.name && formik.errors.name && (
-                                <div className="text-red-500 text-sm mt-1">{formik.errors.name}</div>
-                            )}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="description" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Description
-                            </label>
-                            <textarea
-                                id="description"
-                                name="description"
-                                value={formik.values.description}
-                                onChange={formik.handleChange}
-                                className="border border-gray-300 rounded-md p-2 w-full h-32"
-                                required
-                            />
-                            {formik.touched.description && formik.errors.description && (
-                                <div className="text-red-500 text-sm mt-1">{formik.errors.description}</div>
-                            )}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="plantCare" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Plant Care (Up to 5 points)
-                            </label>
-                            {formik.values.plantCare.map((point, index) => (
-                                <div key={index} className="flex items-center mb-2">
-                                    <textarea
-                                        name={`plantCare[${index}]`}
-                                        value={point}
-                                        onChange={(e) => {
-                                            const updatedPlantCare:any = [...formik.values.plantCare];
-                                            updatedPlantCare[index] = e.target.value;
-                                            formik.setFieldValue('plantCare', updatedPlantCare);
-                                        }}
-                                        className="border border-gray-300 rounded-md p-2 w-full"
-                                    />
-                                    <button
-                                        type="button"
-                                        className="bg-red-500 text-white font-semibold ml-2 p-2 rounded-md"
-                                        onClick={() => {
-                                            const updatedPlantCare = formik.values.plantCare.filter((_, i) => i !== index);
-                                            formik.setFieldValue('plantCare', updatedPlantCare);
-                                        }}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            ))}
-                            {formik.values.plantCare.length < 5 && (
-                                <button
-                                    type="button"
-                                    className="bg-[#5f9231] hover:bg-[#4b7427] text-white font-semibold p-2 rounded-md mt-2"
-                                    onClick={() => formik.setFieldValue('plantCare', [...formik.values.plantCare, ''])}
-                                >
-                                    Add Plant Care Point
-                                </button>
-                            )}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="quantity" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Quantity
-                            </label>
-                            <input
-                                type="number"
-                                id="quantity"
-                                name="quantity"
-                                value={formik.values.quantity}
-                                onChange={formik.handleChange}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                                required
-                            />
-                            {formik.touched.quantity && formik.errors.quantity && (
-                                <div className="text-red-500 text-sm mt-1">{formik.errors.quantity}</div>
-                            )}
-                        </div>
-                        <div className="mb-4">
-                            <label htmlFor="offerPercentage" className="block text-gray-700 text-sm font-semibold mb-2">
-                                Offer Percentage
-                            </label>
-                            <input
-                                type="number"
-                                id="offerPercentage"
-                                name="offerPercentage"
-                                value={formik.values.offerPercentage}
-                                onChange={formik.handleChange}
-                                className="border border-gray-300 rounded-md p-2 w-full"
-                                required
-                            />
-                            {formik.touched.offerPercentage && formik.errors.offerPercentage && (
-                                <div className="text-red-500 text-sm mt-1">{formik.errors.offerPercentage}</div>
-                            )}
-                        </div>
-                        {/* Sizes and Pots */}
-                        <div className="mb-4">
-                            <label className="block text-gray-700 text-sm font-semibold mb-2">
-                                Sizes
-                            </label>
-                            {formik.values.sizes.map((size:any, sizeIndex) => (
-                                <div key={sizeIndex} className="mb-6 p-4 border border-gray-300 rounded-lg bg-white">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <input
-                                            type="text"
-                                            placeholder="Size Name"
-                                            value={size.name}
-                                            onChange={(e) => {
-                                                const updatedSizes:any = [...formik.values.sizes];
-                                                updatedSizes[sizeIndex].name = e.target.value;
-                                                formik.setFieldValue('sizes', updatedSizes);
-                                            }}
-                                            className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                        />
-                                        <input
-                                            type="number"
-                                            placeholder="Price"
-                                            value={size.price}
-                                            onChange={(e) => {
-                                                const updatedSizes:any = [...formik.values.sizes];
-                                                updatedSizes[sizeIndex].price = e.target.value;
-                                                formik.setFieldValue('sizes', updatedSizes);
-                                            }}
-                                            className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all"
-                                            onClick={() => removeSize(sizeIndex)}
-                                        >
-                                            Remove Size
-                                        </button>
+                <div className="flex flex-col md:flex-row min-h-screen bg-gray-50/50">
+                    <ScrollArea className="flex-1 h-screen">
+                        <main className="p-6">
+                            <div className="max-w-7xl mx-auto space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <Link href='/admin/allProducts'>
+                                        <Button variant="ghost" size="icon">
+                                            <FaArrowLeft size={20} />
+                                        </Button>
+                                    </Link>
+                                    <div>
+                                        <h1 className="text-3xl font-semibold text-gray-900">Edit Product</h1>
+                                        <p className="mt-1 text-sm text-gray-500">Code: {formik.values?.code}</p>
                                     </div>
-                                    <div className="ml-4">
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Pots
-                                        </label>
-                                        {size.pots.map((pot:any, potIndex:any) => (
-                                            <div key={potIndex} className="flex items-center gap-3 mb-3">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Pot Name"
-                                                    value={pot.potName}
-                                                    onChange={(e) => {
-                                                        const updatedSizes:any = [...formik.values.sizes];
-                                                        updatedSizes[sizeIndex].pots[potIndex].potName = e.target.value;
-                                                        formik.setFieldValue('sizes', updatedSizes);
-                                                    }}
-                                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                </div>
+
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Product Details</CardTitle>
+                                        <CardDescription>Update your product information</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <form onSubmit={formik.handleSubmit} className="space-y-6">
+                                            {/* Product Name */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name">Product Name</Label>
+                                                <Input
+                                                    id="name"
+                                                    name="name"
+                                                    value={formik.values.name}
+                                                    onChange={formik.handleChange}
+                                                    required
                                                 />
-                                                <input
-                                                    type="number"
-                                                    placeholder="Pot Price"
-                                                    value={pot.potPrice}
-                                                    onChange={(e) => {
-                                                        const updatedSizes:any = [...formik.values.sizes];
-                                                        updatedSizes[sizeIndex].pots[potIndex].potPrice = e.target.value;
-                                                        formik.setFieldValue('sizes', updatedSizes);
-                                                    }}
-                                                    className="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    className="bg-red-500 text-white px-3 py-1.5 rounded-lg hover:bg-red-600 transition-all"
-                                                    onClick={() => removePot(sizeIndex, potIndex)}
-                                                >
-                                                    Remove Pot
-                                                </button>
+                                                {formik.touched.name && formik.errors.name && (
+                                                    <p className="text-sm text-red-500">{formik.errors.name}</p>
+                                                )}
                                             </div>
-                                        ))}
-                                        <button
-                                            type="button"
-                                            className="bg-[#5f9231] text-white px-4 py-2 rounded-lg hover:bg-[#4b7427] transition-all"
-                                            onClick={() => addPot(sizeIndex)}
-                                        >
-                                            Add Pot
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            <button
-                                type="button"
-                                className="bg-[#5f9231] text-white px-4 py-2 rounded-lg hover:bg-[#4b7427] transition-all"
-                                onClick={addSize}
-                            >
-                                Add Size
-                            </button>
-                        </div>
-                        {/* Image Upload */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {['image1', 'image2', 'image3'].map((imageKey, index) => (
-  <div key={imageKey} className="mb-4">
-    {images[imageKey as keyof Images] ? (
-      <img
-        src={URL.createObjectURL(images[imageKey as keyof Images]!)}
-        alt={`Product Image ${index + 1}`}
-        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-      />
-    ) : (
-      <img
-        src={`${apiUrl}/api/product/product-photo/${pid}/${index + 1}`}
-        alt={`Product Image ${index + 1}`}
-        className="max-w-full h-48 rounded-md shadow-md mx-auto mb-5"
-      />
-    )}
-    <label className="cursor-pointer border border-gray-300 rounded-md p-2 mt-2">
-      Change Image
-      <input
-        type="file"
-        id={imageKey}
-        name={imageKey}
-        accept="image/*"
-        onChange={(e) => handleImageUpload(e, imageKey)}
-        hidden
-      />
-    </label>
-  </div>
-))}
-                        </div>
-                        {/* Submit and Delete Buttons */}
-                        <div className="mb-4">
-                            <button
-                                type="submit"
-                                className="bg-[#5f9231] hover:bg-[#4b7427] text-white font-semibold py-2 px-4 rounded-md"
-                            >
-                                Update Product
-                            </button>
-                            <button
-                                type="button"
-                                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md ml-4"
-                                onClick={openDeleteModal}
-                            >
-                                Delete Product
-                            </button>
-                        </div>
-                    </form>
-                    <Modal
-                        visible={deleteModalVisible}
-                        title="Confirm Delete"
-                        onCancel={closeDeleteModal}
-                        footer={[
-                            <Button key="cancel" onClick={closeDeleteModal}>
-                                Cancel
-                            </Button>,
-                            <button key="confirm" className="bg-red-500 hover:bg-red-600 text-white hover:ring-red-300 hover:ring-1 py-1 px-4 rounded-md mx-2"
-                                onClick={handleDelete}>
-                                Delete
-                            </button>,
-                        ]}
-                    >
-                        Are you sure you want to delete {formik.values.name} Product?
-                    </Modal>
+
+                                            {/* Description */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="description">Description</Label>
+                                                <Textarea
+                                                    id="description"
+                                                    name="description"
+                                                    value={formik.values.description}
+                                                    onChange={formik.handleChange}
+                                                    required
+                                                    className="min-h-[100px]"
+                                                />
+                                                {formik.touched.description && formik.errors.description && (
+                                                    <p className="text-sm text-red-500">{formik.errors.description}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Plant Care */}
+                                            <div className="space-y-2">
+                                                <Label>Plant Care (Up to 5 points)</Label>
+                                                {formik.values.plantCare.map((point, index) => (
+                                                    <div key={index} className="flex items-center gap-2">
+                                                        <Textarea
+                                                            name={`plantCare[${index}]`}
+                                                            value={point}
+                                                            onChange={(e) => {
+                                                                const updatedPlantCare:any = [...formik.values.plantCare];
+                                                                updatedPlantCare[index] = e.target.value;
+                                                                formik.setFieldValue('plantCare', updatedPlantCare);
+                                                            }}
+                                                            className="flex-1"
+                                                        />
+                                                        <Button
+                                                            type="button"
+                                                            variant="destructive"
+                                                            size="icon"
+                                                            onClick={() => {
+                                                                const updatedPlantCare = formik.values.plantCare.filter((_, i) => i !== index);
+                                                                formik.setFieldValue('plantCare', updatedPlantCare);
+                                                            }}
+                                                        >
+                                                            ×
+                                                        </Button>
+                                                    </div>
+                                                ))}
+                                                {formik.values.plantCare.length < 5 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => formik.setFieldValue('plantCare', [...formik.values.plantCare, ''])}
+                                                    >
+                                                        Add Plant Care Point
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            {/* Quantity */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="quantity">Quantity</Label>
+                                                <Input
+                                                    type="number"
+                                                    id="quantity"
+                                                    name="quantity"
+                                                    value={formik.values.quantity}
+                                                    onChange={formik.handleChange}
+                                                    required
+                                                />
+                                                {formik.touched.quantity && formik.errors.quantity && (
+                                                    <p className="text-sm text-red-500">{formik.errors.quantity}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Offer Percentage */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="offerPercentage">Offer Percentage</Label>
+                                                <Input
+                                                    type="number"
+                                                    id="offerPercentage"
+                                                    name="offerPercentage"
+                                                    value={formik.values.offerPercentage}
+                                                    onChange={formik.handleChange}
+                                                    required
+                                                />
+                                                {formik.touched.offerPercentage && formik.errors.offerPercentage && (
+                                                    <p className="text-sm text-red-500">{formik.errors.offerPercentage}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Sizes and Pots */}
+                                            <div className="space-y-4">
+                                                <Label>Sizes</Label>
+                                                {formik.values.sizes.map((size:any, sizeIndex) => (
+                                                    <Card key={sizeIndex} className="p-4">
+                                                        <div className="flex items-center gap-3 mb-4">
+                                                            <Input
+                                                                placeholder="Size Name"
+                                                                value={size.name}
+                                                                onChange={(e) => {
+                                                                    const updatedSizes:any = [...formik.values.sizes];
+                                                                    updatedSizes[sizeIndex].name = e.target.value;
+                                                                    formik.setFieldValue('sizes', updatedSizes);
+                                                                }}
+                                                                className="flex-1"
+                                                            />
+                                                            <Input
+                                                                type="number"
+                                                                placeholder="Price"
+                                                                value={size.price}
+                                                                onChange={(e) => {
+                                                                    const updatedSizes:any = [...formik.values.sizes];
+                                                                    updatedSizes[sizeIndex].price = e.target.value;
+                                                                    formik.setFieldValue('sizes', updatedSizes);
+                                                                }}
+                                                                className="flex-1"
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                onClick={() => removeSize(sizeIndex)}
+                                                            >
+                                                                Remove Size
+                                                            </Button>
+                                                        </div>
+                                                        <div className="ml-4 space-y-4">
+                                                            <Label>Pots</Label>
+                                                            {size.pots.map((pot:any, potIndex:any) => (
+                                                                <div key={potIndex} className="flex items-center gap-3">
+                                                                    <Input
+                                                                        placeholder="Pot Name"
+                                                                        value={pot.potName}
+                                                                        onChange={(e) => {
+                                                                            const updatedSizes:any = [...formik.values.sizes];
+                                                                            updatedSizes[sizeIndex].pots[potIndex].potName = e.target.value;
+                                                                            formik.setFieldValue('sizes', updatedSizes);
+                                                                        }}
+                                                                        className="flex-1"
+                                                                    />
+                                                                    <Input
+                                                                        type="number"
+                                                                        placeholder="Pot Price"
+                                                                        value={pot.potPrice}
+                                                                        onChange={(e) => {
+                                                                            const updatedSizes:any = [...formik.values.sizes];
+                                                                            updatedSizes[sizeIndex].pots[potIndex].potPrice = e.target.value;
+                                                                            formik.setFieldValue('sizes', updatedSizes);
+                                                                        }}
+                                                                        className="flex-1"
+                                                                    />
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="destructive"
+                                                                        onClick={() => removePot(sizeIndex, potIndex)}
+                                                                    >
+                                                                        Remove Pot
+                                                                    </Button>
+                                                                </div>
+                                                            ))}
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                onClick={() => addPot(sizeIndex)}
+                                                            >
+                                                                Add Pot
+                                                            </Button>
+                                                        </div>
+                                                    </Card>
+                                                ))}
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={addSize}
+                                                >
+                                                    Add Size
+                                                </Button>
+                                            </div>
+
+                                            {/* Image Upload */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                {['image1', 'image2', 'image3'].map((imageKey, index) => (
+                                                    <div key={imageKey} className="space-y-4">
+                                                        {images[imageKey as keyof Images] ? (
+                                                            <img
+                                                                src={URL.createObjectURL(images[imageKey as keyof Images]!)}
+                                                                alt={`Product Image ${index + 1}`}
+                                                                className="w-full h-48 object-cover rounded-md"
+                                                            />
+                                                        ) : (
+                                                            <img
+                                                                src={`${apiUrl}/api/product/product-photo/${pid}/${index + 1}`}
+                                                                alt={`Product Image ${index + 1}`}
+                                                                className="w-full h-48 object-cover rounded-md"
+                                                            />
+                                                        )}
+                                                        <Label
+                                                            htmlFor={imageKey}
+                                                            className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                                                        >
+                                                            Change Image
+                                                            <input
+                                                                type="file"
+                                                                id={imageKey}
+                                                                name={imageKey}
+                                                                accept="image/*"
+                                                                onChange={(e) => handleImageUpload(e, imageKey)}
+                                                                className="hidden"
+                                                            />
+                                                        </Label>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Submit and Delete Buttons */}
+                                            <div className="flex items-center gap-4">
+                                                <Button type="submit">
+                                                    Update Product
+                                                </Button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="destructive">
+                                                            Delete Product
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This will permanently delete {formik.values.name}. This action cannot be undone.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={handleDelete}>
+                                                                Delete
+                                                            </AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
+                                        </form>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </main>
+                    </ScrollArea>
                 </div>
             )}
         </>
