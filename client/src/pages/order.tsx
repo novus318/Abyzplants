@@ -33,12 +33,19 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { format } from 'date-fns';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@/components/ui/tabs';
 
 interface Product {
   _id: string;
   name: string;
   image: string;
   price: number;
+  totalPrice: number;
   offer: number;
   quantity: number;
   cancelledQuantity: number;
@@ -97,8 +104,6 @@ const Order = () => {
 
   // History Dialog State
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
-  const [historyType, setHistoryType] = useState<'return' | 'cancel'>('return');
-  const [historyItems, setHistoryItems] = useState<any[]>([]);
 
   const fetchOrders = async () => {
     try {
@@ -161,9 +166,8 @@ const Order = () => {
     setCancelDialogOpen(true);
   };
 
-  const openHistoryDialog = (items: any[], type: 'return' | 'cancel') => {
-    setHistoryItems(items);
-    setHistoryType(type);
+  const openHistoryDialog = (product: Product) => {
+    setSelectedProduct(product);
     setHistoryDialogOpen(true);
   };
 
@@ -275,10 +279,7 @@ const Order = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => openHistoryDialog(
-              product.returnHistory?.length ? product.returnHistory : product.cancellationHistory,
-              product.returnHistory?.length ? 'return' : 'cancel'
-            )}
+            onClick={() => openHistoryDialog(product)}
           >
             View History
           </Button>
@@ -321,114 +322,119 @@ const Order = () => {
           ))}
               </div>
 
-        <ScrollArea className="h-[calc(100vh-300px)]">
-          {orderData?.length ? (
-            <div className="space-y-2">
-              {orderData.map((order) => (
-                    <div
-                      key={order._id}
-                  className="bg-card rounded-lg shadow-sm border p-4 space-y-4"
-                >
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Order #{order._id.substring(order._id.length - 6).toUpperCase()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDateTo12HourTime(order.createdAt)}
-                      </p>
-                      <Badge variant="outline" className="mt-1">
-                        {order.paymentMethod}
-                      </Badge>
-                      <Badge className="ml-2">
-                        {order.orderStatus}
-                      </Badge>
-                        </div>
-                        <div>
-                      <p className="text-base font-semibold text-primary">
-                        {order.total.toFixed(2)} AED
-                          </p>
-                        </div>
-                      </div>
-
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-base">Products</h3>
-                      {order.products.map((product, i) => (
-                        <div
-                          key={i}
-                        className="flex flex-row gap-1 border-b pb-2 last:border-b-0"
-                        >
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                          className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-md"
-                        />
-                      
-                        <div className="flex-1 space-y-2">
-                          <h4 className="font-semibold text-xs md:text-sm text-gray-900">
-                            {product.name}
-                          </h4>
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <p>Size: {product.size} {product.pots && `• ${product.pots.potName}`}</p>
-                            {product.color && <p>Color: {product.color}</p>}
-                            <div className="flex items-center gap-2">
-                              <p>Quantity: {product.quantity}</p>
-                              {product.cancelledQuantity > 0 && (
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                                  Cancelled: {product.cancelledQuantity}
-                                </Badge>
-                              )}
-                              {product.returnedQuantity > 0 && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  Returned: {product.returnedQuantity}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-xs md:text-sm font-medium">
-                            Price:{" "}
-                            {product.offer ? (
-                              product.pots?.potPrice ? (
-                                <>
-                                  {(
-                                    ((100 - product.offer) / 100) *
-                                    (Number(product.price) + Number(product.pots?.potPrice))
-                                  ).toFixed(2)}{" "}
-                                  AED
-                                </>
-                              ) : (
-                                <>
-                                  {(((100 - product.offer) / 100) * product.price).toFixed(2)} AED
-                                </>
-                              )
-                            ) : product.pots?.potPrice ? (
-                              <>
-                                {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED
-                              </>
-                            ) : (
-                              <>{product.price.toFixed(2)} AED</>
-                            )}
-                          </p>
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-3 text-xs md:text-sm">
-                          <Badge className={getStatusColor(product.status)}>
-                            {product.status}
-                          </Badge>
-                          {getActionButtons(order, product)}
-                        </div>
-                    </div>
-                  ))}
-                </div>
-                </div>
-              ))}
+              <ScrollArea className="h-[calc(100vh-300px)]">
+  {orderData?.length ? (
+    <div className="space-y-4">
+      {orderData.map((order) => (
+        <div
+          key={order._id}
+          className="bg-card rounded-lg shadow-sm border p-4 md:p-6 space-y-4"
+        >
+          {/* Order Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">
+                Order #{order._id.substring(order._id.length - 6).toUpperCase()}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDateTo12HourTime(order.createdAt)}
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-1">
+                <Badge variant="outline">{order.paymentMethod}</Badge>
+                <Badge>{order.orderStatus}</Badge>
+              </div>
             </div>
-          ) : (
-            <div className="text-center text-muted-foreground py-16">
-              No orders found for the selected period.
+            <div className="text-base font-semibold text-primary">
+              {order.total.toFixed(2)} AED
+            </div>
+          </div>
+
+          {/* Product List */}
+          <div className="space-y-2">
+            <h3 className="font-medium text-base">Products</h3>
+            {order.products.map((product, i) => (
+              <div
+                key={i}
+                className="flex flex-col md:flex-row gap-4 border-b pb-4 last:border-b-0"
+              >
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-20 h-20 md:w-24 md:h-24 object-cover rounded-md shrink-0"
+                />
+
+                <div className="flex-1 space-y-2">
+                  <h4 className="font-semibold text-sm text-gray-900">
+                    {product.name}
+                  </h4>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>
+                      Size: {product.size}{" "}
+                      {product.pots && `• ${product.pots.potName}`}
+                    </p>
+                    {product.color && <p>Color: {product.color}</p>}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p>Quantity: {product.quantity}</p>
+                      {product.cancelledQuantity > 0 && (
+                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                          Cancelled: {product.cancelledQuantity}
+                        </Badge>
+                      )}
+                      {product.returnedQuantity > 0 && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                          Returned: {product.returnedQuantity}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs md:text-sm font-medium">
+                    Price:{" "}
+                    {product.offer ? (
+                      product.pots?.potPrice ? (
+                        <>
+                          {(
+                            ((100 - product.offer) / 100) *
+                            (Number(product.price) + Number(product.pots?.potPrice))
+                          ).toFixed(2)}{" "}
+                          AED
+                        </>
+                      ) : (
+                        <>
+                          {(((100 - product.offer) / 100) * product.price).toFixed(2)} AED
+                        </>
+                      )
+                    ) : product.pots?.potPrice ? (
+                      <>
+                        {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED
+                      </>
+                    ) : (
+                      <>{product.price.toFixed(2)} AED</>
+                    )}
+                  </p>
+                  <p className="text-xs md:text-sm font-medium">
+                    Total Price: {(product?.totalPrice || 0).toFixed(2)} AED
+                  </p>
+                </div>
+
+                <div className="flex md:flex-col justify-between md:items-end gap-2 md:gap-3">
+                  <Badge className={getStatusColor(product.status)}>
+                    {product.status}
+                  </Badge>
+                  {getActionButtons(order, product)}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
-        </ScrollArea>
+      ))}
+    </div>
+  ) : (
+    <div className="text-center text-muted-foreground py-16">
+      No orders found for the selected period.
+    </div>
+  )}
+</ScrollArea>
+
       </main>
       <Footer />
 
@@ -593,44 +599,90 @@ const Order = () => {
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {historyType === 'return' ? 'Return History' : 'Cancellation History'}
-            </DialogTitle>
+            <DialogTitle>Order History</DialogTitle>
+            <DialogDescription>
+              History for {selectedProduct?.name}
+            </DialogDescription>
           </DialogHeader>
           
-          <ScrollArea className="h-96 rounded-md border p-4">
-            {historyItems.length > 0 ? (
-              <Accordion type="single" collapsible className="w-full">
-                {historyItems.map((item, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-4">
-                        <span className="font-medium">
-                          {format(new Date(item.date), 'MMM d, yyyy h:mm a')}
-                        </span>
-                        <Badge variant="outline">
-                          {historyType === 'return' ? item.status : 'Cancelled'}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-2 pl-2">
-                        <p><span className="font-medium">Quantity:</span> {item.quantity}</p>
-                        <p><span className="font-medium">Reason:</span> {item.reason}</p>
-                        {item.refundAmount > 0 && (
-                          <p><span className="font-medium">Refund Amount:</span> {item.refundAmount} AED</p>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                No history available
-              </p>
-            )}
-          </ScrollArea>
+          <Tabs defaultValue="return" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="return">Return History</TabsTrigger>
+              <TabsTrigger value="cancel">Cancellation History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="return">
+              <ScrollArea className="h-96 rounded-md border p-4">
+                {selectedProduct?.returnHistory?.length > 0 ? (
+                  <Accordion type="single" collapsible className="w-full">
+                    {selectedProduct.returnHistory.map((item: any, index: number) => (
+                      <AccordionItem key={index} value={`return-${index}`}>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-4">
+                            <span className="font-medium">
+                              {format(new Date(item.date), 'MMM d, yyyy h:mm a')}
+                            </span>
+                            <Badge variant="outline">
+                              {item.status}
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pl-2">
+                            <p><span className="font-medium">Quantity:</span> {item.quantity}</p>
+                            <p><span className="font-medium">Reason:</span> {item.reason}</p>
+                            {item.refundAmount > 0 && (
+                              <p><span className="font-medium">Refund Amount:</span> {item.refundAmount} AED</p>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    No return history available
+                  </p>
+                )}
+              </ScrollArea>
+            </TabsContent>
+            
+            <TabsContent value="cancel">
+              <ScrollArea className="h-96 rounded-md border p-4">
+                {selectedProduct?.cancellationHistory?.length > 0 ? (
+                  <Accordion type="single" collapsible className="w-full">
+                    {selectedProduct.cancellationHistory.map((item: any, index: number) => (
+                      <AccordionItem key={index} value={`cancel-${index}`}>
+                        <AccordionTrigger className="hover:no-underline">
+                          <div className="flex items-center gap-4">
+                            <span className="font-medium">
+                              {format(new Date(item.date), 'MMM d, yyyy h:mm a')}
+                            </span>
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              Cancelled
+                            </Badge>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2 pl-2">
+                            <p><span className="font-medium">Quantity:</span> {item.quantity}</p>
+                            <p><span className="font-medium">Reason:</span> {item.reason}</p>
+                            {item.refundAmount > 0 && (
+                              <p><span className="font-medium">Refund Amount:</span> {item.refundAmount} AED</p>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">
+                    No cancellation history available
+                  </p>
+                )}
+              </ScrollArea>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
         </div>

@@ -27,6 +27,7 @@ const productSchema = new mongoose.Schema({
     required: true,
     min: 1
   },
+  totalPrice: Number,
   cancelledQuantity: {
     type: Number,
     default: 0,
@@ -147,8 +148,8 @@ orderSchema.methods = {
     const product = this.products.id(productId);
     if (!product) throw new Error('Product not found in order');
     
-    if (product.status !== 'Order Delivered') {
-      throw new Error('Product must be delivered before returning');
+    if (!['Order Delivered', 'Return Requested'].includes(product.status)) {
+      throw new Error('Product must be delivered or have a pending return request');
     }
     
     if (quantity > product.quantity - product.returnedQuantity) {

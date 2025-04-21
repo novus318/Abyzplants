@@ -38,6 +38,7 @@ export const createOrderController = async (req, res) => {
     // Prepare products with initial status
     const products = orderDetails.products.map(product => ({
       ...product,
+      totalPrice: product.price * product.quantity,
       status: 'Processing',
       returnedQuantity: 0,
       refundAmount: 0,
@@ -155,11 +156,9 @@ export const createOrderController = async (req, res) => {
 export const requestProductReturn = async (req, res) => {
   try {
     const { orderId, productId, quantity, reason } = req.body;
-    const userId = req.user._id;
 
     const order = await orderModel.findOne({ 
-      _id: orderId, 
-      user: userId 
+      _id: orderId,
     });
 
     if (!order) {

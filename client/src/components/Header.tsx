@@ -174,7 +174,7 @@ export default function Header() {
                    <Button variant="ghost" size="icon" className="relative md:hidden">
                         <Link href="/cart">
                           <FaShoppingBag className="text-secondary-foreground h-6 w-6" />
-                          <Badge className="absolute -top-1 -right-1 bg-primary text-white p-0 px-0.5">
+                          <Badge className="absolute -top-0.5 -right-0.5 bg-primary text-white !p-0 !px-0.5 !py-0.5 h-4">
                             {cart?.length}
                           </Badge>
                         </Link>
@@ -233,7 +233,7 @@ export default function Header() {
                       <Button variant="ghost" size="icon" className="relative">
                         <Link href="/cart">
                           <FaShoppingBag className="text-secondary-foreground h-6 w-6" />
-                          <Badge className="absolute -top-1 -right-1 bg-primary text-white p-0 px-0.5">
+                          <Badge className="absolute -top-0.5 -right-0.5 bg-primary text-white !p-0 !px-0.5 !py-0.5 h-4">
                             {cart?.length}
                           </Badge>
                         </Link>
