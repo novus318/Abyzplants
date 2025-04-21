@@ -20,6 +20,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
+
 export const createOrderController = async (req, res) => {
   const { orderDetails, userDetails } = req.body;
 
@@ -38,7 +40,9 @@ export const createOrderController = async (req, res) => {
       ...product,
       status: 'Processing',
       returnedQuantity: 0,
-      refundAmount: 0
+      refundAmount: 0,
+      returnHistory: [],
+      cancellationHistory: []
     }));
 
     const totalPrice = orderDetails.total.toFixed(2);
@@ -47,6 +51,7 @@ export const createOrderController = async (req, res) => {
     const newOrder = await new orderModel({
       products,
       total: orderDetails.total,
+      shippingFee: orderDetails.shippingFee || 0,
       refundedAmount: 0,
       paymentMethod: orderDetails.paymentMethod,
       user: userDetails._id,
@@ -133,7 +138,6 @@ export const createOrderController = async (req, res) => {
         console.log('Confirmation email sent to:', user.email);
       } catch (emailError) {
         console.error('Error sending confirmation email:', emailError);
-        // You might want to log this to a monitoring system
       }
     });
 
@@ -146,6 +150,166 @@ export const createOrderController = async (req, res) => {
     });
   }
 };
+
+// Product Return Controller
+export const requestProductReturn = async (req, res) => {
+  try {
+    const { orderId, productId, quantity, reason } = req.body;
+    const userId = req.user._id;
+
+    const order = await orderModel.findOne({ 
+      _id: orderId, 
+      user: userId 
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.requestReturn(productId, quantity, reason);
+    
+    res.json({
+      success: true,
+      message: 'Return request submitted successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Product Cancellation Controller
+export const cancelProduct = async (req, res) => {
+  try {
+    const { orderId, productId, quantity, reason } = req.body;
+
+    const order = await orderModel.findOne({ 
+      _id: orderId, 
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.cancelProduct(productId, quantity, reason);
+    
+    res.json({
+      success: true,
+      message: 'Product cancelled successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Admin Approval for Return
+export const approveReturn = async (req, res) => {
+  try {
+    const { orderId, productId } = req.body;
+    const adminId = req.user._id;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.approveReturn(productId, adminId);
+    
+    res.json({
+      success: true,
+      message: 'Return approved successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Admin Rejection for Return
+export const rejectReturn = async (req, res) => {
+  try {
+    const { orderId, productId } = req.body;
+    const adminId = req.user._id;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.rejectReturn(productId, adminId);
+    
+    res.json({
+      success: true,
+      message: 'Return rejected successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// Complete Return Process
+export const completeReturn = async (req, res) => {
+  try {
+    const { orderId, productId } = req.body;
+    const adminId = req.user._id;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.completeReturn(productId, adminId);
+    
+    res.json({
+      success: true,
+      message: 'Return process completed successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 
 
 export const getOrdersByUserIdController = async (req, res) => {

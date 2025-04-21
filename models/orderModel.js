@@ -1,5 +1,22 @@
 import mongoose from "mongoose";
 
+const returnHistorySchema = new mongoose.Schema({
+  date: { type: Date, default: Date.now },
+  quantity: Number,
+  reason: String,
+  status: String,
+  refundAmount: Number,
+  processedBy: String // Could be 'system' or admin ID
+});
+
+const cancellationHistorySchema = new mongoose.Schema({
+  date: { type: Date, default: Date.now },
+  quantity: Number,
+  reason: String,
+  refundAmount: Number,
+  processedBy: String
+});
+
 const productSchema = new mongoose.Schema({
   _id: String,
   code: String,
@@ -9,6 +26,17 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 1
+  },
+  cancelledQuantity: {
+    type: Number,
+    default: 0,
+    min: 0,
+    validate: {
+      validator: function(value) {
+        return value <= this.quantity;
+      },
+      message: 'Cancelled quantity cannot exceed ordered quantity'
+    }
   },
   size: String,
   color: String,
@@ -24,6 +52,7 @@ const productSchema = new mongoose.Schema({
       'Ready to Ship', 
       'Order Shipped', 
       'Order Delivered', 
+      'Partially Cancelled',
       'Order Cancelled', 
       'Unable to Process', 
       'Return Requested',
@@ -61,12 +90,18 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: 0
-  }
+  },
+  returnHistory: [returnHistorySchema],
+  cancellationHistory: [cancellationHistorySchema]
 });
 
 const orderSchema = new mongoose.Schema({
   products: [productSchema],
   total: Number,
+  shippingFee: {
+    type: Number,
+    default: 0
+  },
   refundedAmount: {
     type: Number,
     default: 0
@@ -92,6 +127,20 @@ const orderSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+// Calculate refund amount for a product
+function calculateRefund(product, returnedQty) {
+  // Calculate base price (product price + pot price if exists)
+  const basePrice = product.price + (product.pots?.potPrice || 0);
+  
+  // Apply any discount that was given
+  const discountedPrice = product.offer 
+    ? basePrice * (1 - product.offer / 100)
+    : basePrice;
+  
+  // Return amount is based on the returned quantity
+  return discountedPrice * returnedQty;
+}
+
 // Add methods for product-level operations
 orderSchema.methods = {
   requestReturn: function(productId, quantity, reason) {
@@ -102,26 +151,67 @@ orderSchema.methods = {
       throw new Error('Product must be delivered before returning');
     }
     
+    if (quantity > product.quantity - product.returnedQuantity) {
+      throw new Error('Return quantity exceeds available quantity');
+    }
+    
     product.status = 'Return Requested';
     product.returnReason = reason;
-    product.returnedQuantity = quantity;
+    product.returnedQuantity += quantity;
+    
+    // Add to return history
+    product.returnHistory.push({
+      quantity,
+      reason,
+      status: 'Requested',
+      refundAmount: 0 // Will be set when approved
+    });
+    
     return this.save();
   },
   
-  cancelProduct: function(productId, reason) {
+  cancelProduct: function(productId, quantity, reason, processedBy = 'system') {
     const product = this.products.id(productId);
     if (!product) throw new Error('Product not found in order');
     
-    if (!['Processing', 'Ready to Ship'].includes(product.status)) {
-      throw new Error('Product can only be cancelled in Processing or Ready to Ship state');
+    if (!['Processing', 'Ready to Ship', 'Partially Cancelled'].includes(product.status)) {
+      throw new Error('Product can only be cancelled in Processing, Ready to Ship or Partially Cancelled state');
+    }
+
+    const remainingQuantity = product.quantity - product.cancelledQuantity;
+    if (quantity > remainingQuantity) {
+      throw new Error('Cancellation quantity exceeds remaining quantity');
     }
     
-    product.status = 'Order Cancelled';
-    product.cancellationReason = reason;
+    // Update cancelled quantity
+    product.cancelledQuantity += quantity;
+    
+    // Calculate refund amount for cancelled quantity
+    const refundAmount = calculateRefund(product, quantity);
+    product.refundAmount += refundAmount;
+    
+    // Update status based on cancellation
+    if (product.cancelledQuantity === product.quantity) {
+      product.status = 'Order Cancelled';
+    } else if (product.cancelledQuantity > 0) {
+      product.status = 'Partially Cancelled';
+    }
+    
+    // Add to cancellation history with quantity and refund amount
+    product.cancellationHistory.push({
+      quantity,
+      reason,
+      processedBy,
+      refundAmount
+    });
+    
+    // Update order status
+    this.updateOrderStatus();
+    
     return this.save();
   },
   
-  approveReturn: function(productId, refundAmount) {
+  approveReturn: function(productId, adminId) {
     const product = this.products.id(productId);
     if (!product) throw new Error('Product not found in order');
     
@@ -129,12 +219,57 @@ orderSchema.methods = {
       throw new Error('Product must have return requested');
     }
     
+    // Find the most recent return request not yet approved
+    const lastReturn = product.returnHistory
+      .sort((a, b) => b.date - a.date)
+      .find(r => r.status === 'Requested');
+    
+    if (!lastReturn) {
+      throw new Error('No pending return request found');
+    }
+    
+    // Calculate refund amount
+    const refundAmount = calculateRefund(product, lastReturn.quantity);
+    
     product.status = 'Return Approved';
     product.refundAmount = refundAmount;
+    
+    // Update the return history
+    lastReturn.status = 'Approved';
+    lastReturn.refundAmount = refundAmount;
+    lastReturn.processedBy = adminId;
+    
     return this.save();
   },
   
-  completeReturn: function(productId) {
+  rejectReturn: function(productId, adminId) {
+    const product = this.products.id(productId);
+    if (!product) throw new Error('Product not found in order');
+    
+    if (product.status !== 'Return Requested') {
+      throw new Error('Product must have return requested');
+    }
+    
+    // Find the most recent return request
+    const lastReturn = product.returnHistory
+      .sort((a, b) => b.date - a.date)
+      .find(r => r.status === 'Requested');
+    
+    if (!lastReturn) {
+      throw new Error('No pending return request found');
+    }
+    
+    product.status = 'Return Rejected';
+    product.returnedQuantity -= lastReturn.quantity;
+    
+    // Update the return history
+    lastReturn.status = 'Rejected';
+    lastReturn.processedBy = adminId;
+    
+    return this.save();
+  },
+  
+  completeReturn: function(productId, adminId) {
     const product = this.products.id(productId);
     if (!product) throw new Error('Product not found in order');
     
@@ -145,8 +280,32 @@ orderSchema.methods = {
     product.status = 'Return Received';
     this.refundedAmount += product.refundAmount;
     
-    // Update order status if needed
+    // Update the return history
+    const lastReturn = product.returnHistory
+      .sort((a, b) => b.date - a.date)
+      .find(r => r.status === 'Approved');
+    
+    if (lastReturn) {
+      lastReturn.status = 'Completed';
+      lastReturn.processedBy = adminId;
+    }
+    
+    // Update order status
+    this.updateOrderStatus();
+    
+    return this.save();
+  },
+  
+  updateOrderStatus: function() {
     const allProducts = this.products;
+    
+    // Check if all products are cancelled
+    if (allProducts.every(p => p.status === 'Order Cancelled')) {
+      this.orderStatus = 'Cancelled';
+      return;
+    }
+    
+    // Check return statuses
     const returnedProducts = allProducts.filter(p => 
       ['Return Received', 'Refunded'].includes(p.status)
     );
@@ -157,7 +316,14 @@ orderSchema.methods = {
       this.orderStatus = 'Partially Returned';
     }
     
-    return this.save();
+    // Check other statuses if no returns
+    else if (allProducts.every(p => p.status === 'Delivered')) {
+      this.orderStatus = 'Delivered';
+    } else if (allProducts.every(p => p.status === 'Shipped')) {
+      this.orderStatus = 'Shipped';
+    } else if (allProducts.some(p => ['Processing', 'Ready to Ship'].includes(p.status))) {
+      this.orderStatus = 'Processing';
+    }
   }
 };
 

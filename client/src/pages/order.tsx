@@ -5,15 +5,34 @@ import axios from 'axios';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import { Modal } from 'antd';
-import PhoneInput from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'react-hot-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { format } from 'date-fns';
 
 interface Product {
   _id: string;
@@ -22,13 +41,28 @@ interface Product {
   price: number;
   offer: number;
   quantity: number;
+  cancelledQuantity: number;
   size: string;
   color: string;
   pots: {
     potName: string;
     potPrice: number;
-  }
+  };
   status: string;
+  returnedQuantity: number;
+  returnHistory: Array<{
+    date: string;
+    quantity: number;
+    reason: string;
+    status: string;
+    refundAmount: number;
+  }>;
+  cancellationHistory: Array<{
+    date: string;
+    quantity: number;
+    reason: string;
+    refundAmount: number;
+  }>;
 }
 
 interface Order {
@@ -37,6 +71,7 @@ interface Order {
   total: number;
   paymentMethod: string;
   createdAt: string;
+  orderStatus: string;
 }
 
 const Order = () => {
@@ -45,64 +80,25 @@ const Order = () => {
   const [loading, setLoading] = useState(true);
   const [orderData, setOrderData] = useState<Order[] | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>('thisWeek');
-  const [returnModalVisible, setReturnModalVisible] = useState(false);
-  const [returnId, setReturnId] = useState('');
-  const [returnProductId, setReturnProductId] = useState('');
-  const [returnColor, setReturnColor] = useState('');
-  const [returnProductSize, setReturnProductSize] = useState('');
-  const [formData, setFormData] = useState({
-    name: '',
-    number: '',
-    account: '',
-    iban: '',
-    reason: ''
-  });
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
+  // Return Dialog State
+  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [returnQuantity, setReturnQuantity] = useState(1);
+  const [returnReason, setReturnReason] = useState('');
+  const [returnProcessing, setReturnProcessing] = useState(false);
 
-  const handleFormSubmit = async () => {
-    setLoading(true);
-    try {
-      const newStatus = 'Return';
-      const response = await axios.put(`${apiUrl}/api/order/returnOrder/${returnId}/${returnProductId}`, { 
-        newStatus, 
-        formData,
-        returnProductSize,
-        returnColor 
-      });
+  // Cancel Dialog State
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelProcessing, setCancelProcessing] = useState(false);
+  const [cancelQuantity, setCancelQuantity] = useState(1);
 
-      if (response.status === 200) {
-        toast.success('Return request submitted successfully');
-        setReturnModalVisible(false);
-        fetchOrders();
-      }
-    } catch (error) {
-      toast.error('Failed to submit return request');
-      setLoading(false);
-    }
-  }
-
-  const showReturnModal = (id: string, productId: string, size: string, color: string) => {
-    setReturnId(id);
-    setReturnColor(color);
-    setReturnProductId(productId);
-    setReturnProductSize(size);
-    setReturnModalVisible(true);
-  };
-
-  const handleReturnCancel = () => {
-    setReturnId('');
-    setReturnColor('');
-    setReturnProductId('');
-    setReturnProductSize('');
-    setReturnModalVisible(false);
-  };
+  // History Dialog State
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [historyType, setHistoryType] = useState<'return' | 'cancel'>('return');
+  const [historyItems, setHistoryItems] = useState<any[]>([]);
 
   const fetchOrders = async () => {
     try {
@@ -147,299 +143,497 @@ const Order = () => {
   };
 
   const formatDateTo12HourTime = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    };
-    return new Date(dateString).toLocaleString(undefined, options);
+    return format(new Date(dateString), 'MMMM d, yyyy h:mm a');
   };
 
-  const handleCancelOrder = async (orderId: string, productId: string, size: string, color: string) => {
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      setLoading(true);
-      try {
-        const newStatus = 'Order Cancelled';
-        const response = await axios.put(`${apiUrl}/api/order/orders/${orderId}/${productId}`, { 
-          newStatus,
-          size,
-          color
-        });
+  const openReturnDialog = (orderId: string, product: Product) => {
+    setSelectedOrderId(orderId);
+    setSelectedProduct(product);
+    setReturnQuantity(1);
+    setReturnReason('');
+    setReturnDialogOpen(true);
+  };
 
-        if (response.status === 200) {
-          toast.success('Order cancelled successfully');
-          fetchOrders();
-        }
-      } catch (error) {
-        toast.error('Failed to cancel order');
-        setLoading(false);
+  const openCancelDialog = (orderId: string, product: Product) => {
+    setSelectedOrderId(orderId);
+    setSelectedProduct(product);
+    setCancelReason('');
+    setCancelDialogOpen(true);
+  };
+
+  const openHistoryDialog = (items: any[], type: 'return' | 'cancel') => {
+    setHistoryItems(items);
+    setHistoryType(type);
+    setHistoryDialogOpen(true);
+  };
+
+  const handleReturnSubmit = async () => {
+    if (!selectedProduct || !returnReason) return;
+    
+    setReturnProcessing(true);
+    try {
+      const response = await axios.post(`${apiUrl}/api/order/request-return`, {
+        orderId: selectedOrderId,
+        productId: selectedProduct._id,
+        quantity: returnQuantity,
+        reason: returnReason
+      });
+
+      if (response.data.success) {
+        toast.success('Return request submitted successfully');
+        setReturnDialogOpen(false);
+        await fetchOrders();
       }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to submit return request');
+    } finally {
+      setReturnProcessing(false);
     }
-  }
+  };
+
+  const handleCancelSubmit = async () => {
+    if (!selectedProduct || !cancelReason) return;
+    
+    setCancelProcessing(true);
+    try {
+      const response = await axios.post(`${apiUrl}/api/order/cancel-product`, {
+        orderId: selectedOrderId,
+        productId: selectedProduct._id,
+        quantity: cancelQuantity,
+        reason: cancelReason
+      });
+
+      if (response.data.success) {
+        toast.success('Product cancellation requested successfully');
+        setCancelDialogOpen(false);
+        await fetchOrders();
+      }
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to cancel product');
+    } finally {
+      setCancelProcessing(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Processing':
       case 'Ready to Ship':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
       case 'Order Shipped':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
       case 'Order Delivered':
-        return 'bg-primary text-primary-foreground';
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
       case 'Order Cancelled':
-        return 'bg-destructive text-destructive-foreground';
-      case 'Unable to Process':
-        return 'bg-orange-500 text-white';
-      case 'Return':
+      case 'Return Rejected':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      case 'Partially Cancelled':
+        return 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+      case 'Return Requested':
+      case 'Return Approved':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+      case 'Return Received':
       case 'Refunded':
-        return 'bg-blue-500 text-white';
+        return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
     }
   };
 
-  return (
-    <>
-      {loading ? (
-        <Spinner />
-      ) : (
-        <div className="min-h-screen bg-background">
-          <Header />
-          <main className="container mx-auto max-w-4xl py-8 px-1 mt-10">
-            <h1 className="text-3xl font-semibold text-primary mb-8 text-center">Your Orders</h1>
-            
-            <div className="flex flex-wrap justify-center gap-1 mb-8">
-              {['thisWeek', 'lastWeek', 'thisMonth', 'thisYear'].map((filter) => (
-                <Button
-                size='sm'
-                  key={filter}
-                  variant={selectedFilter === filter ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange(filter)}
-                  className="capitalize"
-                >
-                  {filter.replace(/([A-Z])/g, ' $1').trim()}
-                </Button>
-              ))}
-            </div>
+  const getActionButtons = (order: Order, product: Product) => {
+    const availableToReturn = product.quantity - (product.returnedQuantity || 0);
+    const canReturn = ['Order Delivered', 'Return Requested', 'Return Approved'].includes(product.status) && availableToReturn > 0;
+    const canCancel = ['Processing', 'Ready to Ship', 'Partially Cancelled'].includes(product.status);
 
-            <ScrollArea className="h-[calc(100vh-300px)]">
-              {orderData?.length ? (
-                <div className="space-y-6">
-                  {orderData.map((order) => (
+    return (
+      <div className="flex flex-wrap gap-2 text-xs">
+        {canCancel && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive border-destructive hover:bg-destructive/10"
+            onClick={() => openCancelDialog(order._id, product)}
+          >
+            Cancel
+          </Button>
+        )}
+
+        {canReturn && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-primary border-primary hover:bg-primary/10"
+            onClick={() => openReturnDialog(order._id, product)}
+          >
+            {product.status === 'Return Requested' || product.status === 'Return Approved' 
+              ? 'Update Return' 
+              : 'Return'}
+          </Button>
+        )}
+
+        {(product.returnHistory?.length > 0 || product.cancellationHistory?.length > 0) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openHistoryDialog(
+              product.returnHistory?.length ? product.returnHistory : product.cancellationHistory,
+              product.returnHistory?.length ? 'return' : 'cancel'
+            )}
+          >
+            View History
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const calculateRefundAmount = (product: Product, qty: number) => {
+    if (!product) return 0;
+    
+    // Calculate base price (product + pot if exists)
+    const basePrice = product.price + (product.pots?.potPrice || 0);
+    
+    // Apply discount if exists
+    const discountedPrice = product.offer 
+      ? basePrice * (1 - product.offer / 100)
+      : basePrice;
+    
+    return (discountedPrice * qty).toFixed(2);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+          <Header />
+      <main className="container mx-auto max-w-4xl py-8 px-2 mt-10">
+        <h1 className="text-3xl font-semibold text-primary mb-8 text-center">Your Orders</h1>
+        
+        <div className="flex flex-wrap justify-center gap-1 mb-6">
+          {['thisWeek', 'lastWeek', 'thisMonth', 'thisYear'].map((filter) => (
+            <Button
+              key={filter}
+              size="sm"
+              variant={selectedFilter === filter ? 'default' : 'outline'}
+              onClick={() => handleFilterChange(filter)}
+              className="capitalize text-xs"
+            >
+              {filter.replace(/([A-Z])/g, ' $1').trim()}
+            </Button>
+          ))}
+              </div>
+
+        <ScrollArea className="h-[calc(100vh-300px)]">
+          {orderData?.length ? (
+            <div className="space-y-2">
+              {orderData.map((order) => (
                     <div
                       key={order._id}
-                      className="bg-card rounded-lg shadow-sm border p-3 space-y-2"
-                    >
-                      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div className="space-y-1">
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground">Order ID: {order._id.substring(16)}</p>
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground">{formatDateTo12HourTime(order.createdAt)}</p>
-                          <p className="text-xs md:text-sm font-medium text-muted-foreground">Payment: {order.paymentMethod}</p>
+                  className="bg-card rounded-lg shadow-sm border p-4 space-y-4"
+                >
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Order #{order._id.substring(order._id.length - 6).toUpperCase()}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDateTo12HourTime(order.createdAt)}
+                      </p>
+                      <Badge variant="outline" className="mt-1">
+                        {order.paymentMethod}
+                      </Badge>
+                      <Badge className="ml-2">
+                        {order.orderStatus}
+                      </Badge>
                         </div>
                         <div>
-                          <p className="text-sm md:text-base font-semibold text-primary">
-                            Total: {order.total.toFixed(2)} AED
+                      <p className="text-base font-semibold text-primary">
+                        {order.total.toFixed(2)} AED
                           </p>
                         </div>
                       </div>
 
-                      <div className="space-y-4">
-                        <h3 className="font-medium">Ordered Products</h3>
-                        {order.products.map((product, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center gap-4 border-b pb-2"
-                          >
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-base">Products</h3>
+                      {order.products.map((product, i) => (
+                        <div
+                          key={i}
+                        className="flex flex-row gap-1 border-b pb-2 last:border-b-0"
+                        >
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-20 h-20 object-cover rounded-md"
-                            />
-                          
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-sm text-gray-900">
-                                {product.name}
-                              </h4>
-                              <div className="text-xs text-gray-500 space-y-0.5">
-                                <p>Size: {product.size} {product.pots && `• ${product.pots.potName}`}</p>
-                                {product.color && <p>Color: {product.color}</p>}
-                                <p>Qty: {product.quantity}</p>
-                              </div>
-                              <p className="text-xs text-gray-800 font-medium">
-                                Price:{" "}
-                                {product.offer ? (
-                                  product.pots?.potPrice ? (
-                                    <>
-                                      {(
-                                        ((100 - product.offer) / 100) *
-                                        (Number(product.price) + Number(product.pots?.potPrice))
-                                      ).toFixed(2)}{" "}
-                                      AED
-                                    </>
-                                  ) : (
-                                    <>
-                                      {(((100 - product.offer) / 100) * product.price).toFixed(2)} AED
-                                    </>
-                                  )
-                                ) : product.pots?.potPrice ? (
-                                  <>
-                                    {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED
-                                  </>
-                                ) : (
-                                  <>{product.price.toFixed(2)} AED</>
-                                )}
-                              </p>
-                            </div>
-                            
-                            <div className="flex flex-col items-end gap-3">
-                              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                product.status === 'Order Delivered' ? 'bg-green-100 text-green-800' :
-                                product.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                                product.status.includes('Cancelled') || product.status.includes('Return') ? 'bg-red-100 text-red-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
-                                {product.status}
-                              </div>
-                              
-                              <div className="flex flex-wrap justify-end gap-2">
-                                {!(['Refunded', 'Order Cancelled', 'Order Delivered', 'Return', 'Order Shipped'].includes(product.status)) && (
-                                  <button
-                                    onClick={() => handleCancelOrder(order._id, product._id, product.size, product.color)}
-                                    className="text-sm font-medium text-red-600 hover:text-red-800 px-3 py-1.5 rounded-md hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={loading}
-                                  >
-                                    Cancel Order
-                                  </button>
-                                )}
-                                
-                                {product.status === 'Order Delivered' && (
-                                  <button
-                                    onClick={() => showReturnModal(order._id, product._id, product.size, product.color)}
-                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 px-3 py-1.5 rounded-md hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                    disabled={loading}
-                                  >
-                                    Return Item
-                                  </button>
-                                )}
-                                
-                                {product.status === 'Return' && (
-                                  <p className="text-sm text-blue-600 italic">Return in progress</p>
-                                )}
-                                
-                                {product.status === 'Refunded' && (
-                                  <p className="text-sm text-green-600 italic">Refund completed</p>
-                                )}
-                              </div>
+                          className="w-16 h-16 md:w-24 md:h-24 object-cover rounded-md"
+                        />
+                      
+                        <div className="flex-1 space-y-2">
+                          <h4 className="font-semibold text-xs md:text-sm text-gray-900">
+                            {product.name}
+                          </h4>
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <p>Size: {product.size} {product.pots && `• ${product.pots.potName}`}</p>
+                            {product.color && <p>Color: {product.color}</p>}
+                            <div className="flex items-center gap-2">
+                              <p>Quantity: {product.quantity}</p>
+                              {product.cancelledQuantity > 0 && (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                  Cancelled: {product.cancelledQuantity}
+                                </Badge>
+                              )}
+                              {product.returnedQuantity > 0 && (
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  Returned: {product.returnedQuantity}
+                                </Badge>
+                              )}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <p className="text-xs md:text-sm font-medium">
+                            Price:{" "}
+                            {product.offer ? (
+                              product.pots?.potPrice ? (
+                                <>
+                                  {(
+                                    ((100 - product.offer) / 100) *
+                                    (Number(product.price) + Number(product.pots?.potPrice))
+                                  ).toFixed(2)}{" "}
+                                  AED
+                                </>
+                              ) : (
+                                <>
+                                  {(((100 - product.offer) / 100) * product.price).toFixed(2)} AED
+                                </>
+                              )
+                            ) : product.pots?.potPrice ? (
+                              <>
+                                {(Number(product.price) + Number(product.pots.potPrice)).toFixed(2)} AED
+                              </>
+                            ) : (
+                              <>{product.price.toFixed(2)} AED</>
+                            )}
+                          </p>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-3 text-xs md:text-sm">
+                          <Badge className={getStatusColor(product.status)}>
+                            {product.status}
+                          </Badge>
+                          {getActionButtons(order, product)}
+                        </div>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  No orders found for the selected period.
                 </div>
-              )}
-            </ScrollArea>
-          </main>
-          <Footer />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground py-16">
+              No orders found for the selected period.
         </div>
       )}
+        </ScrollArea>
+      </main>
+      <Footer />
 
-      <Modal
-        title="Return Order"
-        open={returnModalVisible}
-        onCancel={handleReturnCancel}
-        footer={null}
-        className="rounded-md"
-      >
-        <div className="p-4 space-y-4">
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md">
-            <p>A charge of 13 AED will be deducted for the return.</p>
-            <p className="text-xs mt-1">
-              *The refunded amount will be credited to your account after deducting the applicable fee.
-            </p>
-          </div>
-
-          <form onSubmit={handleFormSubmit} className="space-y-4">
+      {/* Return Dialog */}
+      <Dialog open={returnDialogOpen} onOpenChange={setReturnDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Request Product Return</DialogTitle>
+            <DialogDescription>
+              Fill out the form to request a return for {selectedProduct?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Phone Number</label>
-              <PhoneInput
-                international
-                defaultCountry="AE"
-                value={formData.number}
-                onChange={(value) => handleInputChange({ target: { name: 'number', value } })}
-                className="border p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Holder Name</label>
-              <Input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Account Number</label>
-              <Input
-                type="text"
-                name="account"
-                value={formData.account}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">IBAN</label>
-              <Input
-                type="text"
-                name="iban"
-                value={formData.iban}
-                onChange={handleInputChange}
-                required
-              />
+              <label className="text-sm font-medium">Return Quantity</label>
+              <Select
+                value={returnQuantity.toString()}
+                onValueChange={(value) => setReturnQuantity(Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select quantity" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(
+                    { length: Math.min(selectedProduct?.quantity - (selectedProduct?.returnedQuantity || 0), 10) }, 
+                    (_, i) => i + 1
+                  ).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Available to return: {selectedProduct?.quantity - (selectedProduct?.returnedQuantity || 0)}
+              </p>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Reason for Return</label>
+              <Select
+                value={returnReason}
+                onValueChange={setReturnReason}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Damaged Product">Damaged Product</SelectItem>
+                  <SelectItem value="Wrong Item Shipped">Wrong Item Shipped</SelectItem>
+                  <SelectItem value="Product Not as Described">Product Not as Described</SelectItem>
+                  <SelectItem value="Changed Mind">Changed Mind</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {returnReason && (
+              <div className="bg-blue-50 p-3 rounded-md">
+                <p className="text-sm font-medium text-blue-800">
+                  Estimated Refund: {calculateRefundAmount(selectedProduct!, returnQuantity)} AED
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Note: Shipping fees are not refundable
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setReturnDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleReturnSubmit}
+              disabled={!returnReason || returnProcessing}
+            >
+              {returnProcessing ? 'Submitting...' : 'Submit Return Request'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancel Dialog */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Cancel Product</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to cancel {selectedProduct?.name}?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Quantity to Cancel</label>
+              <Select
+                value={cancelQuantity.toString()}
+                onValueChange={(value) => setCancelQuantity(Number(value))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select quantity" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(
+                    { length: Math.min(selectedProduct?.quantity - (selectedProduct?.cancelledQuantity || 0), 10) }, 
+                    (_, i) => i + 1
+                  ).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Available to cancel: {selectedProduct?.quantity - (selectedProduct?.cancelledQuantity || 0)}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Reason for Cancellation</label>
               <Textarea
-                name="reason"
-                value={formData.reason}
-                onChange={handleInputChange}
-                required
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Please specify the reason for cancellation"
                 className="min-h-[100px]"
               />
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleReturnCancel}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                className="bg-primary hover:bg-primary/90"
-              >
-                Submit Return Request
-              </Button>
-            </div>
-          </form>
+            {cancelReason && (
+              <div className="bg-blue-50 p-3 rounded-md">
+                <p className="text-sm font-medium text-blue-800">
+                  Estimated Refund: {calculateRefundAmount(selectedProduct!, cancelQuantity)} AED
+                </p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCancelDialogOpen(false)}
+            >
+              Go Back
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleCancelSubmit}
+              disabled={!cancelReason || cancelProcessing}
+            >
+              {cancelProcessing ? 'Processing...' : 'Confirm Cancellation'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>
+              {historyType === 'return' ? 'Return History' : 'Cancellation History'}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <ScrollArea className="h-96 rounded-md border p-4">
+            {historyItems.length > 0 ? (
+              <Accordion type="single" collapsible className="w-full">
+                {historyItems.map((item, index) => (
+                  <AccordionItem key={index} value={`item-${index}`}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-4">
+                        <span className="font-medium">
+                          {format(new Date(item.date), 'MMM d, yyyy h:mm a')}
+                        </span>
+                        <Badge variant="outline">
+                          {historyType === 'return' ? item.status : 'Cancelled'}
+                        </Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2 pl-2">
+                        <p><span className="font-medium">Quantity:</span> {item.quantity}</p>
+                        <p><span className="font-medium">Reason:</span> {item.reason}</p>
+                        {item.refundAmount > 0 && (
+                          <p><span className="font-medium">Refund Amount:</span> {item.refundAmount} AED</p>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No history available
+              </p>
+            )}
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
         </div>
-      </Modal>
-    </>
   );
 };
 

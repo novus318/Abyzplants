@@ -1,5 +1,5 @@
 import express  from "express";
-import { checkPaymentStatus, createOrderController, createStripeController, getAllOrdersController, getOrderByIdWithUserDetails, getOrdersByUserIdController, returnOrderStatusAndSendNotification, updateOrderStatusAndSendNotification } from "../contrrollers/orderController.js";
+import { approveReturn, cancelProduct, checkPaymentStatus, completeReturn, createOrderController, createStripeController, getAllOrdersController, getOrderByIdWithUserDetails, getOrdersByUserIdController, rejectReturn, requestProductReturn, returnOrderStatusAndSendNotification, updateOrderStatusAndSendNotification } from "../contrrollers/orderController.js";
 import nodemailer from 'nodemailer';
 
 
@@ -23,6 +23,12 @@ const transporter = nodemailer.createTransport({
 const router=express.Router()
 
 router.post('/create-order',createOrderController)
+router.post('/request-return',requestProductReturn)
+router.post('/cancel-product',cancelProduct)
+router.post('/approve-return',approveReturn)
+router.post('/reject-return',rejectReturn)
+router.post('/complete-return',completeReturn)
+
 router.get('/get-order/:pid',getOrdersByUserIdController)
 router.get('/get-allOrders',getAllOrdersController)
 router.get('/get-orderById/:pid',getOrderByIdWithUserDetails)
