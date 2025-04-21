@@ -171,6 +171,14 @@ export default function Header() {
                   src={UAEFlag.src}
                   alt="UAE Flag"
                 />
+                   <Button variant="ghost" size="icon" className="relative md:hidden">
+                        <Link href="/cart">
+                          <FaShoppingBag className="text-secondary-foreground h-6 w-6" />
+                          <Badge className="absolute -top-1 -right-1 bg-primary text-white p-0 px-0.5">
+                            {cart?.length}
+                          </Badge>
+                        </Link>
+                      </Button>
                 <Button
                   variant="ghost"
                   size="icon"

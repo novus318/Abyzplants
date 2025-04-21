@@ -111,10 +111,10 @@ const Cart: React.FC = () => {
   
 
   const calculateShippingFee = (subtotal: number) => {
-    if (subtotal >= 100) {
+    if (subtotal >= 199) {
       return 0;
     } else {
-      return 13;
+      return 20;
     }
   };
 
@@ -144,6 +144,8 @@ const Cart: React.FC = () => {
         // returnReason: null,
         // cancellationReason: null
       })),
+      shippingFee: calculateShippingFee(calculateSubtotal()),
+      subtotal: calculateSubtotal(),
       total: calculateTotal(),
       paymentMethod: 'Cash on Delivery',
     };
@@ -344,7 +346,7 @@ const Cart: React.FC = () => {
                         )}
                       </div>
                       {calculateSubtotal() <= 100 ? (
-                        <div className="text-[#a14e3a] text-sm mt-2">Free shipping above 99 AED</div>
+                        <div className="text-[#a14e3a] text-sm mt-2">Free shipping above 199 AED</div>
                       ) : null}
                       <div className="mt-4">
                         <h3 className="text-lg font-semibold">Shipping Details</h3>
