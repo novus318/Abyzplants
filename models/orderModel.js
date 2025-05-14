@@ -296,6 +296,28 @@ orderSchema.methods = {
     
     return this.save();
   },
+  changeOrderStatus: function(productId, adminId,status) {
+    const product = this.products.id(productId);
+    if (!product) throw new Error('Product not found in order');
+    
+    product.status = status;
+    this.refundedAmount += product.refundAmount;
+    
+    // Update the return history
+    const lastReturn = product.returnHistory
+      .sort((a, b) => b.date - a.date)
+      .find(r => r.status === 'Approved');
+    
+    if (lastReturn) {
+      lastReturn.status = 'Completed';
+      lastReturn.processedBy = adminId;
+    }
+    
+    // Update order status
+    this.updateOrderStatus();
+    
+    return this.save();
+  },
   
   updateOrderStatus: function() {
     const allProducts = this.products;

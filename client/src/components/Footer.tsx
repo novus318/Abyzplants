@@ -32,6 +32,11 @@ const Footer = () => {
                 Contact Us
               </a>
             </li>
+            <li className="mb-2 pr-4">
+              <a href="/policy" target="_blank" className="text-gray-300 hover:text-[#5f9231] transition-colors duration-300">
+                Privacy Policy
+              </a>
+            </li>
           </ul>
         </div>
         <div className="md:w-1/3 text-center mb-2">

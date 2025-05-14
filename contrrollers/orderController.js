@@ -4,6 +4,7 @@ import stripe from 'stripe';
 import dotenv from 'dotenv'
 import nodemailer from 'nodemailer';
 import { startOfWeek, subDays, startOfMonth, startOfYear } from 'date-fns';
+import mongoose from 'mongoose';
 dotenv.config("../.env")
 
 const apiUrl = process.env.REACT_APP_API_URL;
@@ -309,6 +310,38 @@ export const completeReturn = async (req, res) => {
   }
 };
 
+// Change Order Status
+export const changeOrderStatus = async (req, res) => {
+  try {
+    const { orderId, productId, status } = req.body;
+    const adminId = req.user._id;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    await order.changeOrderStatus(productId, adminId, status);
+    
+    res.json({
+      success: true,
+      message: 'Order status changed successfully',
+      order
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+}
+  
+
 
 
 export const getOrdersByUserIdController = async (req, res) => {
@@ -377,9 +410,15 @@ export const getOrdersByUserIdController = async (req, res) => {
       if (searchQuery) {
         const regex = new RegExp(searchQuery, 'i');
         
-        // Search in multiple fields
+        // Search in multiple fields including order total (numeric comparison)
         searchConditions.$or = [
+          // Exact match for order _id if valid ObjectId
           { _id: mongoose.Types.ObjectId.isValid(searchQuery) ? searchQuery : null },
+          
+          // Numeric comparison for order total
+          isNaN(searchQuery) ? null : { total: parseFloat(searchQuery) },
+          
+          // Search in product fields
           { 'products.code': regex },
           { 'products.name': regex },
           { 'products.size': regex },
@@ -388,25 +427,28 @@ export const getOrdersByUserIdController = async (req, res) => {
           { orderStatus: regex },
           { paymentMethod: regex }
         ].filter(condition => {
-          // Remove null conditions (like invalid ObjectId)
-          if (condition && Object.values(condition)[0] === null) return false;
+          // Remove null conditions (like invalid ObjectId or non-numeric total)
+          if (!condition || (typeof condition === 'object' && Object.values(condition)[0] === null)) {
+            return false;
+          }
           return true;
         });
   
         // Also search in user details by populating first
         const users = await userModel.find({
           $or: [
-            { name: regex },
+            { name: regex },  // This will search by user name
             { email: regex },
             { phone: regex },
-            { 'address.street': regex },
-            { 'address.city': regex },
-            { 'address.zip': regex }
+            { address: regex },
+            { city: regex },
+            { zip: regex }
           ]
         }).select('_id').lean();
   
         if (users.length > 0) {
-          searchConditions.user = { $in: users.map(u => u._id) };
+          if (!searchConditions.$or) searchConditions.$or = [];
+          searchConditions.$or.push({ user: { $in: users.map(u => u._id) } });
         }
       }
   
@@ -462,7 +504,7 @@ export const getOrdersByUserIdController = async (req, res) => {
         error: error.message 
       });
     }
-  };
+};
   
   export const getOrderByIdWithUserDetails = async (req, res) => {
     const orderId = req.params.pid;
