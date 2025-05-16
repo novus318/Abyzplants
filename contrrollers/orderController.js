@@ -220,8 +220,7 @@ export const cancelProduct = async (req, res) => {
 // Admin Approval for Return
 export const approveReturn = async (req, res) => {
   try {
-    const { orderId, productId } = req.body;
-    const adminId = req.user._id;
+    const { orderId, productId, adminId } = req.body;
 
     const order = await orderModel.findById(orderId);
 
@@ -251,8 +250,7 @@ export const approveReturn = async (req, res) => {
 // Admin Rejection for Return
 export const rejectReturn = async (req, res) => {
   try {
-    const { orderId, productId } = req.body;
-    const adminId = req.user._id;
+    const { orderId, productId, adminId } = req.body;
 
     const order = await orderModel.findById(orderId);
 
@@ -282,8 +280,7 @@ export const rejectReturn = async (req, res) => {
 // Complete Return Process
 export const completeReturn = async (req, res) => {
   try {
-    const { orderId, productId } = req.body;
-    const adminId = req.user._id;
+    const { orderId, productId, adminId } = req.body;
 
     const order = await orderModel.findById(orderId);
 
@@ -314,7 +311,6 @@ export const completeReturn = async (req, res) => {
 export const changeOrderStatus = async (req, res) => {
   try {
     const { orderId, productId, status } = req.body;
-    const adminId = req.user._id;
 
     const order = await orderModel.findById(orderId);
 
@@ -325,7 +321,7 @@ export const changeOrderStatus = async (req, res) => {
       });
     }
 
-    await order.changeOrderStatus(productId, adminId, status);
+    await order.changeOrderStatus(productId, status);
     
     res.json({
       success: true,

@@ -296,7 +296,7 @@ orderSchema.methods = {
     
     return this.save();
   },
-  changeOrderStatus: function(productId, adminId,status) {
+  changeOrderStatus: function(productId,status) {
     const product = this.products.id(productId);
     if (!product) throw new Error('Product not found in order');
     
@@ -310,7 +310,6 @@ orderSchema.methods = {
     
     if (lastReturn) {
       lastReturn.status = 'Completed';
-      lastReturn.processedBy = adminId;
     }
     
     // Update order status

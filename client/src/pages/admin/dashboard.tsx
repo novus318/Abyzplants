@@ -56,33 +56,33 @@ const Dashboard: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await Axios.get(`${apiUrl}/api/order/get-allOrders`, {
-          params: {
-            page: currentPage,
-            pageSize: itemsPerPage,
-            search: searchQuery
-          }
-        });
-        
-        if (response.data.success) {
-          const sortedOrders = response.data.orders.sort((a: Order, b: Order) => {
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-          setOrders(sortedOrders);
-          setFilteredOrders(sortedOrders);
-          setTotalPages(response.data.pagination.totalPages);
-          setTotalOrders(response.data.pagination.totalOrders);
+  const fetchOrders = async () => {
+    try {
+      const response = await Axios.get(`${apiUrl}/api/order/get-allOrders`, {
+        params: {
+          page: currentPage,
+          pageSize: itemsPerPage,
+          search: searchQuery
         }
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        setLoading(false);
+      });
+      
+      if (response.data.success) {
+        const sortedOrders = response.data.orders.sort((a: Order, b: Order) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+        setOrders(sortedOrders);
+        setFilteredOrders(sortedOrders);
+        setTotalPages(response.data.pagination.totalPages);
+        setTotalOrders(response.data.pagination.totalOrders);
       }
-    };
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchOrders();
   }, [currentPage, itemsPerPage, searchQuery]);
 
@@ -118,7 +118,7 @@ const Dashboard: React.FC = () => {
             <div className="p-4 border-b">
               <h2 className="font-medium">All Orders ({totalOrders})</h2>
             </div>
-            <OrdersTable orders={orders} currentPage={currentPage} totalOrders={totalOrders}/>
+            <OrdersTable orders={orders} onStatusChange={fetchOrders}/>
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <div className="text-sm text-muted-foreground">
                 Showing page {currentPage} of {totalPages}
